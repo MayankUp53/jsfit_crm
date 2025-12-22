@@ -44,5 +44,8 @@ class Customer extends Entity
         'updated_user_id' => true,
         'deleted' => true,
         'deleted_user_id' => true,
+          'client_cd' => true,
+    'company_name' => true,
+    'type_of_number' => true
     ];
 }

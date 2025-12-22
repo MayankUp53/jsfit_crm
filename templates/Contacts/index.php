@@ -9,51 +9,84 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
     </div>
     <?= $this->Form->create(null, ['url' => ['action' => 'index'], 'type' => 'post']) ?>
     <table class="table">
-        <tbody>
-            <tr>
-                <td class="search-label" width="10%">顧客氏名</td>
-                <td width="23%"><?= $this->Form->control('Search.customer_name', ['label' => false, 'value' => $search['customer_name'] ?? '', 'class' => 'form-control']) ?></td>
-                <td class="search-label" width="10%">顧客電話</td>
-                <td width="23%"><?= $this->Form->control('Search.customer_phone', ['label' => false, 'value' => $search['customer_phone'] ?? '', 'class' => 'form-control']) ?></td>
-                <td class="search-label" width="10%">顧客メール</td>
-                <td width="23%"><?= $this->Form->control('Search.customer_email', ['label' => false, 'value' => $search['customer_email'] ?? '', 'class' => 'form-control']) ?></td>
-            </tr>
-            <tr>
-                <td class="search-label">顧客ID</td>
-                <td><?= $this->Form->control('Search.customer_id', ['label' => false, 'value' => $search['customer_id'] ?? '', 'class' => 'form-control', 'type' => 'number']) ?></td>
-                <td class="search-label">履歴ID</td>
-                <td><?= $this->Form->control('Search.contact_id', ['label' => false, 'value' => $search['contact_id'] ?? '', 'class' => 'form-control', 'type' => 'number']) ?></td>
-                <td class="search-label">架電番号</td>
-                <td><?= $this->Form->control('Search.phone', ['label' => false, 'value' => $search['phone'] ?? '', 'class' => 'form-control']) ?></td>
-            </tr>
-            <tr>
-                <td class="search-label">ステータス</td>
-                <td><?= $this->Form->control('Search.status', ['label' => false, 'type' => 'select', 'options' => $statusOpt ?? [], 'empty' => '-----', 'value' => $search['status'] ?? '']) ?></td>
-                <td class="search-label">キュー</td>
-                <td><?= $this->Form->control('Search.queue_name', ['label' => false, 'type' => 'select', 'options' => $queueOpt ?? [], 'empty' => '-----', 'value' => $search['queue_name'] ?? '']) ?></td>
-                <td class="search-label">再コール状態</td>
-                <td><?= $this->Form->control('Search.is_done', ['label' => false, 'type' => 'select', 'options' => $callbackStatusOpt ?? [], 'empty' => '-----', 'value' => $search['is_done'] ?? '']) ?></td>
-            </tr>
-            <tr>
-                <td class="search-label">登録者</td>
-                <td><?= $this->Form->control('Search.created_user_id', ['label' => false, 'type' => 'select', 'options' => $allUsersOpt ?? [], 'empty' => '-----', 'value' => $search['created_user_id'] ?? '']) ?></td>
-                <td class="search-label">登録日(From)</td>
-                <td><?= $this->Form->control('Search.created_from', ['label' => false, 'class' => 'form-control datepicker', 'value' => $search['created_from'] ?? '']) ?></td>
-                <td class="search-label">登録日(To)</td>
-                <td><?= $this->Form->control('Search.created_to', ['label' => false, 'class' => 'form-control datepicker', 'value' => $search['created_to'] ?? '']) ?></td>
-            </tr>
-            <tr>
-                <td class="search-label">再コール日(From)</td>
-                <td><?= $this->Form->control('Search.callback_from', ['label' => false, 'class' => 'form-control datepicker', 'value' => $search['callback_from'] ?? '']) ?></td>
-                <td class="search-label">再コール日(To)</td>
-                <td><?= $this->Form->control('Search.callback_to', ['label' => false, 'class' => 'form-control datepicker', 'value' => $search['callback_to'] ?? '']) ?></td>
-                <td class="search-label">概要/備考</td>
-                <td>
-                    <?= $this->Form->control('Search.summary', ['label' => false, 'class' => 'form-control', 'placeholder' => '概要キーワード', 'value' => $search['summary'] ?? '']) ?>
-                    <?= $this->Form->control('Search.remark', ['label' => false, 'class' => 'form-control', 'placeholder' => '備考キーワード', 'style' => 'margin-top:5px;', 'value' => $search['remark'] ?? '']) ?>
-                </td>
-            </tr>
-        </tbody>
+      <tbody>
+    <tr>
+        <td width="10%" class="search-label">氏名</td>
+        <td width="23%">
+            <?= $this->Form->control('Search.name', [
+                    'label' => false,
+                    'value' => $search['name'] ?? '',
+                    'class' => 'form-control'
+                ]) 
+            ?>
+        </td>
+
+        <td width="10%" class="search-label">電話番号</td>
+        <td width="23%">
+            <?= $this->Form->control('Search.phone', [
+                    'label' => false,
+                    'value' => $search['phone'] ?? '',
+                    'class' => 'form-control'
+                ]) 
+            ?>
+        </td>
+
+        <td width="10%" class="search-label">メール</td>
+        <td width="23%">
+            <?= $this->Form->control('Search.email', [
+                    'label' => false,
+                    'value' => $search['email'] ?? '',
+                    'class' => 'form-control'
+                ]) 
+            ?>
+        </td>
+    </tr>
+
+    <tr>
+        <td class="search-label">FAX</td>
+        <td>
+            <?= $this->Form->control('Search.fax', [
+                    'label' => false,
+                    'value' => $search['fax'] ?? '',
+                    'class' => 'form-control'
+                ]) 
+            ?>
+        </td>
+
+        <td class="search-label">得意先CD</td>
+        <td>
+            <?= $this->Form->control('Search.client_cd', [
+                    'label' => false,
+                    'value' => $search['client_cd'] ?? '',
+                    'class' => 'form-control',
+                    'type' => 'number'
+                ]) 
+            ?>
+        </td>
+
+        <td class="search-label">登録日</td>
+        <td>
+            <div class="d-flex align-items-center">
+                <?= $this->Form->control('Search.created_from', [
+                        'label' => false,
+                        'value' => $search['created_from'] ?? '',
+                        'class' => 'form-control datepicker',
+                        'placeholder' => 'From'
+                    ]) 
+                ?>
+                <span style="margin: 0 5px;">~</span>
+                <?= $this->Form->control('Search.created_to', [
+                        'label' => false,
+                        'value' => $search['created_to'] ?? '',
+                        'class' => 'form-control datepicker',
+                        'placeholder' => 'To'
+                    ]) 
+                ?>
+            </div>
+        </td>
+    </tr>
+</tbody>
+
     </table>
     <div class="text-center btn_margin" style="width:95%;margin-bottom:5px;margin-top:5px;">
         <?= $this->Form->button('検　索', ['name' => 'searching', 'value' => '1', 'type' => 'submit', 'class' => 'btn-success btn-xs', 'style' => 'width:150px;height:30px;cursor:pointer']) ?>
@@ -76,16 +109,18 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
     <div class="table-responsive">
         <table class="table table-striped table-hover" style="font-size:12px">
             <thead>
-                <tr height="35" bgcolor="#20b2aa" style="vertical-align:middle;color:#ffffff;">
-                    <td width="6%">履歴ID</td>
-                    <td width="15%">顧客氏名</td>
-                    <td width="12%">顧客電話</td>
-                    <td width="12%">架電番号</td>
-                    <td width="12%">ステータス</td>
-                    <td width="19%">概要</td>
-                    <td width="12%">登録日</td>
-                    <td width="12%">操作</td>
-                </tr>
+             <tr height="35" bgcolor="#20b2aa" style="vertical-align:middle;color:#ffffff;">
+    <td width="8%">得意先CD</td>
+    <td width="15%">会社・支店名</td>
+    <td width="12%">氏名</td>
+    <td width="10%">番号種別</td>
+    <td width="10%">TEL</td>
+    <td width="15%">概要</td>
+    <td width="10%">ステータス</td>
+    <td width="10%">担当OP</td>
+    <td width="10%">登録日</td>
+</tr>
+
             </thead>
             <tbody>
                 <?php foreach ($contacts as $row): ?>

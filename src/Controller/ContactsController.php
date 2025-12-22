@@ -37,103 +37,169 @@ class ContactsController extends AppController
     }
 
     public function index()
-    {
-        $this->setListValue();
-        $session = $this->request->getSession();
+{
+    $this->setListValue();
+    $session = $this->request->getSession();
 
-        if ($this->request->is('post')) {
-            if ($this->request->getData('searching')) {
-                $session->write('Contacts.search', $this->request->getData('Search', []));
-                return $this->redirect(['action' => 'index']);
-            }
-            if ($this->request->getData('clear')) {
-                return $this->clearSession();
-            }
-            if ($this->request->getData('add')) {
-                return $this->redirect(['action' => 'add']);
-            }
+    if ($this->request->is('post')) {
+        if ($this->request->getData('searching')) {
+            $session->write('Contacts.search', $this->request->getData('Search', []));
+            return $this->redirect(['action' => 'index']);
         }
-
-        $searchData = $session->read('Contacts.search') ?? [];
-        $searchData += $this->contactSearchDefaults();
-
-        $query = $this->Contacts->find()
-            ->contain(['Customers'])
-            ->where(['Contacts.deleted IS' => null]);
-
-        if ($searchData['customer_name'] !== '') {
-            $query->where(['Customers.name LIKE' => '%' . $searchData['customer_name'] . '%']);
+        if ($this->request->getData('clear')) {
+            return $this->clearSession();
         }
-        if ($searchData['customer_phone'] !== '') {
-            $query->where([
-                'OR' => [
-                    'Customers.phone LIKE' => '%' . $searchData['customer_phone'] . '%',
-                    'Customers.tel LIKE' => '%' . $searchData['customer_phone'] . '%',
-                ],
-            ]);
+        if ($this->request->getData('add')) {
+            return $this->redirect(['action' => 'add']);
         }
-        if ($searchData['customer_email'] !== '') {
-            $query->where(['Customers.email LIKE' => '%' . $searchData['customer_email'] . '%']);
-        }
-        if ($searchData['customer_id'] !== '' && is_numeric($searchData['customer_id'])) {
-            $query->where(['Customers.id' => (int)$searchData['customer_id']]);
-        }
-        if ($searchData['contact_id'] !== '' && is_numeric($searchData['contact_id'])) {
-            $query->where(['Contacts.id' => (int)$searchData['contact_id']]);
-        }
-        if ($searchData['status'] !== '') {
-            $query->where(['Contacts.status' => $searchData['status']]);
-        }
-        if ($searchData['queue_name'] !== '') {
-            $query->where(['Contacts.queue_name' => $searchData['queue_name']]);
-        }
-        if ($searchData['created_user_id'] !== '') {
-            $query->where(['Contacts.created_user_id' => $searchData['created_user_id']]);
-        }
-        if ($searchData['is_done'] !== '') {
-            $query->where(['Contacts.is_done' => $searchData['is_done']]);
-        }
-        if ($searchData['phone'] !== '') {
-            $query->where(['Contacts.phone LIKE' => '%' . $searchData['phone'] . '%']);
-        }
-        if ($searchData['summary'] !== '') {
-            $query->where(['Contacts.summary LIKE' => '%' . $searchData['summary'] . '%']);
-        }
-        if ($searchData['remark'] !== '') {
-            $query->where(['Contacts.remark LIKE' => '%' . $searchData['remark'] . '%']);
-        }
-        if ($searchData['created_from'] !== '') {
-            $query->where(['Contacts.created >=' => $searchData['created_from']]);
-        }
-        if ($searchData['created_to'] !== '') {
-            $end = $searchData['created_to'];
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-                $end .= ' 23:59:59';
-            }
-            $query->where(['Contacts.created <=' => $end]);
-        }
-        if ($searchData['callback_from'] !== '') {
-            $query->where(['Contacts.callback_datetime >=' => $searchData['callback_from']]);
-        }
-        if ($searchData['callback_to'] !== '') {
-            $end = $searchData['callback_to'];
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-                $end .= ' 23:59:59';
-            }
-            $query->where(['Contacts.callback_datetime <=' => $end]);
-        }
-
-        $query->orderBy(['Contacts.created' => 'DESC']);
-
-        if ($this->request->is('post') && $this->request->getData('download')) {
-            $results = $query->all();
-            return $this->csv($results->toArray());
-        }
-
-        $this->paginate = ['limit' => 50];
-        $contacts = $this->paginate($query);
-        $this->set(compact('contacts', 'searchData'));
     }
+
+    $searchData = $session->read('Contacts.search') ?? [];
+    $searchData += $this->contactSearchDefaults();
+
+    // Fetch contacts with associated customer data
+    $query = $this->Contacts->find()
+        ->contain(['Customers'])
+        ->where(['Contacts.deleted IS' => null]);
+
+    // --- Filter by Customer fields ---
+    if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
+        $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
+    }
+    if (!empty($searchData['company_name'])) {
+        $query->where(['Customers.company_name LIKE' => '%' . $searchData['company_name'] . '%']);
+    }
+    if (!empty($searchData['name'])) {
+        $query->where(['Customers.name LIKE' => '%' . $searchData['name'] . '%']);
+    }
+    if (!empty($searchData['type_of_number'])) {
+        $query->where(['Customers.type_of_number LIKE' => '%' . $searchData['type_of_number'] . '%']);
+    }
+    if (!empty($searchData['phone'])) {
+        $query->where([
+            'OR' => [
+                'Customers.phone LIKE' => '%' . $searchData['phone'] . '%',
+                'Customers.tel LIKE' => '%' . $searchData['phone'] . '%',
+            ],
+        ]);
+    }
+    if (!empty($searchData['created_from'])) {
+        $query->where(['Customers.created >=' => $searchData['created_from']]);
+    }
+    if (!empty($searchData['created_to'])) {
+        $end = $searchData['created_to'];
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+            $end .= ' 23:59:59';
+        }
+        $query->where(['Customers.created <=' => $end]);
+    }
+
+    // --- Filter by Contact fields ---
+    if (!empty($searchData['summary'])) {
+        $query->where(['Contacts.summary LIKE' => '%' . $searchData['summary'] . '%']);
+    }
+    if (!empty($searchData['status'])) {
+        $query->where(['Contacts.status' => $searchData['status']]);
+    }
+    if (!empty($searchData['created_user_id'])) {
+        $query->where(['Contacts.created_user_id' => $searchData['created_user_id']]);
+    }
+
+    // Order by contact creation date
+    $query->orderBy(['Contacts.created' => 'DESC']);
+
+    // CSV download
+    if ($this->request->is('post') && $this->request->getData('download')) {
+        $results = $query->all();
+        return $this->csv($results->toArray());
+    }
+
+    $this->paginate = ['limit' => 50];
+    $contacts = $this->paginate($query);
+
+    $this->set(compact('contacts', 'searchData'));
+}
+
+
+//     public function index()
+// {
+//     $this->setListValue();
+//     $session = $this->request->getSession();
+
+//     if ($this->request->is('post')) {
+//         if ($this->request->getData('searching')) {
+//             $session->write('Contacts.search', $this->request->getData('Search', []));
+//             return $this->redirect(['action' => 'index']);
+//         }
+//         if ($this->request->getData('clear')) {
+//             return $this->clearSession();
+//         }
+//         if ($this->request->getData('add')) {
+//             return $this->redirect(['action' => 'add']);
+//         }
+//     }
+
+//     $searchData = $session->read('Contacts.search') ?? [];
+//     $searchData += $this->contactSearchDefaults();
+
+//     $query = $this->Contacts->find()
+//         ->contain(['Customers'])
+//         ->where(['Contacts.deleted IS' => null]);
+
+//     // Customer related fields
+//     $customerName  = $searchData['customer_name'] ?? '';
+//     $customerPhone = $searchData['customer_phone'] ?? '';
+//     $customerEmail = $searchData['customer_email'] ?? '';
+//     $customerFax   = $searchData['customer_fax'] ?? '';
+//     $clientCd      = $searchData['client_cd'] ?? '';
+
+//     if ($customerName !== '') {
+//         $query->where(['Customers.name LIKE' => '%' . $customerName . '%']);
+//     }
+//     if ($customerPhone !== '') {
+//         $query->where([
+//             'OR' => [
+//                 'Customers.phone LIKE' => '%' . $customerPhone . '%',
+//                 'Customers.tel LIKE' => '%' . $customerPhone . '%',
+//             ],
+//         ]);
+//     }
+//     if ($customerEmail !== '') {
+//         $query->where(['Customers.email LIKE' => '%' . $customerEmail . '%']);
+//     }
+//     if ($customerFax !== '') {
+//         $query->where(['Customers.fax LIKE' => '%' . $customerFax . '%']);
+//     }
+//     if ($clientCd !== '' && is_numeric($clientCd)) {
+//         $query->where(['Customers.client_cd' => (int)$clientCd]);
+//     }
+
+//     // Contacts registration date
+//     if (!empty($searchData['created_from'])) {
+//         $query->where(['Contacts.created >=' => $searchData['created_from']]);
+//     }
+//     if (!empty($searchData['created_to'])) {
+//         $end = $searchData['created_to'];
+//         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+//             $end .= ' 23:59:59';
+//         }
+//         $query->where(['Contacts.created <=' => $end]);
+//     }
+
+//     // Order by newest contact
+//     $query->orderBy(['Contacts.created' => 'DESC']);
+
+//     // CSV download
+//     if ($this->request->is('post') && $this->request->getData('download')) {
+//         $results = $query->all();
+//         return $this->csv($results->toArray());
+//     }
+
+//     $this->paginate = ['limit' => 50];
+//     $contacts = $this->paginate($query);
+//     $this->set(compact('contacts', 'searchData'));
+// }
+
 
     public function csv($results = null)
     {

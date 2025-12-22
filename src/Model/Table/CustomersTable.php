@@ -40,6 +40,10 @@ class CustomersTable extends Table
         $this->setTable('customers');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
+           $this->hasMany('Contacts', [
+        'foreignKey' => 'customer_id', 
+        'dependent' => true,           
+    ]);
 
         // Keep legacy created/updated columns in sync.
         $this->addBehavior('Timestamp', [

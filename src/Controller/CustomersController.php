@@ -53,73 +53,72 @@ class CustomersController extends AppController
      *
      * @return \Cake\Http\Response|null|void Renders view
      */
-    public function index()
-    {
-        $this->setListValue();
-        $session = $this->request->getSession();
+  
+   public function index()
+{
+    $this->setListValue();
+    $session = $this->request->getSession();
 
-        if ($this->request->is('post')) {
-            if ($this->request->getData('searching')) {
-                $session->write('Customers.search', $this->request->getData('Search', []));
-                return $this->redirect(['action' => 'index']);
-            }
-            if ($this->request->getData('clear')) {
-                return $this->clearSession();
-            }
-            if ($this->request->getData('add')) {
-                return $this->redirect(['action' => 'add']);
-            }
+    if ($this->request->is('post')) {
+        if ($this->request->getData('searching')) {
+            $session->write('Customers.search', $this->request->getData('Search', []));
+            return $this->redirect(['action' => 'index']);
         }
-
-        $searchData = $session->read('Customers.search') ?? [];
-        $searchData += $this->customerSearchDefaults();
-
-        $query = $this->Customers->find()
-            ->where(['Customers.deleted IS' => null]);
-
-        if ($searchData['name'] !== '') {
-            $query->where(['Customers.name LIKE' => '%' . $searchData['name'] . '%']);
+        if ($this->request->getData('clear')) {
+            return $this->clearSession();
         }
-        if ($searchData['phone'] !== '') {
-            $query->where([
-                'OR' => [
-                    'Customers.phone LIKE' => '%' . $searchData['phone'] . '%',
-                    'Customers.tel LIKE' => '%' . $searchData['phone'] . '%',
-                ],
-            ]);
+        if ($this->request->getData('add')) {
+            return $this->redirect(['action' => 'add']);
         }
-        if ($searchData['email'] !== '') {
-            $query->where(['Customers.email LIKE' => '%' . $searchData['email'] . '%']);
-        }
-        if ($searchData['id'] !== '' && is_numeric($searchData['id'])) {
-            $query->where(['Customers.id' => (int)$searchData['id']]);
-        }
-        if ($searchData['disp_no'] !== '') {
-            $query->where(['Customers.disp_no LIKE' => '%' . $searchData['disp_no'] . '%']);
-        }
-        if ($searchData['created_from'] !== '') {
-            $query->where(['Customers.created >=' => $searchData['created_from']]);
-        }
-        if ($searchData['created_to'] !== '') {
-            $end = $searchData['created_to'];
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-                $end .= ' 23:59:59';
-            }
-            $query->where(['Customers.created <=' => $end]);
-        }
-
-        $query->orderBy(['Customers.id' => 'DESC']);
-
-        if ($this->request->is('post') && $this->request->getData('download')) {
-            $results = $query->all();
-            return $this->csv($results->toArray());
-        }
-
-        $this->paginate = ['limit' => 50];
-        $customers = $this->paginate($query);
-
-        $this->set(compact('customers', 'searchData'));
     }
+
+    $searchData = $session->read('Customers.search') ?? [];
+    $searchData += $this->customerSearchDefaults();
+
+    $query = $this->Customers->find()
+        ->where(['Customers.deleted IS' => null]);
+
+    if ($searchData['name'] !== '') {
+        $query->where(['Customers.name LIKE' => '%' . $searchData['name'] . '%']);
+    }
+    if ($searchData['phone'] !== '') {
+        $query->where([
+            'OR' => [
+                'Customers.phone LIKE' => '%' . $searchData['phone'] . '%',
+                'Customers.tel LIKE' => '%' . $searchData['phone'] . '%',
+            ],
+        ]);
+    }
+    if ($searchData['email'] !== '') {
+        $query->where(['Customers.email LIKE' => '%' . $searchData['email'] . '%']);
+    }
+    // Replaced id → client_cd
+    if ($searchData['client_cd'] !== '' && is_numeric($searchData['client_cd'])) {
+        $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
+    }
+    if ($searchData['created_from'] !== '') {
+        $query->where(['Customers.created >=' => $searchData['created_from']]);
+    }
+    if ($searchData['created_to'] !== '') {
+        $end = $searchData['created_to'];
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+            $end .= ' 23:59:59';
+        }
+        $query->where(['Customers.created <=' => $end]);
+    }
+
+    $query->orderBy(['Customers.client_cd' => 'DESC']); // Optional: sort by client_cd
+
+    if ($this->request->is('post') && $this->request->getData('download')) {
+        $results = $query->all();
+        return $this->csv($results->toArray());
+    }
+
+    $this->paginate = ['limit' => 50];
+    $customers = $this->paginate($query);
+
+    $this->set(compact('customers', 'searchData'));
+}
 
     /**
      * CSV export method
@@ -535,16 +534,18 @@ class CustomersController extends AppController
             'phone' => '',
             'email' => '',
             'disp_no' => '',
-            'id' => '',
             'created_from' => '',
             'created_to' => '',
+            'client_cd' => '',
         ];
     }
 
     protected function customerExportColumns(): array
+    
     {
         return [
             'id' => '顧客ID',
+            'client_cd' => '得意先CD',
             'disp_no' => '表示No',
             'name' => '氏名',
             'name_kj' => '氏名(漢字)',
