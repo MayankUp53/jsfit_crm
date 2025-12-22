@@ -1,0 +1,138 @@
+/* Teal/amber theme inspired by legacy UI */
+:root {
+    --teal: #20b2aa;
+    --amber: #ff8c00;
+    --red: #d43f3a;
+    --header-text: #ffffff;
+}
+
+body {
+    padding-top: 20px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, '游ゴシック', 'Yu Gothic', sans-serif;
+    background: #f5f7fa;
+}
+
+.panel-primary > .panel-heading {
+    background-color: var(--teal);
+    border-color: var(--teal);
+    color: var(--header-text);
+}
+
+.panel-warning > .panel-heading {
+    background-color: var(--amber);
+    border-color: var(--amber);
+    color: var(--header-text);
+}
+
+.panel-danger > .panel-heading {
+    background-color: var(--red);
+    border-color: var(--red);
+    color: var(--header-text);
+}
+
+table.table thead tr {
+    background-color: var(--teal);
+    color: var(--header-text);
+}
+
+.btn-info,
+.btn-warning,
+.btn-success,
+.btn-danger {
+    border-radius: 2px;
+
+/* Dynamic form blocks */
+.field-block {
+    padding: 8px 10px;
+    background: #f5fbff;
+    border: 1px solid #d9e7f4;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.field-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #1d2a36;
+}
+
+.panel-heading {
+    color: var(--header-text);
+}
+}
+
+/* Dynamic form blocks */
+.field-block {
+    padding: 8px 10px;
+    background: #f5fbff;
+    border: 1px solid #d9e7f4;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.field-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #1d2a36;
+}
+
+.panel-heading {
+    color: var(--header-text);
+}
+
+/* Section panels for dynamic forms */
+.section-panel > .panel-heading {
+    background: #e6f3ff;
+    color: #2c3e50;
+    border-color: #d5e5f6;
+    font-weight: bold;
+}
+
+.section-panel > .panel-body {
+    background: #fafcff;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* Table tweaks for dynamic index fields */
+.table th,
+.table td {
+    vertical-align: middle !important;
+    white-space: nowrap;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.btn-info {
+    background-color: var(--teal);
+    border-color: var(--teal);
+}
+
+.btn-warning {
+    background-color: var(--amber);
+    border-color: var(--amber);
+}
+
+.btn-danger {
+    background-color: var(--red);
+    border-color: var(--red);
+}
+
+.ui-datepicker {
+    font-size: 12px;
+}
+.ui-datepicker-header {
+    background: var(--teal);
+    color: var(--header-text);
+}
+.ui-state-active,
+.ui-widget-content .ui-state-active,
+.ui-widget-header .ui-state-active {
+    background: var(--amber) !important;
+    border-color: var(--amber) !important;
+    color: #fff !important;
+}

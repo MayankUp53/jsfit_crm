@@ -1,0 +1,1 @@
+Use the existing list UI to drag and record IDs; call /mt-phonelists/sortupdate/{id-list-separated-by-dash}.
