@@ -109,29 +109,36 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
     <div class="table-responsive">
         <table class="table table-striped table-hover" style="font-size:12px">
             <thead>
-             <tr height="35" bgcolor="#20b2aa" style="vertical-align:middle;color:#ffffff;">
-    <td width="8%">得意先CD</td>
-    <td width="15%">会社・支店名</td>
-    <td width="12%">氏名</td>
-    <td width="10%">番号種別</td>
-    <td width="10%">TEL</td>
-    <td width="15%">概要</td>
-    <td width="10%">ステータス</td>
-    <td width="10%">担当OP</td>
-    <td width="10%">登録日</td>
-</tr>
-
+                <tr height="35" bgcolor="#20b2aa" style="vertical-align:middle;color:#ffffff;">
+                    <th width="8%">得意先CD</th>
+                    <th width="15%">会社・支店名</th>
+                    <th width="12%">氏名</th>
+                    <th width="10%">番号種別</th>
+                    <th width="10%">TEL</th>
+                    <th width="15%">概要</th>
+                    <th width="10%">ステータス</th>
+                    <th width="10%">担当OP</th>
+                    <th width="10%">登録日</th>
+                    <th width="10%">操作</th>
+                </tr>
             </thead>
             <tbody>
                 <?php foreach ($contacts as $row): ?>
-                    <tr ondblclick="location.href='<?= $this->Url->build(['action' => 'view', $row->id]) ?>'">
-                        <td><?= h($row->id) ?></td>
+                    <tr ondblclick="window.location='<?= $this->Url->build(['controller' => 'Contacts', 'action' => 'add', $row->customer->id ?? '']) ?>'">
+                        <!-- Customer info -->
+                        <td><?= h($row->customer->client_cd ?? '') ?></td>
+                        <td><?= h($row->customer->company_name ?? '') ?></td>
                         <td><?= h($row->customer->name ?? '') ?></td>
-                        <td><?= h($row->customer->phone ?? '') ?></td>
-                        <td><?= h($row->phone) ?></td>
-                        <td><?= h($statusOpt[$row->status] ?? $row->status) ?></td>
-                        <td><?= h(mb_strimwidth((string)$row->summary, 0, 50, '...')) ?></td>
+                        <td><?= h($row->customer->type_of_number ?? '') ?></td>
+                        <td><?= h($row->customer->tel ?? '') ?></td>
+
+                        <!-- Contact info -->
+                        <td><?= h($row->summary) ?></td>
+                        <td><?= h($row->status) ?></td>
+                        <td><?= h($row->op_incharge) ?></td>
                         <td><?= $row->created ? h($row->created->format('Y-m-d H:i')) : '' ?></td>
+
+                        <!-- 操作 buttons -->
                         <td>
                             <a href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>" class="btn btn-xs btn-primary">編集</a>
                             <?php if ($userAuth !== null && $userAuth != 0): ?>
@@ -147,6 +154,9 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
             </tbody>
         </table>
     </div>
+</div>
+
+
     <div class="paginateLinks btn_margin" style="width:100%" align="center">
         <ul class="pagination pagination-sm">
             <li><?= $this->Paginator->first('<< ' . __('最初')) ?></li>

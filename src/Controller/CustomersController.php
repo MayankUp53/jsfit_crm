@@ -372,42 +372,44 @@ class CustomersController extends AppController
         $this->setListValue();
     }
 
-    /**
-     * Add method
-     *
-     * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
-     */
+
     public function add()
-    {
-        // Handle back button
-        if ($this->request->is('post') && $this->request->getData('back')) {
+{
+    $customer = $this->Customers->newEmptyEntity();
+
+    if ($this->request->is('post')) {
+
+        // 🔙 Back / Cancel button
+        if ($this->request->getData('back')) {
             return $this->redirect(['action' => 'index']);
         }
 
-        $customer = $this->Customers->newEmptyEntity();
-        if ($this->request->is('post')) {
-            $data = $this->request->getData();
-            $now = date('Y-m-d H:i:s');
-            $currentUser = $this->getCurrentUser();
+        $data = $this->request->getData();
+        $now = date('Y-m-d H:i:s');
+        $currentUser = $this->getCurrentUser();
 
-            $data['created'] = $now;
-            $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
-            $data['updated'] = $now;
-            $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
+        // Audit fields
+        $data['created'] = $now;
+        $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
+        $data['updated'] = $now;
+        $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
 
-            $data = $this->normalizeCustomerPayload($data);
-            $customer = $this->Customers->patchEntity($customer, $data);
-            if ($this->Customers->save($customer)) {
-                $this->Flash->success(__('顧客情報の登録が完了しました。'));
-                return $this->redirect(['action' => 'index']);
-            }
-            $errorMsg = $this->formatEntityErrors($customer);
-            $this->Flash->error(__('顧客情報の登録に失敗しました。もう一度操作してください。 {0}', $errorMsg));
+
+        $customer = $this->Customers->patchEntity($customer, $data);
+
+        if ($this->Customers->save($customer)) {
+            $this->Flash->success(__('顧客情報の登録が完了しました。'));
+            return $this->redirect(['action' => 'index']);
         }
 
-        $this->set(compact('customer'));
-        $this->setListValue();
+        $errorMsg = $this->formatEntityErrors($customer);
+        $this->Flash->error(__('顧客情報の登録に失敗しました。 {0}', $errorMsg));
     }
+
+    $this->set(compact('customer'));
+    $this->setListValue();
+}
+
 
     /**
      * Edit method
@@ -416,43 +418,43 @@ class CustomersController extends AppController
      * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
-    public function edit(?string $id = null)
-    {
-        // Handle back button
-        if ($this->request->is('post') && $this->request->getData('back')) {
+public function edit(?string $id = null)
+{
+    // Handle back button
+    if ($this->request->is('post') && $this->request->getData('back')) {
+        return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
+    }
+
+    // Fetch the customer or fail
+    $customer = $this->Customers->find()
+        ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
+        ->firstOrFail();
+
+    // Handle customer update
+    if ($this->request->is(['patch', 'post', 'put'])) {
+        $data = $this->request->getData();
+        $now = date('Y-m-d H:i:s');
+        $currentUser = $this->getCurrentUser();
+
+        // Update timestamps and user
+        $data['updated'] = $now;
+        $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
+
+        // Patch entity and save
+        $customer = $this->Customers->patchEntity($customer, $data);
+
+        if ($this->Customers->save($customer)) {
+            $this->Flash->success(__('顧客情報の更新が完了しました。'));
             return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
         }
 
-        // Handle delete button
-        if ($this->request->is('post') && $this->request->getData('delete')) {
-            return $this->redirect(['action' => 'delete', $id]);
-        }
-
-        $customer = $this->Customers->find()
-            ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
-            ->firstOrFail();
-
-        if ($this->request->is(['patch', 'post', 'put'])) {
-            $data = $this->request->getData();
-            $now = date('Y-m-d H:i:s');
-            $currentUser = $this->getCurrentUser();
-
-            $data['updated'] = $now;
-            $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
-
-            $data = $this->normalizeCustomerPayload($data, false);
-            $customer = $this->Customers->patchEntity($customer, $data);
-            if ($this->Customers->save($customer)) {
-                $this->Flash->success(__('顧客情報の更新が完了しました。'));
-                return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
-            }
-            $errorMsg = $this->formatEntityErrors($customer);
-            $this->Flash->error(__('顧客情報の更新に失敗しました。もう一度操作してください。 {0}', $errorMsg));
-        }
-
-        $this->set(compact('customer'));
-        $this->setListValue();
+        $errorMsg = $this->formatEntityErrors($customer);
+        $this->Flash->error(__('顧客情報の更新に失敗しました。もう一度操作してください。 {0}', $errorMsg));
     }
+
+    // Set customer for the template
+    $this->set(compact('customer'));
+}
 
     /**
      * Delete method (logical delete)

@@ -6,7 +6,7 @@
 ?>
 <div class="panel panel-info">
     <div class="panel-heading">
-        <h3 class="panel-title">顧客詳細情報<?= $customer->isNew() ? '新規登録' : '更新' ?></h3>
+        <h3 class="panel-title">顧客詳細情報 hhheheheheehheehhhhheeeeeeee<?= $customer->isNew() ? '新規登録' : '更新' ?></h3>
     </div>
 
     <?= $this->Form->create($customer, ['url' => $customer->isNew() ? ['action' => 'add'] : ['action' => 'edit', $customer->id]]) ?>
