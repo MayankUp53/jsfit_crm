@@ -54,7 +54,7 @@ class CustomersController extends AppController
      * @return \Cake\Http\Response|null|void Renders view
      */
   
-   public function index()
+       public function index()
 {
     $this->setListValue();
     $session = $this->request->getSession();
@@ -65,23 +65,28 @@ class CustomersController extends AppController
             return $this->redirect(['action' => 'index']);
         }
         if ($this->request->getData('clear')) {
-            return $this->clearSession();
+            if (method_exists($this, 'clearSession')) {
+                return $this->clearSession();
+            }
         }
         if ($this->request->getData('add')) {
             return $this->redirect(['action' => 'add']);
         }
     }
 
+    // Read search data from session and merge with defaults
     $searchData = $session->read('Customers.search') ?? [];
     $searchData += $this->customerSearchDefaults();
 
     $query = $this->Customers->find()
         ->where(['Customers.deleted IS' => null]);
 
-    if ($searchData['name'] !== '') {
+    // Safer checks for each search field
+    if (!empty($searchData['name'])) {
         $query->where(['Customers.name LIKE' => '%' . $searchData['name'] . '%']);
     }
-    if ($searchData['phone'] !== '') {
+
+    if (!empty($searchData['phone'])) {
         $query->where([
             'OR' => [
                 'Customers.phone LIKE' => '%' . $searchData['phone'] . '%',
@@ -89,26 +94,26 @@ class CustomersController extends AppController
             ],
         ]);
     }
-    $email = trim($searchData['email']);
-if ($email !== '') {
-    $query->where([
-        'LOWER(Customers.email) LIKE' => '%' . strtolower($email) . '%'
-    ]);
-}
-    if ($searchData['fax'] !== '') {
-    $query->where([
-        'Customers.fax LIKE' => '%' . $searchData['fax'] . '%'
-    ]);
-}
 
-    // Replaced id → client_cd
-    if ($searchData['client_cd'] !== '' && is_numeric($searchData['client_cd'])) {
+    if (!empty($searchData['email'])) {
+        $query->where([
+            'LOWER(Customers.email) LIKE' => '%' . strtolower(trim($searchData['email'])) . '%'
+        ]);
+    }
+
+    if (!empty($searchData['fax'])) {
+        $query->where(['Customers.fax LIKE' => '%' . $searchData['fax'] . '%']);
+    }
+
+    if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
         $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
     }
-    if ($searchData['created_from'] !== '') {
+
+    if (!empty($searchData['created_from'])) {
         $query->where(['Customers.created >=' => $searchData['created_from']]);
     }
-    if ($searchData['created_to'] !== '') {
+
+    if (!empty($searchData['created_to'])) {
         $end = $searchData['created_to'];
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
             $end .= ' 23:59:59';
@@ -116,37 +121,23 @@ if ($email !== '') {
         $query->where(['Customers.created <=' => $end]);
     }
 
-    $query->orderBy(['Customers.client_cd' => 'DESC']); // Optional: sort by client_cd
+    $query->orderBy(['Customers.client_cd' => 'DESC']);
 
+    // CSV download
     if ($this->request->is('post') && $this->request->getData('download')) {
         $results = $query->all();
-        return $this->csv($results->toArray());
+        if (method_exists($this, 'csv')) {
+            return $this->csv($results->toArray());
+        }
     }
-//     if ($this->request->is('post') && $this->request->getData('download')) {
-//     $results = $query->all();
 
-//     // Map only the fields you want
-//     $exportData = $results->map(function($customer) {
-//         return [
-//             '得意先CD' => $customer->client_cd,
-//             '会社・支店名' => $customer->company_name,
-//             '氏名' => $customer->name,
-//             '電話' => $customer->tel,
-//             'FAX' => $customer->fax,
-//             'メール' => $customer->email,
-//             '登録日' => $customer->created ? $customer->created->format('Y-m-d') : '',
-//         ];
-//     })->toArray();
-
-//     return $this->csv($exportData);
-// }
-
-
+    // Pagination
     $this->paginate = ['limit' => 50];
     $customers = $this->paginate($query);
 
     $this->set(compact('customers', 'searchData'));
 }
+
 
     /**
      * CSV export method
