@@ -36,57 +36,107 @@ class ContactsController extends AppController
         return $this->redirect(['action' => 'index']);
     }
 
-    public function index()
+ public function index()
 {
     $this->setListValue();
-  
     $session = $this->request->getSession();
 
+    /* =========================
+     * Handle POST actions
+     * ========================= */
     if ($this->request->is('post')) {
+
+        // Search
         if ($this->request->getData('searching')) {
             $session->write('Contacts.search', $this->request->getData('Search', []));
             return $this->redirect(['action' => 'index']);
         }
+
+        // Clear
         if ($this->request->getData('clear')) {
             return $this->clearSession();
         }
+
+        // Add
         if ($this->request->getData('add')) {
             return $this->redirect(['action' => 'add']);
         }
     }
 
+    /* =========================
+     * Read search data
+     * ========================= */
     $searchData = $session->read('Contacts.search') ?? [];
     $searchData += $this->contactSearchDefaults();
 
-    // Fetch contacts with associated customer data
+    /* =========================
+     * Base Query
+     * ========================= */
     $query = $this->Contacts->find()
         ->contain(['Customers'])
         ->where(['Contacts.deleted IS' => null]);
 
-    // --- Filter by Customer fields ---
+    /* =========================
+     * Customer-based filters
+     * ========================= */
+
+    // Client CD
     if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
         $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
     }
+
+    // Company name
     if (!empty($searchData['company_name'])) {
-        $query->where(['Customers.company_name LIKE' => '%' . $searchData['company_name'] . '%']);
+        $query->where([
+            'Customers.company_name LIKE' => '%' . trim($searchData['company_name']) . '%'
+        ]);
     }
+
+    // Customer name
     if (!empty($searchData['name'])) {
-        $query->where(['Customers.name LIKE' => '%' . $searchData['name'] . '%']);
+        $query->where([
+            'Customers.name LIKE' => '%' . trim($searchData['name']) . '%'
+        ]);
     }
+
+    // Type of number
     if (!empty($searchData['type_of_number'])) {
-        $query->where(['Customers.type_of_number LIKE' => '%' . $searchData['type_of_number'] . '%']);
+        $query->where([
+            'Customers.type_of_number LIKE' => '%' . trim($searchData['type_of_number']) . '%'
+        ]);
     }
+
+    // Phone / Tel
     if (!empty($searchData['phone'])) {
         $query->where([
             'OR' => [
-                'Customers.phone LIKE' => '%' . $searchData['phone'] . '%',
-                'Customers.tel LIKE' => '%' . $searchData['phone'] . '%',
+                'Customers.phone LIKE' => '%' . trim($searchData['phone']) . '%',
+                'Customers.tel LIKE'   => '%' . trim($searchData['phone']) . '%',
             ],
         ]);
     }
+
+    // ✅ Email (FIXED)
+    if (!empty($searchData['email'])) {
+        $email = trim($searchData['email']);
+        $query->where([
+            'LOWER(Customers.email) LIKE' => '%' . strtolower($email) . '%'
+        ]);
+    }
+
+    // ✅ Fax (ADDED)
+    if (!empty($searchData['fax'])) {
+        $query->where([
+            'Customers.fax LIKE' => '%' . trim($searchData['fax']) . '%'
+        ]);
+    }
+
+    // Created date from
     if (!empty($searchData['created_from'])) {
         $query->where(['Customers.created >=' => $searchData['created_from']]);
     }
+
+    // Created date to
     if (!empty($searchData['created_to'])) {
         $end = $searchData['created_to'];
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
@@ -95,89 +145,119 @@ class ContactsController extends AppController
         $query->where(['Customers.created <=' => $end]);
     }
 
-    // --- Filter by Contact fields ---
+    /* =========================
+     * Contact-based filters
+     * ========================= */
+
+    // Summary
     if (!empty($searchData['summary'])) {
-        $query->where(['Contacts.summary LIKE' => '%' . $searchData['summary'] . '%']);
+        $query->where([
+            'Contacts.summary LIKE' => '%' . trim($searchData['summary']) . '%'
+        ]);
     }
+
+    // Status
     if (!empty($searchData['status'])) {
         $query->where(['Contacts.status' => $searchData['status']]);
     }
+
+    // Created user
     if (!empty($searchData['created_user_id'])) {
         $query->where(['Contacts.created_user_id' => $searchData['created_user_id']]);
     }
 
-    // Order by contact creation date
+    /* =========================
+     * Order
+     * ========================= */
     $query->order(['Contacts.created' => 'DESC']);
 
-    // CSV download
-    if ($this->request->is('post') && $this->request->getData('download')) {
-        $results = $query->all();
+    /* =========================
+     * CSV Download
+     * ========================= */
+if ($this->request->is('post') && $this->request->getData('download')) {
+    $results = $query->all();
 
-        // Add op_incharge field for CSV
-        foreach ($results as $contact) {
-            $user = $this->Users->find()
-                ->select(['name'])
-                ->where(['id' => $contact->updated_user_id])
-                ->first();
-            $contact->op_incharge = $user ? $user->name : '-';
-        }
+    $exportData = [];
 
-        return $this->csv($results->toArray());
+    foreach ($results as $contact) {
+        // Get OP name
+        $user = $this->Users->find()
+            ->select(['user_name'])
+            ->where(['id' => $contact->updated_user_id])
+            ->first();
+
+        $contact->op_incharge = $user ? $user->user_name : '-';
+
+        // Map data manually for CSV
+        $exportData[] = [
+            'id' => $contact->id,
+            'client_cd' => $contact->customer->client_cd ?? '',
+            'company_name' => $contact->customer->company_name ?? '',
+            'customer_name' => $contact->customer->name ?? '',
+            'customer_tel' => $contact->customer->tel ?? '',
+            'customer_email' => $contact->customer->email ?? '',
+            'customer_fax' => $contact->customer->fax ?? '',
+            'summary' => $contact->summary,
+            'status' => $contact->status,
+            'remark' => $contact->remark,
+            'op_incharge' => $contact->op_incharge,
+            'created' => $contact->created ? $contact->created->format('Y-m-d H:i') : '',
+            'updated' => $contact->updated ? $contact->updated->format('Y-m-d H:i') : '',
+        ];
     }
 
-    // Pagination
+    return $this->csv($exportData);
+}
+
+
+
+    /* =========================
+     * Pagination
+     * ========================= */
     $this->paginate = ['limit' => 50];
     $contacts = $this->paginate($query);
 
-    // Add op_incharge field for each contact
     foreach ($contacts as $contact) {
         $user = $this->Users->find()
             ->select(['user_name'])
             ->where(['id' => $contact->updated_user_id])
             ->first();
+
         $contact->op_incharge = $user ? $user->user_name : '-';
     }
 
     $this->set(compact('contacts', 'searchData'));
 }
 
+public function csv(array $results = [])
+{
+    $filename = rawurlencode('対応履歴情報_' . date('Y-m-d H:i:s') . '.csv');
+    
+    // Use column mapping for CSV headers
+    $columns = [
+        'id' => '履歴ID',
+        'client_cd' => '得意先CD',
+        'company_name' => '会社・支店名',
+        'customer_name' => '顧客氏名',
+        'customer_tel' => '顧客電話',
+        'customer_email' => '顧客メール',
+        'customer_fax' => 'FAX',
+        'summary' => '概要',
+        'status' => 'ステータス',
+        'remark' => '対応内容',
+        'op_incharge' => '担当OP',
+        'created' => '登録日',
+        'updated' => '更新日',
+    ];
+
+    $this->set(compact('filename', 'columns', 'results'));
+    $this->viewBuilder()->setLayout('ajax');
+    $this->render('download');
+}
 
 
 
 
-
-    public function csv($results = null)
-    {
-        $filename = rawurlencode('対応履歴情報_' . date('Y-m-d H:i:s') . '.csv');
-        $columns = $this->contactExportColumns();
-        $this->setListValue();
-
-        $this->set(compact('filename', 'columns', 'results'));
-        $this->viewBuilder()->setLayout('ajax');
-        $this->render('download');
-    }
-
-//    public function view(?string $id = null)
-// {
-//     // Fetch the main contact and its associated customer
-//     $contact = $this->Contacts->find()
-//         ->where(['Contacts.id' => $id, 'Contacts.deleted IS' => null])
-//         ->contain(['Customers'])
-//         ->firstOrFail();
-
-//     // Convenience variable for the customer
-//     $customer = $contact->customer;
-
-//     // Fetch all contacts for the same customer (excluding deleted)
-//     $contacts = $this->Contacts->find()
-//         ->where(['Contacts.customer_id' => $contact->customer_id, 'Contacts.deleted IS' => null])
-//         ->orderBy(['Contacts.updated' => 'DESC'])
-//         ->contain(['Customers']) // optional, if you need customer info in the list
-//         ->toArray();
-
-//     $this->set(compact('contact', 'customer', 'contacts'));
-//     $this->setListValue(); // keep for select options if needed in view
-// }
 
 public function view(?string $id = null)
 {
@@ -292,59 +372,6 @@ public function add(?string $customer_id = null)
 
     $this->set(compact('contact', 'contacts', 'customer'));
 }
-
-
-
-// public function add(?string $customer_id = null)
-// {
-//     if (empty($customer_id) || !$this->Customers->exists(['id' => $customer_id])) {
-//         $this->Flash->error(__('顧客を選択してから対応履歴を登録してください。'));
-//         return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
-//     }
-
-//     // Back button
-//     if ($this->request->is('post') && $this->request->getData('back')) {
-//         return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
-//     }
-
-//     $contact  = $this->Contacts->newEmptyEntity();
-//     $customer = $this->Customers->get($customer_id);
-//     $currentUser = $this->getCurrentUser();
-
-//     if ($this->request->is('post')) {
-//         $data = $this->request->getData('Contact') ?: $this->request->getData();
-
-//         $now = date('Y-m-d H:i:s');
-
-//         $data['customer_id'] = $customer_id;
-//         $data['created'] = $now;
-//         $data['updated'] = $now;
-//         $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
-//         $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
-    
-
-//         $contact = $this->Contacts->patchEntity($contact, $data);
-
-//         if ($this->Contacts->save($contact)) {
-//             $this->Flash->success(__('対応履歴情報の登録が完了しました。'));
-//             return $this->redirect(['action' => 'view',    $contact->id]);
-//         }
-
-//         $this->Flash->error(__('対応履歴情報の登録に失敗しました。'));
-//     }
-
-    
-//     $contacts = $this->Contacts->find()
-//         ->where([
-//             'Contacts.customer_id' => $customer_id,
-//             'Contacts.deleted IS' => null
-//         ])
-//         ->contain(['Customers'])
-//         ->order(['Contacts.created' => 'DESC'])
-//         ->all();
-
-//     $this->set(compact('contact', 'contacts', 'customer'));
-// }
 
 
  
@@ -480,27 +507,22 @@ public function edit(?string $id = null)
         ];
     }
 
-    protected function contactExportColumns(): array
-    {
-        return [
-            'id' => '履歴ID',
-            'customer_id' => '顧客ID',
-            'customer.name' => '顧客氏名',
-            'customer.phone' => '顧客電話',
-            'status' => 'ステータス',
-            'summary' => '概要',
-            'detail' => '対応内容',
-            'remark' => '備考',
-            'phone' => '架電番号',
-            'queue_name' => 'キュー',
-            'callback_datetime' => '再コール日時',
-            'is_done' => '再コール状態',
-            'created' => '登録日',
-            'created_user_id' => '登録者',
-            'updated' => '更新日',
-            'updated_user_id' => '更新者',
-        ];
-    }
+protected function contactExportColumns(): array
+{
+    return [
+        'id' => '履歴ID',
+        'client_cd' => '得意先CD',
+        'company_name' => '会社・支店名',
+        'customer_name' => '顧客氏名',
+        'customer_tel' => '顧客電話',
+        'summary' => '概要',
+        'status' => 'ステータス',
+        'remark' => '対応内容',
+        'op_incharge' => '担当OP',
+        'created' => '登録日',
+    ];
+}
+
 
     protected function normalizeContactPayload(array $data): array
     {

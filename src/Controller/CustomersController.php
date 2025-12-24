@@ -89,9 +89,18 @@ class CustomersController extends AppController
             ],
         ]);
     }
-    if ($searchData['email'] !== '') {
-        $query->where(['Customers.email LIKE' => '%' . $searchData['email'] . '%']);
-    }
+    $email = trim($searchData['email']);
+if ($email !== '') {
+    $query->where([
+        'LOWER(Customers.email) LIKE' => '%' . strtolower($email) . '%'
+    ]);
+}
+    if ($searchData['fax'] !== '') {
+    $query->where([
+        'Customers.fax LIKE' => '%' . $searchData['fax'] . '%'
+    ]);
+}
+
     // Replaced id → client_cd
     if ($searchData['client_cd'] !== '' && is_numeric($searchData['client_cd'])) {
         $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
@@ -113,6 +122,25 @@ class CustomersController extends AppController
         $results = $query->all();
         return $this->csv($results->toArray());
     }
+//     if ($this->request->is('post') && $this->request->getData('download')) {
+//     $results = $query->all();
+
+//     // Map only the fields you want
+//     $exportData = $results->map(function($customer) {
+//         return [
+//             '得意先CD' => $customer->client_cd,
+//             '会社・支店名' => $customer->company_name,
+//             '氏名' => $customer->name,
+//             '電話' => $customer->tel,
+//             'FAX' => $customer->fax,
+//             'メール' => $customer->email,
+//             '登録日' => $customer->created ? $customer->created->format('Y-m-d') : '',
+//         ];
+//     })->toArray();
+
+//     return $this->csv($exportData);
+// }
+
 
     $this->paginate = ['limit' => 50];
     $customers = $this->paginate($query);
@@ -130,12 +158,46 @@ class CustomersController extends AppController
     {
         $filename = rawurlencode('顧客情報_' . date('Y-m-d H:i:s') . '.csv');
         $columns = $this->customerExportColumns();
-        $sexLabels = $this->sexOptions();
+     $sexLabels = $this->sexOptions();
 
-        $this->set(compact('filename', 'columns', 'results', 'sexLabels'));
+            $this->set(compact('filename', 'columns', 'results', 'sexLabels'))  ;
         $this->viewBuilder()->setLayout('ajax');
         $this->render('download');
     }
+//  public function csv(array $results = null, string $filename = null)
+// {
+//     // If no filename provided, create one
+//     $filename = $filename ?? '顧客情報_' . date('Y-m-d_H-i-s') . '.csv';
+
+//     // Disable CakePHP view/layout
+//     $this->autoRender = false;
+
+//     // Set CSV headers for download
+//     header('Content-Type: text/csv; charset=UTF-8');
+//     header('Content-Disposition: attachment; filename="' . $filename . '"');
+//     header('Cache-Control: max-age=0');
+
+//     // Open output stream
+//     $output = fopen('php://output', 'w');
+
+//     // Add UTF-8 BOM for Excel (important for Japanese)
+//     fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+//     // Output header row if results exist
+//     if (!empty($results)) {
+//         fputcsv($output, array_keys($results[0]));
+//     }
+
+//     // Output data rows
+//     foreach ($results as $row) {
+//         fputcsv($output, $row);
+//     }
+
+//     // Close stream and stop execution
+//     fclose($output);
+//     exit;
+// }
+
 
     /**
      * Jump method - search by phone number
@@ -532,13 +594,14 @@ public function edit(?string $id = null)
     protected function customerSearchDefaults(): array
     {
         return [
-            'name' => '',
-            'phone' => '',
-            'email' => '',
-            'disp_no' => '',
-            'created_from' => '',
-            'created_to' => '',
-            'client_cd' => '',
+          'client_cd' => '',
+        'company_name' => '',
+        'name'      => '',
+        'type_of_number' => '',
+        'tel'       => '',
+        'email'     => '',
+        'fax'       => '',
+        'created'   => '',
         ];
     }
 
@@ -546,28 +609,14 @@ public function edit(?string $id = null)
     
     {
         return [
-            'id' => '顧客ID',
             'client_cd' => '得意先CD',
-            'disp_no' => '表示No',
-            'name' => '氏名',
-            'name_kj' => '氏名(漢字)',
-            'name_kn' => '氏名(カナ)',
-            'phone' => '電話番号',
-            'tel' => '携帯番号',
-            'email' => 'メール',
-            'fax' => 'FAX',
-            'zip_cd' => '郵便番号',
-            'addr1' => '住所1',
-            'addr2' => '住所2',
-            'addr3' => '住所3',
-            'sex' => '性別',
-            'birth' => '生年月日',
-            'remark' => '備考',
-            'ex1' => '拡張1',
-            'ex2' => '拡張2',
-            'ex3' => '拡張3',
-            'created' => '登録日',
-            'updated' => '更新日',
+        'company_name' => '会社・支店名',
+        'name'      => '氏名',
+        'type_of_number' => '番号種別',
+        'tel'       => '携帯番号',
+        'email'     => 'メール',
+        'fax'       => 'FAX',
+        'created'   => '登録日',
         ];
     }
 
