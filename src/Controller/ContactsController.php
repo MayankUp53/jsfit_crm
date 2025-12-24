@@ -285,7 +285,7 @@ public function view(?string $id = null)
             'Contacts.customer_id' => $contact->customer_id,
             'Contacts.deleted IS' => null
         ])
-        ->order(['Contacts.updated' => 'DESC'])
+        ->orderBy(['Contacts.updated' => 'DESC'])
         ->contain(['Customers']) // optional, for customer info in list
         ->all();
 
@@ -356,7 +356,7 @@ public function add(?string $customer_id = null)
             'Contacts.deleted IS' => null
         ])
         ->contain(['Customers'])
-        ->order(['Contacts.created' => 'DESC'])
+        ->orderBy(['Contacts.created' => 'DESC'])
         ->all();
 
     // SAME logic as index(): updated_user_id → user_name
