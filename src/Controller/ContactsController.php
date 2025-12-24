@@ -169,8 +169,7 @@ class ContactsController extends AppController
     /* =========================
      * Order
      * ========================= */
-    $query->order(['Contacts.created' => 'DESC']);
-
+    $query->orderBy(['Contacts.created' => 'DESC']);
     /* =========================
      * CSV Download
      * ========================= */
