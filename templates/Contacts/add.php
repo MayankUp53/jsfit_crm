@@ -132,6 +132,22 @@ $currentUser = $this->request->getAttribute('identity');
         </div>
     </div>
     <?= $this->Form->end() ?>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector("form");
+    form.addEventListener("submit", function(e) {
+        const summary = form.querySelector("select[name='summary']").value;
+        const status = form.querySelector("select[name='status']").value;
+
+        if (summary === "" || status === "") {
+            alert("概要とステータスは必ず選択してください。");
+            e.preventDefault(); // stop form submission
+        }
+    });
+});
+</script>
+
 </div>
 
 <!-- 対応履歴一覧テーブル -->
@@ -165,7 +181,7 @@ $currentUser = $this->request->getAttribute('identity');
                         <td><?= h($row->customer->tel ?? '') ?></td>
                         <td><?= h($row->summary) ?></td>
                         <td><?= h($row->status) ?></td>
-                        <td><?= h($row->assigned_operator) ?></td>
+                        <td><?= h($row->op_incharge) ?></td>
                         <td><?= h($row->created ? $row->created->format('Y-m-d H:i') : '') ?></td>
                         <td>
                             <a href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>" class="btn btn-xs btn-primary">編集</a>

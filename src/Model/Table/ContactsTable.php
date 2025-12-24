@@ -62,6 +62,18 @@ class ContactsTable extends Table
             ->requirePresence('customer_id', 'create')
             ->notEmptyString('customer_id');
 
+             $validator
+        ->requirePresence('summary', 'create')
+        ->notEmptyString('summary', '概要を選択してください。');
+
+    $validator
+        ->requirePresence('status', 'create')
+        ->notEmptyString('status', 'ステータスを選択してください。');
+
+
+    $validator
+        ->allowEmptyString('remark');
+
         return $validator;
     }
 
