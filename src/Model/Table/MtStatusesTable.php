@@ -21,20 +21,20 @@ class MtStatusesTable extends Table
         $this->setPrimaryKey('id');
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator
-            ->scalar('item_name')
-            ->maxLength('item_name', 200)
-            ->requirePresence('item_name', 'create')
-            ->notEmptyString('item_name', '名称は必須です。入力してください。');
+ public function validationDefault(Validator $validator): Validator
+{
+    $validator
+        ->scalar('item_name')
+        ->maxLength('item_name', 200)
+        ->requirePresence('item_name', 'create')
+        ->notEmptyString('item_name', 'Name is required');
 
-        $validator
-            ->integer('active_flg')
-            ->requirePresence('active_flg', 'create')
-            ->notEmptyString('active_flg', '有効無効は必須です。選択してください。');
+    $validator
+        ->integer('disp_cd')
+        ->allowEmptyString('disp_cd'); // optional if you allow blank
 
-        return $validator;
-    }
+    return $validator;
+}
+
 }
 

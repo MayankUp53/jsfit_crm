@@ -61,32 +61,37 @@ function formSubmit() {
             <h3 class="panel-title">設定項目一覧</h3>
         </div>
         <table class="table table-hover">
-            <tbody>
-                <tr>
-                    <th style="vertical-align:middle">&nbsp;ステータスリスト</th>
-                    <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-statuses') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
-                </tr>
-                <tr>
-                    <th style="vertical-align:middle">&nbsp;店舗への連絡</th>
-                    <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-queues') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
-                </tr>
-                <tr>
-                    <th style="vertical-align:middle">&nbsp;商品案内</th>
-                    <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-products') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
-                </tr>
-                <tr>
-                    <th style="vertical-align:middle">&nbsp;電話帳＆店舗リスト</th>
-                    <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-phonelists') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
-                </tr>
-                <tr>
-                    <th style="vertical-align:middle">&nbsp;発信者番号リスト</th>
-                    <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-cids') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
-                </tr>
-                <tr>
-                    <th style="vertical-align:middle">&nbsp;高度な設定</th>
-                    <td width="50%"><button onclick="location.href='<?= $this->Url->build('/core-settings') ?>';" class="btn-danger btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
-                </tr>
-            </tbody>
+          <tbody>
+    <tr>
+        <th style="vertical-align:middle">&nbsp;ステータスリスト</th>
+        <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-statuses') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
+    </tr>
+    <tr>
+        <th style="vertical-align:middle">&nbsp;店舗への連絡</th>
+        <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-queues') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
+    </tr>
+    <tr>
+        <th style="vertical-align:middle">&nbsp;商品案内</th>
+        <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-products') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
+    </tr>
+    <tr>
+        <th style="vertical-align:middle">&nbsp;電話帳＆店舗リスト</th>
+        <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-phonelists') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
+    </tr>
+    <tr>
+        <th style="vertical-align:middle">&nbsp;発信者番号リスト</th>
+        <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-cids') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
+    </tr>
+    <tr>
+        <th style="vertical-align:middle">&nbsp;概要リスト</th>
+        <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-overview') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
+    </tr>
+    <tr>
+        <th style="vertical-align:middle">&nbsp;高度な設定</th>
+        <td width="50%"><button onclick="location.href='<?= $this->Url->build('/core-settings') ?>';" class="btn-danger btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
+    </tr>
+</tbody>
+
         </table>
     </div>
 </div>

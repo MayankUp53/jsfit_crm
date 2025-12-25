@@ -79,7 +79,7 @@ $users_active = ($controller == 'Users') ? 'active' : null;
                                                     <a href="<?= $this->Url->build('/settings') ?>">設定</a>
                                                 </li>
                                             <?php endif; ?>
-                                            <?php if ($currentUser && $currentUser->auth == 99): ?>
+                                            <?php if ($currentUser): ?>
                                                 <li class="<?= $users_active ?>">
                                                     <a href="<?= $this->Url->build('/users') ?>">ユーザ管理</a>
                                                 </li>

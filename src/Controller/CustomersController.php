@@ -552,35 +552,60 @@ public function edit(?string $id = null)
      *
      * @return void
      */
+    // protected function setListValue(): void
+    // {
+    //     $warning = $this->CallbackNotification->getNumOfWarning();
+
+    //     // Active/Inactive options
+    //     $activeOpt = ['0' => '無効', '1' => '有効'];
+
+    //     // Gender options
+    //     $sexOpt = $this->sexOptions();
+
+    //     // Operators (users)
+    //     $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
+    //         ->where(['Users.deleted IS' => null])
+    //         ->orderBy(['Users.disp_cd' => 'ASC'])
+    //         ->toArray();
+
+    //     // All users (including deleted)
+    //     $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
+    //         ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
+    //         ->toArray();
+
+    //     // Status options
+    //     $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
+    //         ->where(['MtStatuses.active_flg' => 1])
+    //         ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
+    //         ->toArray();
+
+    //     $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt'));
+    // }
     protected function setListValue(): void
-    {
-        $warning = $this->CallbackNotification->getNumOfWarning();
+{
+    $warning = $this->CallbackNotification->getNumOfWarning();
+    $activeOpt = ['0' => '無効', '1' => '有効'];
+    $sexOpt = $this->sexOptions();
 
-        // Active/Inactive options
-        $activeOpt = ['0' => '無効', '1' => '有効'];
+    // Operators (users)
+    $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
+        ->where(['Users.deleted IS' => null])
+        ->orderBy(['Users.disp_cd' => 'ASC'])
+        ->toArray();
 
-        // Gender options
-        $sexOpt = $this->sexOptions();
+    // All users (including deleted)
+    $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
+        ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
+        ->toArray();
 
-        // Operators (users)
-        $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
-            ->where(['Users.deleted IS' => null])
-            ->orderBy(['Users.disp_cd' => 'ASC'])
-            ->toArray();
+    // Status options (removed active_flg filter)
+    $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
+        ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
+        ->toArray();
 
-        // All users (including deleted)
-        $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
-            ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
-            ->toArray();
+    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt'));
+}
 
-        // Status options
-        $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
-            ->where(['MtStatuses.active_flg' => 1])
-            ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
-            ->toArray();
-
-        $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt'));
-    }
 
     protected function customerSearchDefaults(): array
     {

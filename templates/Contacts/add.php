@@ -76,14 +76,7 @@ $currentUser = $this->request->getAttribute('identity');
             <?= $this->Form->control('summary', [
                 'label' => false,
                 'type' => 'select',
-                'options' => [
-                    '架電' => '架電',
-                    '社内' => '社内',
-                    '依頼' => '依頼',
-                    '問い合わせ' => '問い合わせ',
-                    'クレーム' => 'クレーム',
-                    'その他' => 'その他'
-                ],
+                'options' =>$overviewOpt ?? [],
                 'empty' => '-----',
                 'class' => 'form-control'
             ]) ?>
@@ -95,10 +88,7 @@ $currentUser = $this->request->getAttribute('identity');
             <?= $this->Form->control('status', [
                 'label' => false,
                 'type' => 'select',
-                'options' => [
-                    '未対応' => '未対応',
-                    '対応済' => '対応済'
-                ],
+               'options' => $statusOpt ??[],
                 'empty' => '-----',
                 'class' => 'form-control'
             ]) ?>

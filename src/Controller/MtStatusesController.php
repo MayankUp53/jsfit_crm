@@ -20,63 +20,109 @@ class MtStatusesController extends AppController
         $this->Users = $this->fetchTable('Users');
     }
 
-    public function index()
-    {
-        $mtStatuses = $this->MtStatuses->find()
-            ->where(['deleted IS' => null])
-            ->orderBy(['disp_cd' => 'ASC'])
-            ->all();
+public function index()
+{
+    // Fetch statuses
+    $mtStatuses = $this->MtStatuses->find()
+        ->where(['deleted IS' => null])
+        ->orderBy(['disp_cd' => 'ASC'])
+        ->all()
+        ->toArray(); // convert entities to array
 
-        $this->set(compact('mtStatuses'));
-        $this->setListValue();
+    // Fetch users once (id => user_name)
+    $users = $this->Users->find('list', [
+        'keyField' => 'id',
+        'valueField' => 'user_name'
+    ])
+    ->where(['deleted IS' => null])
+    ->toArray();
+
+    // Add created/updated user names to each status
+    foreach ($mtStatuses as $key => $row) {
+        $mtStatuses[$key]['created_user_name'] = $users[$row['created_user_id']] ?? '-';
+        $mtStatuses[$key]['updated_user_name'] = $users[$row['updated_user_id']] ?? '-';
     }
 
-    public function add()
-    {
-        $entry = $this->MtStatuses->newEmptyEntity();
-        if ($this->request->is('post')) {
-            $data = $this->request->getData();
-            $now = date('Y-m-d H:i:s');
-            $userId = $this->getCurrentUser()?->id ?? 0;
+    $this->set(compact('mtStatuses'));
+}
 
-            $data['created'] = $now;
-            $data['created_user_id'] = $userId;
-            $data['updated'] = $now;
-            $data['updated_user_id'] = $userId;
 
-            $entry = $this->MtStatuses->patchEntity($entry, $data);
-            if ($this->MtStatuses->save($entry)) {
-                $this->Flash->success(__('ステータスの登録が完了しました。'));
-                return $this->redirect(['action' => 'index']);
-            }
-            $this->Flash->error(__('ステータスの登録に失敗しました。もう一度操作してください。'));
+
+
+public function add()
+{
+    $entry = $this->MtStatuses->newEmptyEntity();
+
+    if ($this->request->is('post')) {
+        $data = $this->request->getData();
+
+        // Automatically set display order if not provided
+        if (empty($data['disp_cd'])) {
+            $maxDisp = $this->MtStatuses->find()
+                ->select(['max_disp' => 'MAX(disp_cd)'])
+                ->first()
+                ->max_disp ?? 0;
+            $data['disp_cd'] = $maxDisp + 1;
         }
 
-        $this->set(compact('entry'));
-        $this->setListValue();
-    }
+        $now = date('Y-m-d H:i:s');
+        $userId = $this->getCurrentUser()?->id ?? 0;
 
-    public function edit(?string $id = null)
-    {
-        $entry = $this->MtStatuses->find()
-            ->where(['MtStatuses.id' => $id, 'deleted IS' => null])
-            ->firstOrFail();
-        if ($this->request->is(['patch', 'post', 'put'])) {
-            $data = $this->request->getData();
-            $data['updated'] = date('Y-m-d H:i:s');
-            $data['updated_user_id'] = $this->getCurrentUser()?->id ?? 0;
+        $data['created'] = $now;
+        $data['created_user_id'] = $userId;
+        $data['updated'] = $now;
+        $data['updated_user_id'] = $userId;
 
-            $entry = $this->MtStatuses->patchEntity($entry, $data);
-            if ($this->MtStatuses->save($entry)) {
-                $this->Flash->success(__('ステータスの更新が完了しました。'));
-                return $this->redirect(['action' => 'index']);
-            }
-            $this->Flash->error(__('ステータスの更新に失敗しました。もう一度操作してください。'));
+        $entry = $this->MtStatuses->patchEntity($entry, $data);
+
+        if ($this->MtStatuses->save($entry)) {
+            $this->Flash->success(__('ステータスの登録が完了しました。'));
+            return $this->redirect(['action' => 'index']);
         }
 
-        $this->set(compact('entry'));
-        $this->setListValue();
+        $errorMsg = $this->formatEntityErrors($entry);
+        $this->Flash->error(__('ステータスの登録に失敗しました。入力内容を確認してください。 {0}', $errorMsg));
     }
+
+    $this->set(compact('entry'));
+    $this->setListValue();
+}
+
+
+
+public function edit(?string $id = null)
+{
+    // Fetch the entry
+    $entry = $this->MtOverview->find()
+        ->where(['MtOverview.id' => $id, 'deleted IS' => null])
+        ->firstOrFail();
+
+    if ($this->request->is(['patch', 'post', 'put'])) {
+        $data = $this->request->getData();
+
+        // Only patch relevant fields
+        $data = [
+            'item_name' => $data['item_name'] ?? $entry->item_name,
+            'disp_cd'   => $data['disp_cd'] ?? $entry->disp_cd,
+            'updated'   => date('Y-m-d H:i:s'),
+            'updated_user_id' => $this->getCurrentUser()?->id ?? 0
+        ];
+
+        $entry = $this->MtOverview->patchEntity($entry, $data);
+
+        if ($this->MtOverview->save($entry)) {
+            $this->Flash->success(__('概要の更新が完了しました。'));
+            return $this->redirect(['action' => 'index']);
+        }
+
+        $this->Flash->error(__('概要の更新に失敗しました。もう一度操作してください。'));
+    }
+
+    $this->set(compact('entry'));
+    $this->setListValue();
+}
+
+
 
     public function delete(?string $id = null)
     {

@@ -14,6 +14,7 @@ class ContactsController extends AppController
     protected $Callbacks;
     protected $CoreSettings;
     protected $MtQueues;
+    protected $MtOverview;
 
     public function initialize(): void
     {
@@ -23,6 +24,7 @@ class ContactsController extends AppController
         $this->Customers = $this->fetchTable('Customers');
         $this->Users = $this->fetchTable('Users');
         $this->MtStatuses = $this->fetchTable('MtStatuses');
+        $this->MtOverview = $this->fetchTable('MtOverview');
         $this->Callbacks = $this->fetchTable('Callbacks');
         $this->CoreSettings = $this->fetchTable('CoreSettings');
         $this->MtQueues = $this->fetchTable('MtQueues');
@@ -328,6 +330,23 @@ public function add(?string $customer_id = null)
     $customer = $this->Customers->get($customer_id);
     $currentUser = $this->getCurrentUser();
 
+    // Fetch active statuses for dropdown
+    $statusOpt = $this->MtStatuses->find('list', [
+        'keyField' => 'id',
+        'valueField' => 'item_name'
+    ])
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
+
+  $overviewOpt = $this->MtOverview->find('list', [
+    'keyField' => 'id',
+    'valueField' => 'item_name'
+])
+->orderBy(['disp_cd' => 'ASC'])
+->toArray();
+
+
+
     if ($this->request->is('post')) {
         $data = $this->request->getData('Contact') ?: $this->request->getData();
 
@@ -359,7 +378,7 @@ public function add(?string $customer_id = null)
         ->orderBy(['Contacts.created' => 'DESC'])
         ->all();
 
-    // SAME logic as index(): updated_user_id → user_name
+    // Convert updated_user_id to user_name
     foreach ($contacts as $contactItem) {
         $user = $this->Users->find()
             ->select(['user_name'])
@@ -369,8 +388,9 @@ public function add(?string $customer_id = null)
         $contactItem->op_incharge = $user ? $user->user_name : '-';
     }
 
-    $this->set(compact('contact', 'contacts', 'customer'));
+    $this->set(compact('contact', 'contacts', 'customer', 'statusOpt','overviewOpt'));
 }
+
 
 
  
@@ -454,35 +474,35 @@ public function edit(?string $id = null)
         return $this->redirect(['action' => 'add', $customerId]);
     }
 
-    protected function setListValue(): void
-    {
-        $warning = $this->CallbackNotification->getNumOfWarning();
-        $activeOpt = ['0' => '無効', '1' => '有効'];
-        $sexOpt = ['1' => '男性', '2' => '女性'];
+  protected function setListValue(): void
+{
+    $warning = $this->CallbackNotification->getNumOfWarning();
+    $activeOpt = ['0' => '無効', '1' => '有効'];
+    $sexOpt = ['1' => '男性', '2' => '女性'];
 
-        $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
-            ->where(['Users.auth' => '9'])
-            ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
-            ->toArray();
+    $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
+        ->where(['Users.auth' => '9'])
+        ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
+        ->toArray();
 
-        $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
-            ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
-            ->toArray();
+    $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
+        ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
+        ->toArray();
 
-        $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
-            ->where(['MtStatuses.active_flg' => 1])
-            ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
-            ->toArray();
+    // mt_statuses no longer has active_flg, so removed the where condition
+    $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
+        ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
+        ->toArray();
 
-        $callbackStatusOpt = ['0' => '未', '1' => '完了', '2' => '中止', '3' => '破棄', '4' => '登録誤り', '99' => 'その他'];
+    $callbackStatusOpt = ['0' => '未', '1' => '完了', '2' => '中止', '3' => '破棄', '4' => '登録誤り', '99' => 'その他'];
 
-        $queueOpt = $this->MtQueues->find('list', keyField: 'id', valueField: 'item_name')
-            ->where(['MtQueues.active_flg' => 1])
-            ->orderBy(['MtQueues.disp_cd' => 'ASC'])
-            ->toArray();
+    $queueOpt = $this->MtQueues->find('list', keyField: 'id', valueField: 'item_name')
+        ->where(['MtQueues.active_flg' => 1]) // keep this if active_flg still exists in MtQueues
+        ->orderBy(['MtQueues.disp_cd' => 'ASC'])
+        ->toArray();
 
-        $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt', 'callbackStatusOpt', 'queueOpt'));
-    }
+    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt', 'callbackStatusOpt', 'queueOpt'));
+}
 
     protected function contactSearchDefaults(): array
     {
