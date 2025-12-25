@@ -131,6 +131,7 @@ class HomesController extends AppController
 
         $this->set(compact('mtPhonelists'));
         $this->viewBuilder()->disableAutoLayout();
+        
         $this->setListValue();
     }
 
@@ -142,6 +143,7 @@ class HomesController extends AppController
             ->where(['deleted IS' => null])
             ->orderBy(['disp_cd' => 'ASC'])
             ->all();
+
 
         $this->set(compact('mtPhonelists'));
         $this->viewBuilder()->disableAutoLayout();

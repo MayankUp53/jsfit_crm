@@ -20,7 +20,7 @@
             <table class="table">
                 <tr>
                     <td width="20%">
-                        <?= $this->Form->control('cid', [
+                        <?= $this->Form->control('cid', [ 
                             'label' => false,
                             'type' => 'select',
                             'options' => $cidOpt,

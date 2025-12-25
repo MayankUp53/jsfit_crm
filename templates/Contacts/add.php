@@ -60,14 +60,13 @@ $currentUser = $this->request->getAttribute('identity');
     </div>
 </div>
 
-
 <!-- 対応履歴登録フォーム -->
 <div class="panel panel-default">
     <div class="panel-heading">
         <h3 class="panel-title">対応履歴登録</h3>
     </div>
 
-    <?= $this->Form->create($contact, ['url' => ['action' => 'add', $customer->id]]) ?>
+    <?= $this->Form->create($contact, ['url' => ['action' => 'add', $customer->id], 'id' => 'contactForm']) ?>
     <?= $this->Form->control('customer_id', ['type' => 'hidden', 'value' => $customer->id]) ?>
 
     <div class="panel-body">
@@ -117,12 +116,15 @@ $currentUser = $this->request->getAttribute('identity');
         </div>
 
         <div style="text-align:center; margin:15px 0;">
+            <!-- Cancel button -->
             <?= $this->Form->button('キャンセル', [
-                'name' => 'back',
-                'value' => '1',
+                'type' => 'button',        // prevent default submit / validation
+                'id' => 'cancelBtn',
                 'class' => 'btn-default btn-xs',
                 'style' => 'width:150px;height:30px;cursor:pointer; margin-right:10px;'
             ]) ?>
+
+            <!-- Submit button -->
             <?= $this->Form->button('登　録', [
                 'type' => 'submit',
                 'name' => 'add',
@@ -132,13 +134,25 @@ $currentUser = $this->request->getAttribute('identity');
         </div>
     </div>
     <?= $this->Form->end() ?>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const form = document.querySelector("form");
+    const form = document.getElementById("contactForm");
+    const cancelBtn = document.getElementById("cancelBtn");
+
+    // Cancel button bypasses validation
+    cancelBtn.addEventListener("click", function() {
+        window.location.href = '<?= $this->Url->build(["controller" => "Contacts", "action" => "index"]) ?>';
+    });
+
+    // Form submit validation
     form.addEventListener("submit", function(e) {
-        const summary = form.querySelector("select[name='summary']").value;
-        const status = form.querySelector("select[name='status']").value;
+        // Skip validation if Cancel button triggered submit (just in case)
+        if (document.activeElement === cancelBtn) return;
+
+        const summary = form.querySelector("select[name='summary']")?.value || "";
+        const status = form.querySelector("select[name='status']")?.value || "";
 
         if (summary === "" || status === "") {
             alert("概要とステータスは必ず選択してください。");
@@ -147,8 +161,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
-
-</div>
 
 <!-- 対応履歴一覧テーブル -->
 <div class="panel panel-default">
