@@ -331,17 +331,11 @@ public function add(?string $customer_id = null)
     $currentUser = $this->getCurrentUser();
 
     // Fetch active statuses for dropdown
-    $statusOpt = $this->MtStatuses->find('list', [
-        'keyField' => 'id',
-        'valueField' => 'item_name'
-    ])
+    $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
 
-  $overviewOpt = $this->MtOverview->find('list', [
-    'keyField' => 'id',
-    'valueField' => 'item_name'
-])
+  $overviewOpt = $this->MtOverview->find('list', keyField: 'id', valueField: 'item_name')
 ->orderBy(['disp_cd' => 'ASC'])
 ->toArray();
 

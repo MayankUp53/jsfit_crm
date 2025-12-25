@@ -24,7 +24,7 @@ class MtOverviewController extends AppController{
             ->all();
 
         // Load user names for created/updated
-        $users = $this->Users->find('list', ['keyField' => 'id', 'valueField' => 'user_name'])
+        $users = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
             ->where(['deleted IS' => null])
             ->toArray();
 

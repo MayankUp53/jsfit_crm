@@ -30,10 +30,7 @@ public function index()
         ->toArray(); // convert entities to array
 
     // Fetch users once (id => user_name)
-    $users = $this->Users->find('list', [
-        'keyField' => 'id',
-        'valueField' => 'user_name'
-    ])
+    $users = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
     ->where(['deleted IS' => null])
     ->toArray();
 
