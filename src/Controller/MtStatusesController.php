@@ -91,7 +91,7 @@ public function edit(?string $id = null)
 {
     // Fetch the entry
     $entry = $this->MtStatuses->find()
-        ->where(['MtOverview.id' => $id, 'deleted IS' => null])
+        ->where(['MtStatuses.id' => $id, 'deleted IS' => null])
         ->firstOrFail();
 
     if ($this->request->is(['patch', 'post', 'put'])) {
