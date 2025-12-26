@@ -107,6 +107,8 @@ public function import()
             'updated_user_id' => $userId,
             'zip_cd' => '',
             'addr1' => '',
+            'disp_no' => date('ymdHis') . substr((string)microtime(true), -3),
+
         ];
 
         $entity = $this->Customers->patchEntity($entity, $data);
