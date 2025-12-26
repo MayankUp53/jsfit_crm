@@ -38,7 +38,7 @@ class ImportsController extends AppController
             'tel',
             'fax',
             'email',
-            'remark',
+            'remarks'
         ];
 
         $filename = 'import_template_customers.csv';
@@ -56,77 +56,79 @@ class ImportsController extends AppController
     /**
      * Basic CSV import for customers.
      */
-    public function import()
-    {
-        if (!$this->request->is('post')) {
-            return $this->redirect(['action' => 'index']);
-        }
-
-        $file = $this->request->getData('result');
-        if (empty($file) || $file->getError() !== UPLOAD_ERR_OK) {
-            $this->Flash->error(__('ファイルのアップロードに失敗しました。'));
-            return $this->redirect(['action' => 'index']);
-        }
-
-        $handle = fopen($file->getStream()->getMetadata('uri'), 'r');
-        if ($handle === false) {
-            $this->Flash->error(__('ファイルを読み込めませんでした。'));
-            return $this->redirect(['action' => 'index']);
-        }
-
-        // Skip header
-        fgetcsv($handle);
-
-        $imported = 0;
-        $failed = 0;
-        $now = date('Y-m-d H:i:s');
-        $currentUser = $this->getCurrentUser();
-        $userId = $currentUser?->id ?? 0;
-
-        while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) < 8) {
-                $failed++;
-                continue;
-            }
-
-            [$clientCd, $companyName, $nameKj, $typeOfNumber, $tel, $fax, $email, $remark] = $row;
-
-            $entity = $this->Customers->newEmptyEntity();
-            $data = [
-                'client_cd' => $clientCd,
-                'company_branch_name' => $companyName,
-                'name_kj' => $nameKj,
-                'type_of_number' => $typeOfNumber,
-                'tel' => $tel,
-                'tel_only' => $this->cleanPhone($tel),
-                'fax' => $fax,
-                'email' => $email,
-                'remark' => $remark,
-                'created' => $now,
-                'created_user_id' => $userId,
-                'updated' => $now,
-                'updated_user_id' => $userId,
-                // Generate disp_no if absent
-                'disp_no' => date('ymdHis') . substr((string)microtime(true), -3),
-                // Required legacy fields
-                'zip_cd' => '',
-                'addr1' => '',
-            ];
-
-            $entity = $this->Customers->patchEntity($entity, $data);
-            if ($this->Customers->save($entity)) {
-                $imported++;
-            } else {
-                $failed++;
-            }
-        }
-
-        fclose($handle);
-
-        $msg = sprintf('取込完了: %d件 (失敗: %d件)', $imported, $failed);
-        $this->Flash->success(__($msg));
+public function import()
+{
+    if (!$this->request->is('post')) {
         return $this->redirect(['action' => 'index']);
     }
+
+    $file = $this->request->getData('result');
+    if (empty($file) || $file->getError() !== UPLOAD_ERR_OK) {
+        $this->Flash->error(__('ファイルのアップロードに失敗しました。'));
+        return $this->redirect(['action' => 'index']);
+    }
+
+    $handle = fopen($file->getStream()->getMetadata('uri'), 'r');
+    if ($handle === false) {
+        $this->Flash->error(__('ファイルを読み込めませんでした。'));
+        return $this->redirect(['action' => 'index']);
+    }
+
+    // Skip header
+    fgetcsv($handle);
+
+    $imported = 0;
+    $failed = 0;
+    $now = date('Y-m-d H:i:s');
+    $currentUser = $this->getCurrentUser();
+    $userId = $currentUser?->id ?? 0;
+
+    while (($row = fgetcsv($handle)) !== false) {
+        if (count($row) < 8) {
+            $failed++;
+            continue;
+        }
+
+        [$clientCd, $companyName, $nameKj, $typeOfNumber, $tel, $fax, $email, $remark] = $row;
+
+        $entity = $this->Customers->newEmptyEntity();
+        $data = [
+            'client_cd' => $clientCd,
+            'company_name' => $companyName,
+            'name' => $nameKj,
+            'type_of_number' => $typeOfNumber,
+            'tel' => $tel,
+            'fax' => $fax,
+            'email' => $email,
+            'remark' => $remark,
+            'created' => $now,
+            'created_user_id' => $userId,
+            'updated' => $now,
+            'updated_user_id' => $userId,
+            'zip_cd' => '',
+            'addr1' => '',
+        ];
+
+        $entity = $this->Customers->patchEntity($entity, $data);
+        if ($this->Customers->save($entity)) {
+            $imported++;
+        } else {
+            $failed++;
+        }
+    }
+
+    fclose($handle);
+
+    $msg = sprintf('取込完了: %d件 (失敗: %d件)', $imported, $failed);
+    
+    if ($imported > 0) {
+        $this->Flash->success(__($msg));
+        return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
+    } else {
+        $this->Flash->error(__('全件の取込に失敗しました。') . ' ' . $msg);
+        return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+    }
+}
 
     /**
      * Remove hyphens/spaces from phone string.
