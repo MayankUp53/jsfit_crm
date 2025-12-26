@@ -90,7 +90,7 @@ public function add()
 public function edit(?string $id = null)
 {
     // Fetch the entry
-    $entry = $this->MtOverview->find()
+    $entry = $this->MtStatuses->find()
         ->where(['MtOverview.id' => $id, 'deleted IS' => null])
         ->firstOrFail();
 
@@ -105,9 +105,9 @@ public function edit(?string $id = null)
             'updated_user_id' => $this->getCurrentUser()?->id ?? 0
         ];
 
-        $entry = $this->MtOverview->patchEntity($entry, $data);
+        $entry = $this->MtStatuses->patchEntity($entry, $data);
 
-        if ($this->MtOverview->save($entry)) {
+        if ($this->MtStatuses->save($entry)) {
             $this->Flash->success(__('概要の更新が完了しました。'));
             return $this->redirect(['action' => 'index']);
         }
