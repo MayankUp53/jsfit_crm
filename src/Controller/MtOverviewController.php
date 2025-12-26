@@ -20,7 +20,7 @@ class MtOverviewController extends AppController{
     {
         $mtOverview = $this->MtOverview->find()
             ->where(['deleted IS' => null])
-            ->order(['disp_cd' => 'ASC'])
+            ->orderBy(['disp_cd' => 'ASC'])
             ->all();
 
         // Load user names for created/updated
@@ -43,7 +43,7 @@ class MtOverviewController extends AppController{
     if ($this->request->is('post')) {
         $data = $this->request->getData();
 
-        // Automatically set display order if not provided
+
         if (empty($data['disp_cd'])) {
             $maxDisp = $this->MtOverview->find()
                 ->select(['max_disp' => 'MAX(disp_cd)'])
