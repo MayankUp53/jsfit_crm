@@ -328,14 +328,15 @@ public function view(?string $id = null)
     $currentUser = $this->getCurrentUser();
 
          $statusOpt = $this->MtStatuses
-    ->find('list', keyField: 'item_name', valueField: 'item_name')
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
 
      $overviewOpt = $this->MtOverview
-    ->find('list', keyField: 'item_name', valueField: 'item_name')
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
+
 
     // Handle form submission
     if ($this->request->is('post')) {
@@ -399,12 +400,12 @@ public function edit(?string $id = null)
 
 
       $statusOpt = $this->MtStatuses
-    ->find('list', keyField: 'item_name', valueField: 'item_name')
+    ->find('list', keyField: 'item_name', valueField: 'item_name') ->where(['deleted IS' => null])  
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
 
      $overviewOpt = $this->MtOverview
-    ->find('list', keyField: 'item_name', valueField: 'item_name')
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
     // Fetch contact and related customer
