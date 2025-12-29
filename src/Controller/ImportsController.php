@@ -84,6 +84,17 @@ public function import()
     $userId = $currentUser?->id ?? 0;
 
     while (($row = fgetcsv($handle)) !== false) {
+        $row = array_map(function ($v) {
+            if ($v === null) return null;
+            $v = (string)$v;
+    
+            // remove UTF-8 BOM if present
+            $v = preg_replace('/^\xEF\xBB\xBF/', '', $v);
+    
+            // convert common Japanese CSV encodings to UTF-8
+            return mb_convert_encoding($v, 'UTF-8', 'UTF-8, SJIS-win, CP932, SJIS, EUC-JP');
+        }, $row);    
+
         if (count($row) < 8) {
             $failed++;
             continue;
