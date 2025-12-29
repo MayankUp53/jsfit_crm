@@ -331,18 +331,16 @@ public function view(?string $id = null)
     $currentUser = $this->getCurrentUser();
 
     // Fetch active statuses for dropdown
-    $statusOpt = $this->MtStatuses->find('list', [
-            'keyField' => 'item_name',
-            'valueField' => 'item_name'
-        ])
-        ->orderBy(['disp_cd' => 'ASC'])
-        ->toArray();
+$statusOpt = $this->MtStatuses
+    ->find('list', keyField: 'item_name', valueField: 'item_name')
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
 
-        $overviewOpt = $this->MtOverview->find('list', [
-            'keyField' =>'item_name',
-            'valueField' => 'item_name'
-        ]) ->orderBy(['disp_cd' => 'ASC'])
-        ->toArray();
+$overviewOpt = $this->MtOverview
+    ->find('list', keyField: 'item_name', valueField: 'item_name')
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
+
     // Handle form submission
  if ($this->request->is('post')) {
     $data = $this->request->getData('Contact') ?: $this->request->getData();
@@ -401,16 +399,15 @@ public function edit(?string $id = null)
         return $this->redirect(['action' => 'add', $customerId]);
     }
 
+$statusOpt = $this->MtStatuses
+    ->find('list', keyField: 'item_name', valueField: 'item_name')
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
 
-    $statusOpt = $this->MtStatuses->find('list', [
-        'keyField' => 'item_name',   
-        'valueField' => 'item_name'
-    ])->orderBy(['disp_cd' => 'ASC'])->toArray();
-
-    $overviewOpt = $this->MtOverview->find('list', [
-        'keyField' => 'item_name',  
-        'valueField' => 'item_name'  
-    ])->orderBy(['disp_cd' => 'ASC'])->toArray();
+$overviewOpt = $this->MtOverview
+    ->find('list', keyField: 'item_name', valueField: 'item_name')
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
 
     // Fetch contact and related customer
     $contact = $this->Contacts->find()
