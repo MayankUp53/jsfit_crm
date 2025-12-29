@@ -212,9 +212,6 @@ if ($this->request->is('post') && $this->request->getData('download')) {
 
 
 
-    /* =========================
-     * Pagination
-     * ========================= */
     $this->paginate = ['limit' => 50];
     $contacts = $this->paginate($query);
 
@@ -330,38 +327,38 @@ public function view(?string $id = null)
     $customer = $this->Customers->get($customer_id);
     $currentUser = $this->getCurrentUser();
 
-    // Fetch active statuses for dropdown
-$statusOpt = $this->MtStatuses
+         $statusOpt = $this->MtStatuses
     ->find('list', keyField: 'item_name', valueField: 'item_name')
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
 
-$overviewOpt = $this->MtOverview
+     $overviewOpt = $this->MtOverview
     ->find('list', keyField: 'item_name', valueField: 'item_name')
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
 
     // Handle form submission
- if ($this->request->is('post')) {
-    $data = $this->request->getData('Contact') ?: $this->request->getData();
-    $now = date('Y-m-d H:i:s');
+    if ($this->request->is('post')) {
+        $data = $this->request->getData('Contact') ?: $this->request->getData();
+        $now = date('Y-m-d H:i:s');
 
-    // Set default fields
-    $data['customer_id'] = $customer_id;
-    $data['created'] = $now;
-    $data['updated'] = $now;
-    $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
-    $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
+        // Set default fields
+        $data['customer_id'] = $customer_id;
+        $data['created'] = $now;
+        $data['updated'] = $now;
+        $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
+        $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
 
-    $contact = $this->Contacts->patchEntity($contact, $data);
+        $contact = $this->Contacts->patchEntity($contact, $data);
 
-    if ($this->Contacts->save($contact)) {
-        $this->Flash->success(__('対応履歴情報の登録が完了しました。'));
-        return $this->redirect(['action' => 'view', $contact->id]);
+        if ($this->Contacts->save($contact)) {
+            
+            $this->Flash->success(__('対応履歴情報の登録が完了しました。'));
+            return $this->redirect(['action' => 'view', $contact->id]);
+        }
+
+        $this->Flash->error(__('対応履歴情報の登録に失敗しました。'));
     }
-
-    $this->Flash->error(__('対応履歴情報の登録に失敗しました。'));
-}
 
     // Fetch contacts for this customer
     $contacts = $this->Contacts->find()
@@ -385,6 +382,7 @@ $overviewOpt = $this->MtOverview
     $this->set(compact('contact', 'contacts', 'customer', 'statusOpt', 'overviewOpt'));
 }
 
+
 public function edit(?string $id = null)
 {
     // Handle delete button
@@ -399,16 +397,16 @@ public function edit(?string $id = null)
         return $this->redirect(['action' => 'add', $customerId]);
     }
 
-$statusOpt = $this->MtStatuses
+
+      $statusOpt = $this->MtStatuses
     ->find('list', keyField: 'item_name', valueField: 'item_name')
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
 
-$overviewOpt = $this->MtOverview
+     $overviewOpt = $this->MtOverview
     ->find('list', keyField: 'item_name', valueField: 'item_name')
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
-
     // Fetch contact and related customer
     $contact = $this->Contacts->find()
         ->where(['Contacts.id' => $id, 'Contacts.deleted IS' => null])
@@ -487,11 +485,8 @@ $overviewOpt = $this->MtOverview
     $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
         ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
         ->toArray();
+  
 
-    // mt_statuses no longer has active_flg, so removed the where condition
-    $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
-        ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
-        ->toArray();
 
     $callbackStatusOpt = ['0' => '未', '1' => '完了', '2' => '中止', '3' => '破棄', '4' => '登録誤り', '99' => 'その他'];
 
@@ -500,7 +495,7 @@ $overviewOpt = $this->MtOverview
         ->orderBy(['MtQueues.disp_cd' => 'ASC'])
         ->toArray();
 
-    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt', 'callbackStatusOpt', 'queueOpt'));
+    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt',));
 }
 
     protected function contactSearchDefaults(): array
