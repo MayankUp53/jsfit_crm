@@ -31,14 +31,14 @@ class ImportsController extends AppController
     public function template()
     {
         $headers = [
-            'client_cd',
-            'company_branch_name',
-            'name_kj',
-            'type_of_number',
-            'tel',
-            'fax',
-            'email',
-            'remarks'
+            '得意先CD',
+            '会社・支店名',
+            '氏名',
+            '番号種別',
+            'Tel',
+            'Fax',
+            'メールアドレス',
+            '登録日'
         ];
 
         $filename = 'import_template_customers.csv';
@@ -56,6 +56,7 @@ class ImportsController extends AppController
     /**
      * Basic CSV import for customers.
      */
+    
 public function import()
 {
     if (!$this->request->is('post')) {
@@ -79,30 +80,49 @@ public function import()
 
     $imported = 0;
     $failed = 0;
+    $errorMessages = [];
+
     $now = date('Y-m-d H:i:s');
     $currentUser = $this->getCurrentUser();
     $userId = $currentUser?->id ?? 0;
 
     while (($row = fgetcsv($handle)) !== false) {
+
         $row = array_map(function ($v) {
             if ($v === null) return null;
             $v = (string)$v;
-    
-            // remove UTF-8 BOM if present
-            $v = preg_replace('/^\xEF\xBB\xBF/', '', $v);
-    
-            // convert common Japanese CSV encodings to UTF-8
-            return mb_convert_encoding($v, 'UTF-8', 'UTF-8, SJIS-win, CP932, SJIS, EUC-JP');
-        }, $row);    
 
+            // remove UTF-8 BOM
+            $v = preg_replace('/^\xEF\xBB\xBF/', '', $v);
+
+            // convert Japanese encodings → UTF-8
+            return mb_convert_encoding($v, 'UTF-8', 'UTF-8, SJIS-win, CP932, SJIS, EUC-JP');
+        }, $row);
+
+        // Column count check
         if (count($row) < 8) {
             $failed++;
+
+            $key = 'column_count';
+            if (!isset($errorMessages[$key])) {
+                $errorMessages[$key] = 'CSVのカラム数が不足している行があります。';
+            }
             continue;
         }
 
-        [$clientCd, $companyName, $nameKj, $typeOfNumber, $tel, $fax, $email, $remark] = $row;
+        [
+            $clientCd,
+            $companyName,
+            $nameKj,
+            $typeOfNumber,
+            $tel,
+            $fax,
+            $email,
+            $remark
+        ] = $row;
 
         $entity = $this->Customers->newEmptyEntity();
+
         $data = [
             'client_cd' => $clientCd,
             'company_name' => $companyName,
@@ -112,35 +132,51 @@ public function import()
             'fax' => $fax,
             'email' => $email,
             'remark' => $remark,
+            'zip_cd' => '',
+            'addr1' => '',
+            'disp_no' => date('ymdHis') . substr((string)microtime(true), -3),
             'created' => $now,
             'created_user_id' => $userId,
             'updated' => $now,
             'updated_user_id' => $userId,
-            'zip_cd' => '',
-            'addr1' => '',
-            'disp_no' => date('ymdHis') . substr((string)microtime(true), -3),
-
         ];
 
         $entity = $this->Customers->patchEntity($entity, $data);
+
         if ($this->Customers->save($entity)) {
             $imported++;
         } else {
             $failed++;
+
+            foreach ($entity->getErrors() as $field => $messages) {
+                foreach ($messages as $message) {
+                    $key = $field . ':' . $message;
+
+                    if (!isset($errorMessages[$key])) {
+                        $errorMessages[$key] = $message;
+                    }
+                }
+            }
         }
     }
 
     fclose($handle);
 
-    $msg = sprintf('取込完了: %d件 (失敗: %d件)', $imported, $failed);
-    
-    if ($imported > 0) {
-        $this->Flash->success(__($msg));
-        return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
-    } else {
-        $this->Flash->error(__('全件の取込に失敗しました。') . ' ' . $msg);
-        return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+    if (!empty($errorMessages)) {
+        $this->Flash->error(
+            __("取込エラー:\n") . implode("\n", $errorMessages)
+        );
     }
+
+    $summary = sprintf('取込完了: %d件 / 失敗: %d件', $imported, $failed);
+
+    if ($imported > 0) {
+        $this->Flash->success(__($summary));
+        return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
+    }
+
+    $this->Flash->error(__('全件の取込に失敗しました。 ') . $summary);
+    return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
 }
 
     /**
