@@ -24,10 +24,10 @@ class ContactsController extends AppController
         $this->Customers = $this->fetchTable('Customers');
         $this->Users = $this->fetchTable('Users');
         $this->MtStatuses = $this->fetchTable('MtStatuses');
-        $this->MtOverview = $this->fetchTable('MtOverview');
         $this->Callbacks = $this->fetchTable('Callbacks');
         $this->CoreSettings = $this->fetchTable('CoreSettings');
         $this->MtQueues = $this->fetchTable('MtQueues');
+         $this->MtOverview = $this->fetchTable('MtOverview');
     }
 
     public function clearSession()
@@ -313,54 +313,57 @@ public function view(?string $id = null)
     $this->setListValue(); // keep for select options if needed in view
 }
 
-
-public function add(?string $customer_id = null)
+ public function add(?string $customer_id = null)
 {
+    // Check if customer ID is provided and exists
     if (empty($customer_id) || !$this->Customers->exists(['id' => $customer_id])) {
         $this->Flash->error(__('顧客を選択してから対応履歴を登録してください。'));
         return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
     }
 
-    // Back button
+    // Handle Back button
     if ($this->request->is('post') && $this->request->getData('back')) {
         return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
     }
 
-    $contact  = $this->Contacts->newEmptyEntity();
+    $contact = $this->Contacts->newEmptyEntity();
     $customer = $this->Customers->get($customer_id);
     $currentUser = $this->getCurrentUser();
 
     // Fetch active statuses for dropdown
-    $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
-    ->orderBy(['disp_cd' => 'ASC'])
-    ->toArray();
+    $statusOpt = $this->MtStatuses->find('list', [
+            'keyField' => 'item_name',
+            'valueField' => 'item_name'
+        ])
+        ->orderBy(['disp_cd' => 'ASC'])
+        ->toArray();
 
-  $overviewOpt = $this->MtOverview->find('list', keyField: 'id', valueField: 'item_name')
-->orderBy(['disp_cd' => 'ASC'])
-->toArray();
+        $overviewOpt = $this->MtOverview->find('list', [
+            'keyField' =>'item_name',
+            'valueField' => 'item_name'
+        ]) ->orderBy(['disp_cd' => 'ASC'])
+        ->toArray();
+    // Handle form submission
+ if ($this->request->is('post')) {
+    $data = $this->request->getData('Contact') ?: $this->request->getData();
+    $now = date('Y-m-d H:i:s');
 
+    // Set default fields
+    $data['customer_id'] = $customer_id;
+    $data['created'] = $now;
+    $data['updated'] = $now;
+    $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
+    $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
 
+    $contact = $this->Contacts->patchEntity($contact, $data);
 
-    if ($this->request->is('post')) {
-        $data = $this->request->getData('Contact') ?: $this->request->getData();
-
-        $now = date('Y-m-d H:i:s');
-
-        $data['customer_id'] = $customer_id;
-        $data['created'] = $now;
-        $data['updated'] = $now;
-        $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
-        $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
-
-        $contact = $this->Contacts->patchEntity($contact, $data);
-
-        if ($this->Contacts->save($contact)) {
-            $this->Flash->success(__('対応履歴情報の登録が完了しました。'));
-            return $this->redirect(['action' => 'view', $contact->id]);
-        }
-
-        $this->Flash->error(__('対応履歴情報の登録に失敗しました。'));
+    if ($this->Contacts->save($contact)) {
+        $this->Flash->success(__('対応履歴情報の登録が完了しました。'));
+        return $this->redirect(['action' => 'view', $contact->id]);
     }
+
+    $this->Flash->error(__('対応履歴情報の登録に失敗しました。'));
+}
 
     // Fetch contacts for this customer
     $contacts = $this->Contacts->find()
@@ -378,16 +381,12 @@ public function add(?string $customer_id = null)
             ->select(['user_name'])
             ->where(['id' => $contactItem->updated_user_id])
             ->first();
-
         $contactItem->op_incharge = $user ? $user->user_name : '-';
     }
 
-    $this->set(compact('contact', 'contacts', 'customer', 'statusOpt','overviewOpt'));
+    $this->set(compact('contact', 'contacts', 'customer', 'statusOpt', 'overviewOpt'));
 }
 
-
-
- 
 public function edit(?string $id = null)
 {
     // Handle delete button
@@ -401,6 +400,17 @@ public function edit(?string $id = null)
                     ?? $this->request->getData('Contact.customer_id');
         return $this->redirect(['action' => 'add', $customerId]);
     }
+
+
+    $statusOpt = $this->MtStatuses->find('list', [
+        'keyField' => 'item_name',   
+        'valueField' => 'item_name'
+    ])->orderBy(['disp_cd' => 'ASC'])->toArray();
+
+    $overviewOpt = $this->MtOverview->find('list', [
+        'keyField' => 'item_name',  
+        'valueField' => 'item_name'  
+    ])->orderBy(['disp_cd' => 'ASC'])->toArray();
 
     // Fetch contact and related customer
     $contact = $this->Contacts->find()
@@ -417,15 +427,12 @@ public function edit(?string $id = null)
 
         $data['updated'] = $now;
         $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
-       
-    
-    
 
         // Patch entity directly without custom field normalization
         $contact = $this->Contacts->patchEntity($contact, $data);
 
         if ($this->Contacts->save($contact)) {
-            // Optional callback handling if needed
+            // Optional callback handling
             if (!empty($data['phone']) && !empty($data['callback_datetime'])) {
                 $this->callbackEdit($contact->customer_id, (int)$contact->id, $data);
             }
@@ -441,9 +448,10 @@ public function edit(?string $id = null)
         $this->Flash->error(__('対応履歴情報の更新に失敗しました。もう一度操作してください。 {0}', $errorMsg));
     }
 
-    $this->set(compact('contact', 'customer'));
+    $this->set(compact('contact', 'customer', 'statusOpt', 'overviewOpt'));
     $this->setListValue();
 }
+
 
 
 
