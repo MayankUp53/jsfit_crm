@@ -66,6 +66,21 @@ $search = $searchData ?? [];
     </td>
 </tr>
 
+<td class="search-label">番号種別</td>
+<td>
+    <?= $this->Form->control('Search.type_of_number', [
+        'label' => false,
+        'type' => 'select',
+        'class' => 'form-control',
+        'empty' => '-----',
+        'options' => [
+            '営業所'   => '営業所',
+            '私用携帯' => '私用携帯',
+            '固定電話' => '固定電話',
+        ],
+        'value' => $search['type_of_number'] ?? ''
+    ]) ?>
+</td>
 
 
 </tr>

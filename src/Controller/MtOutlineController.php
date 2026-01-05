@@ -5,20 +5,20 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 
-class MtOverviewController extends AppController{
-  protected $MtOverview ;
+class MtOutlineController extends AppController{
+  protected $MtOutline ;
     protected $Users;
 
     public function initialize(): void
     {
         parent::initialize();
         $this->Users = $this->fetchTable('Users');
-        $this->MtOverview = $this->fetchTable('MtOverview');
+        $this->MtOutline = $this->fetchTable('MtOutline');
     }
 
     public function index()
     {
-        $mtOverview = $this->MtOverview->find()
+        $MtOutline = $this->MtOutline->find()
             ->where(['deleted IS' => null])
             ->orderBy(['disp_cd' => 'ASC'])
             ->all();
@@ -28,17 +28,17 @@ class MtOverviewController extends AppController{
             ->where(['deleted IS' => null])
             ->toArray();
 
-        foreach ($mtOverview as $row) {
+        foreach ($MtOutline as $row) {
             $row->created_user_name = $users[$row->created_user_id] ?? '-';
             $row->updated_user_name = $users[$row->updated_user_id] ?? '-';
         }
 
-        $this->set(compact('mtOverview'));
+        $this->set(compact('MtOutline'));
     }
 
 public function add()
 {
-    $entry = $this->MtOverview->newEmptyEntity();
+    $entry = $this->MtOutline->newEmptyEntity();
 
     if ($this->request->is('post')) {
         $data = $this->request->getData();
@@ -50,7 +50,7 @@ public function add()
 
         // Automatically set display order if not provided
         if (empty($data['disp_cd'])) {
-            $maxDisp = $this->MtOverview->find()
+            $maxDisp = $this->MtOutline->find()
                 ->select(['max_disp' => 'MAX(disp_cd)'])
                 ->first()
                 ->max_disp ?? 0;
@@ -66,9 +66,9 @@ public function add()
         $data['updated_user_id'] = $userId;
 
         // Patch entity with submitted data
-        $entry = $this->MtOverview->patchEntity($entry, $data);
+        $entry = $this->MtOutline->patchEntity($entry, $data);
 
-        if ($this->MtOverview->save($entry)) {
+        if ($this->MtOutline->save($entry)) {
             $this->Flash->success(__('概要の登録が完了しました。'));
             return $this->redirect(['action' => 'index']);
         }
@@ -86,7 +86,7 @@ public function add()
  public function edit(?int $id = null)
 {
     // Fetch the entry
-    $entry = $this->MtOverview->get($id);
+    $entry = $this->MtOutline->get($id);
 
     if ($this->request->is(['patch', 'post', 'put'])) {
         $data = $this->request->getData();
@@ -101,10 +101,10 @@ public function add()
         $data['updated_user_id'] = $this->getCurrentUser()?->id ?? 0;
 
         // Patch the entity
-        $entry = $this->MtOverview->patchEntity($entry, $data);
+        $entry = $this->MtOutline->patchEntity($entry, $data);
 
         // Save and check
-        if ($this->MtOverview->save($entry)) {
+        if ($this->MtOutline->save($entry)) {
             $this->Flash->success(__('概要の更新が完了しました。'));
             return $this->redirect(['action' => 'index']);
         }
@@ -123,11 +123,11 @@ public function add()
     public function delete($id = null)
     {
         $this->request->allowMethod(['post', 'delete']);
-        $entry = $this->MtOverview->get($id);
+        $entry = $this->MtOutline->get($id);
         $entry->deleted = date('Y-m-d H:i:s');
         $entry->deleted_user_id = $this->getCurrentUser()?->id ?? 0;
 
-        if ($this->MtOverview->save($entry)) {
+        if ($this->MtOutline->save($entry)) {
             $this->Flash->success(__('Overview deleted successfully.'));
         } else {
             $this->Flash->error(__('Failed to delete overview.'));

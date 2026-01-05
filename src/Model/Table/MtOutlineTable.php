@@ -6,12 +6,12 @@ namespace App\Model\Table;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
-class MtOverviewTable extends Table
+class MtOutlineTable extends Table
 {
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->setTable('mt_overview');
+        $this->setTable('mt_outline');
         $this->setPrimaryKey('id');
         $this->setDisplayField('item_name');
     }
