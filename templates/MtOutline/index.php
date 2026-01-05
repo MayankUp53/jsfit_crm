@@ -15,7 +15,7 @@
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($mtOverview as $row): ?>
+            <?php foreach ($MtOutline as $row): ?>
                 <tr>
                     <td><?= h($row['disp_cd']) ?></td>
                     <td><?= h($row['item_name']) ?></td>
