@@ -5,7 +5,7 @@ namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
 
-class MtOverview extends Entity
+class MtOutline extends Entity
 {
   
     protected array $_accessible = [

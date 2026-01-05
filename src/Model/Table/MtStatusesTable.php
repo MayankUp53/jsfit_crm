@@ -40,11 +40,13 @@ class MtStatusesTable extends Table
             ->allowEmptyString('disp_cd'); // optional if blank is allowed
 
         // 状態 (active)
-        $validator
-            ->integer('active', '状態は整数で入力してください。')
-            ->requirePresence('active', 'create', '状態は必須です。')
-            ->notEmptyString('active', '状態を選択してください。')
-            ->inList('active', [0, 1], '状態は「有効」または「無効」を選択してください。');
+     $validator
+    ->integer('active', '状態は整数で入力してください。')
+    ->requirePresence('active', 'create', '状態は必須です。')
+    ->notEmptyString('active', '状態を選択してください。')  // validation triggers if empty
+    ->inList('active', [0, 1], '状態は「有効」または「無効」を選択してください。');
+
+
 
         return $validator;
     }

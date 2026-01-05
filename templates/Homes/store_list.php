@@ -3,7 +3,6 @@
  * Store list pop-up (reuses phone list data but only shows names).
  */
 ?>
-<?php $this->viewBuilder()->setLayout(''); ?>
 <div class="panel panel-info">
     <div class="panel-heading">
         <h3 class="panel-title">店舗一覧</h3>

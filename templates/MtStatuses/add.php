@@ -42,24 +42,26 @@
             </tr>
 
             <!-- 状態 -->
-            <tr>
-                <td width="25%" style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">
-                    状態
-                </td>
-                <td>
-                    <?= $this->Form->control('active', [
-                        'label' => false,
-                        'div'   => false,
-                        'class' => 'form-control',
-                        'id'    => 'active',
-                        'type'  => 'select',
-                        'options' => ['1' => '有効', '0' => '無効'],
-                        'empty' => '-- 選択してください --',
-                        'required' => true
-                    ]) ?>
-                    <?= $this->Form->error('active') ?>
-                </td>
-            </tr>
+        <tr>
+    <td width="25%" style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">
+        状態
+    </td>
+     <td>
+        <?= $this->Form->control('active', [
+            'label' => false,
+            'div'   => false,
+            'class' => 'form-control',
+            'id'    => 'active',
+            'type'  => 'select',
+            'options' => ['1' => '有効', '0' => '無効'],
+            'empty' => '-- 選択してください --', // empty placeholder
+            'required' => true,
+            'value' => $entry->id ? $entry->active : '' // force empty for new record
+        ]) ?>
+        <?= $this->Form->error('active') ?>
+    </td>
+</tr>
+
         </tbody>
     </table>
 

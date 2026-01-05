@@ -8,7 +8,13 @@
         <tbody>
             <tr>
                 <td width="20%" style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">*キャンペーンID</td>
-                <td><?= $this->Form->control('campaign_id', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
+                <td><?= $this->Form->control('campaign_id', [
+    'type' => 'number',
+    'label' => false,
+    'div' => false,
+    'class' => 'form-control'
+])
+ ?></td>
                 <td width="20%" style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">*表示順</td>
                 <td><?= $this->Form->control('disp_cd', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
             </tr>

@@ -1,29 +1,83 @@
 <?php
 /**
- * Simple phone book pop-up.
+ * Phone book pop-up (CakePHP 5)
  */
 ?>
-<?php $this->viewBuilder()->setLayout(''); ?>
-<div class="panel panel-info">
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+
+    <!-- Use CDN to avoid 404 from missing webroot assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap.min.css">
+
+    <!-- Optional: if you still want your app's style.css and it exists -->
+    <?php // echo $this->Html->css('style'); ?>
+</head>
+
+<body>
+<div class="panel panel-primary">
     <div class="panel-heading">
-        <h3 class="panel-title">電話帳</h3>
+        <h3 class="panel-title">電話帳一覧</h3>
     </div>
-    <table class="table table-striped table-condensed">
+
+    <table id="dt" class="table table-striped table-hover">
         <thead>
-            <tr>
-                <th>名称</th>
-                <th>番号</th>
-                <th>備考</th>
-            </tr>
+        <tr height="35" style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">
+            <th width="10%">ID</th>
+            <th width="40%">名称</th>
+            <th width="35%">電話番号</th>
+            <th class="actions">操作</th>
+        </tr>
         </thead>
         <tbody>
-            <?php foreach ($mtPhonelists as $row): ?>
-                <tr>
-                    <td><?= h($row->item_name) ?></td>
-                    <td><?= h($row->phone) ?></td>
-                    <td><?= h($row->item_memo) ?></td>
-                </tr>
-            <?php endforeach; ?>
+        <?php foreach ($mtPhonelists as $row): ?>
+            <tr>
+                <td><?= h($row->id) ?></td>
+                <td><?= h($row->item_name) ?></td>
+                <td><?= h($row->phone) ?></td>
+                <td class="actions"></td>
+            </tr>
+        <?php endforeach; ?>
         </tbody>
     </table>
+
+    <br><br>
 </div>
+
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap.min.js"></script>
+
+<script>
+    $(function () {
+        var table = $('#dt').DataTable({
+            dom: '<"pull-left"f><"pull-right"l>ti<"pull-left"p>',
+            order: [[0, "asc"]],
+            language: { url: "//cdn.datatables.net/plug-ins/3cfcc339e89/i18n/Japanese.json" },
+            columnDefs: [{
+                targets: -1,
+                data: null,
+                orderable: false,
+                searchable: false,
+                defaultContent: '<button type="button" class="btn btn-xs btn-info sel_btn">選択</button>'
+            }]
+        });
+
+        $('#dt tbody').on('click', 'button.sel_btn', function () {
+            var data = table.row($(this).parents('tr')).data();
+            var phone = (data && data[2]) ? String(data[2]).trim() : '';
+
+            if (window.opener && !window.opener.closed) {
+                // CakePHP 5 Form->control('tel') default id is usually "tel"
+                var input = window.opener.document.getElementById('tel');
+                if (!input) input = window.opener.document.getElementById('HomeTel'); // legacy fallback
+                if (input) input.value = phone;
+            }
+            window.close();
+        });
+    });
+</script>
+</body>
+</html>

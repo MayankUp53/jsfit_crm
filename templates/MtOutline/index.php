@@ -8,16 +8,20 @@
             <tr>
                 <th>表示ID</th>
                 <th>概要名称</th>
+                <th>状態</th> <!-- 新しい列 -->
                 <th>作成者</th>
                 <th>更新者</th>
                 <th>操作</th>
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($mtOverview as $row): ?>
+            <?php foreach ($MtOutline as $row): ?>
                 <tr>
                     <td><?= h($row['disp_cd']) ?></td>
                     <td><?= h($row['item_name']) ?></td>
+                    <td>
+                        <?= isset($row['active']) ? ($row['active'] ? '有効' : '無効') : '-' ?>
+                    </td>
                     <td><?= h($row['created_user_name']) ?></td>
                     <td><?= h($row['updated_user_name']) ?></td>
                     <td>
@@ -32,13 +36,20 @@
             <?php endforeach; ?>
         </tbody>
     </table>
+<div style="width:50%; margin:20px auto; text-align:center;">
+    <button type="button"
+            class="btn-info btn-xs"
+            style="width:150px; height:30px; cursor:pointer;"
+            onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>'">
+        新規登録
+    </button>
 
-    <div style="width:50%; margin:20px auto; text-align:center;">
-        <button type="button"
-                class="btn-info btn-xs"
-                style="width:150px; height:30px; cursor:pointer;"
-                onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>'">
-            新規登録
-        </button>
-    </div>
+    <button type="button"
+            class="btn-default btn-xs"
+            style="width:150px; height:30px; cursor:pointer; margin-left:10px;"
+            onclick="history.back();">
+        戻る
+    </button>
+</div>
+
 </div>

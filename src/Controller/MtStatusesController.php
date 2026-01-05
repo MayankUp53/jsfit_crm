@@ -49,11 +49,10 @@ public function index()
 public function add()
 {
     $entry = $this->MtStatuses->newEmptyEntity();
-
     if ($this->request->is('post')) {
         $data = $this->request->getData();
 
-        // Automatically set display order if not provided
+
         if (empty($data['disp_cd'])) {
             $maxDisp = $this->MtStatuses->find()
                 ->select(['max_disp' => 'MAX(disp_cd)'])
@@ -61,11 +60,10 @@ public function add()
                 ->max_disp ?? 0;
             $data['disp_cd'] = $maxDisp + 1;
         }
-
-    
-        if (!isset($data['active'])) {
-            $data['active'] = 0; // default to 無効
-        }
+            // Convert empty string from placeholder to null
+    if (isset($data['active']) && $data['active'] === '') {
+        $data['active'] = null;
+    }
 
         $now = date('Y-m-d H:i:s');
         $userId = $this->getCurrentUser()?->id ?? 0;
