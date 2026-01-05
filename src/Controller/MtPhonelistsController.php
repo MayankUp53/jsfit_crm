@@ -40,6 +40,13 @@ class MtPhonelistsController extends AppController
             $now = date('Y-m-d H:i:s');
             $userId = $this->getCurrentUser()?->id ?? 0;
 
+            // Ensure unique disp_cd (idx_mt_phonelists_disp)
+            $maxDisp = $this->MtPhonelists->find()
+                ->select(['max_disp' => $this->MtPhonelists->find()->func()->max('disp_cd')])                
+                ->first();
+            $nextDisp = (int)($maxDisp?->max_disp ?? 0) + 1;
+            $data['disp_cd'] = $nextDisp;
+
             $data['created'] = $now;
             $data['created_user_id'] = $userId;
             $data['updated'] = $now;
@@ -59,7 +66,14 @@ class MtPhonelistsController extends AppController
 
     public function edit(?string $id = null)
     {
-        $entry = $this->MtPhonelists->get($id, ['conditions' => ['deleted IS' => null]]);
+        $entry = $this->MtPhonelists
+            ->find()
+            ->where([
+                'id' => $id,
+                'deleted IS' => null,
+            ])
+            ->firstOrFail();
+
         if ($this->request->is(['patch', 'post', 'put'])) {
             $data = $this->request->getData();
             $data['updated'] = date('Y-m-d H:i:s');
@@ -80,7 +94,14 @@ class MtPhonelistsController extends AppController
     public function delete(?string $id = null)
     {
         $this->request->allowMethod(['post', 'delete']);
-        $entry = $this->MtPhonelists->get($id);
+
+        $entry = $this->MtPhonelists
+            ->find()
+            ->where([
+                'id' => $id,
+                'deleted IS' => null,
+            ])
+            ->firstOrFail();
 
         $entry->deleted = date('Y-m-d H:i:s');
         $entry->deleted_user_id = $this->getCurrentUser()?->id ?? 0;
@@ -98,16 +119,25 @@ class MtPhonelistsController extends AppController
     {
         $sortArray = explode('-', (string)$id);
         $idx = 1;
+
         foreach ($sortArray as $itemId) {
-            if (empty($itemId)) {
+            if ($itemId === '' || $itemId === null) {
                 continue;
             }
-            $entry = $this->MtPhonelists->find()->where(['id' => $itemId])->first();
+
+            $entry = $this->MtPhonelists->find()
+                ->where([
+                    'id' => $itemId,
+                    'deleted IS' => null,
+                ])
+                ->first();
+
             if ($entry) {
                 $entry->disp_cd = $idx++;
                 $this->MtPhonelists->save($entry);
             }
         }
+
         return $this->redirect(['action' => 'index']);
     }
 

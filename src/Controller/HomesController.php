@@ -132,7 +132,7 @@ class HomesController extends AppController
         $this->set(compact('mtPhonelists'));
         $this->viewBuilder()->disableAutoLayout();
         
-        $this->setListValue();
+     //   $this->setListValue();
     }
 
     public function storeList()

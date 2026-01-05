@@ -211,6 +211,8 @@ class CustomersController extends AppController
                 'OR' => [
                     'Customers.tel_only' => $phone,
                     'Customers.phone_only' => $phone,
+                    'Customers.tel' => $phone,
+                    'Customers.phone' => $phone,
                 ],
             ])
             ->toArray();
@@ -226,6 +228,8 @@ class CustomersController extends AppController
                     'OR' => [
                         'Customers.tel_only' => $phone,
                         'Customers.phone_only' => $phone,
+                        'Customers.tel' => $phone,
+                        'Customers.phone' => $phone,
                     ],
                 ])
                 ->toArray();
@@ -245,6 +249,8 @@ class CustomersController extends AppController
                     'OR' => [
                         'Customers.tel_only LIKE' => "%{$phone}%",
                         'Customers.phone_only LIKE' => "%{$phone}%",
+                        'Customers.tel LIKE' => "%{$phone}%",
+                        'Customers.phone LIKE' => "%{$phone}%",
                     ],
                 ]);
 
@@ -286,7 +292,7 @@ class CustomersController extends AppController
         $customer->updated = $now;
         $customer->updated_user_id = $currentUser ? $currentUser->id : 0;
         $customer->disp_no = $dispNo;
-        $customer->tel_only = $phone;
+        $customer->tel = $phone;
         $customer->zip_cd = '';
         $customer->addr1 = '';
 
@@ -354,6 +360,8 @@ class CustomersController extends AppController
                 'OR' => [
                     'Customers.tel_only' => $phone,
                     'Customers.phone_only' => $phone,
+                    'Customers.tel' => $phone,
+                    'Customers.phone' => $phone,
                 ],
             ])
             ->toArray();
@@ -386,6 +394,8 @@ class CustomersController extends AppController
                     'OR' => [
                         'Customers.tel_only LIKE' => "%{$phone}%",
                         'Customers.phone_only LIKE' => "%{$phone}%",
+                        'Customers.tel LIKE' => "%{$phone}%",
+                        'Customers.phone LIKE' => "%{$phone}%",
                     ],
                 ]);
 

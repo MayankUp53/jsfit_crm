@@ -254,9 +254,6 @@ public function csv(array $results = [])
 }
 
 
-
-
-
 public function view(?string $id = null)
 {
     if (empty($id)) {
@@ -326,18 +323,6 @@ public function view(?string $id = null)
     $contact = $this->Contacts->newEmptyEntity();
     $customer = $this->Customers->get($customer_id);
     $currentUser = $this->getCurrentUser();
-
-         $statusOpt = $this->MtStatuses
-    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
-    ->orderBy(['disp_cd' => 'ASC'])
-    ->toArray();
-
-     $overviewOpt = $this->MtOverview
-    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
-    ->orderBy(['disp_cd' => 'ASC'])
-    ->toArray();
-
-
     // Handle form submission
     if ($this->request->is('post')) {
         $data = $this->request->getData('Contact') ?: $this->request->getData();
@@ -380,7 +365,8 @@ public function view(?string $id = null)
         $contactItem->op_incharge = $user ? $user->user_name : '-';
     }
 
-    $this->set(compact('contact', 'contacts', 'customer', 'statusOpt', 'overviewOpt'));
+    $this->set(compact('contact', 'contacts', 'customer'));
+    $this->setListValue();
 }
 
 
@@ -398,16 +384,6 @@ public function edit(?string $id = null)
         return $this->redirect(['action' => 'add', $customerId]);
     }
 
-
-      $statusOpt = $this->MtStatuses
-    ->find('list', keyField: 'item_name', valueField: 'item_name') ->where(['deleted IS' => null])  
-    ->orderBy(['disp_cd' => 'ASC'])
-    ->toArray();
-
-     $overviewOpt = $this->MtOverview
-    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
-    ->orderBy(['disp_cd' => 'ASC'])
-    ->toArray();
     // Fetch contact and related customer
     $contact = $this->Contacts->find()
         ->where(['Contacts.id' => $id, 'Contacts.deleted IS' => null])
@@ -444,7 +420,7 @@ public function edit(?string $id = null)
         $this->Flash->error(__('対応履歴情報の更新に失敗しました。もう一度操作してください。 {0}', $errorMsg));
     }
 
-    $this->set(compact('contact', 'customer', 'statusOpt', 'overviewOpt'));
+    $this->set(compact('contact', 'customer'));
     $this->setListValue();
 }
 
@@ -474,6 +450,7 @@ public function edit(?string $id = null)
 
   protected function setListValue(): void
 {
+
     $warning = $this->CallbackNotification->getNumOfWarning();
     $activeOpt = ['0' => '無効', '1' => '有効'];
     $sexOpt = ['1' => '男性', '2' => '女性'];
@@ -486,7 +463,16 @@ public function edit(?string $id = null)
     $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
         ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
         ->toArray();
-  
+
+     $statusOpt = $this->MtStatuses
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
+
+     $overviewOpt = $this->MtOverview
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
 
 
     $callbackStatusOpt = ['0' => '未', '1' => '完了', '2' => '中止', '3' => '破棄', '4' => '登録誤り', '99' => 'その他'];
@@ -496,7 +482,7 @@ public function edit(?string $id = null)
         ->orderBy(['MtQueues.disp_cd' => 'ASC'])
         ->toArray();
 
-    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt',));
+    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt',"statusOpt", "overviewOpt"));
 }
 
     protected function contactSearchDefaults(): array

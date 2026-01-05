@@ -62,7 +62,7 @@ function formSubmit() {
         </div>
         <table class="table table-hover">
           <tbody>
-    <tr>
+    <!-- <tr>
         <th style="vertical-align:middle">&nbsp;ステータスリスト</th>
         <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-statuses') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
     </tr>
@@ -73,7 +73,7 @@ function formSubmit() {
     <tr>
         <th style="vertical-align:middle">&nbsp;商品案内</th>
         <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-products') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
-    </tr>
+    </tr> -->
     <tr>
         <th style="vertical-align:middle">&nbsp;電話帳＆店舗リスト</th>
         <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-phonelists') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
