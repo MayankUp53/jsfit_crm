@@ -141,12 +141,14 @@ class ContactsController extends AppController
         }
 
         // Contact filters
+        // Summary (multi-select)
         if (!empty($searchData['summary'])) {
-            $query->where(['Contacts.summary LIKE' => '%' . trim($searchData['summary']) . '%']);
+            $query->where(['Contacts.summary IN' => $searchData['summary']]);
         }
 
+        // Status (multi-select)
         if (!empty($searchData['status'])) {
-            $query->where(['Contacts.status' => $searchData['status']]);
+            $query->where(['Contacts.status IN' => $searchData['status']]);
         }
 
         if (!empty($searchData['created_user_id'])) {

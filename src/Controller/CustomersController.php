@@ -150,9 +150,10 @@ class CustomersController extends AppController
             $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
         }
 
-        // ✅ Type of number dropdown
+        //  Type of number dropdown
+
         if (!empty($searchData['type_of_number'])) {
-            $query->where(['Customers.type_of_number' => $searchData['type_of_number']]);
+            $query->where(['Customers.type_of_number IN' => $searchData['type_of_number']]);
         }
 
         if (!empty($searchData['created_from'])) {
