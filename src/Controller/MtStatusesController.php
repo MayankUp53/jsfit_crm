@@ -62,6 +62,11 @@ public function add()
             $data['disp_cd'] = $maxDisp + 1;
         }
 
+    
+        if (!isset($data['active'])) {
+            $data['active'] = 0; // default to 無効
+        }
+
         $now = date('Y-m-d H:i:s');
         $userId = $this->getCurrentUser()?->id ?? 0;
 
@@ -70,6 +75,7 @@ public function add()
         $data['updated'] = $now;
         $data['updated_user_id'] = $userId;
 
+        // Patch entity with all data including active
         $entry = $this->MtStatuses->patchEntity($entry, $data);
 
         if ($this->MtStatuses->save($entry)) {
@@ -77,6 +83,7 @@ public function add()
             return $this->redirect(['action' => 'index']);
         }
 
+        // If save fails, show validation errors
         $errorMsg = $this->formatEntityErrors($entry);
         $this->Flash->error(__('ステータスの登録に失敗しました。入力内容を確認してください。 {0}', $errorMsg));
     }
@@ -84,6 +91,7 @@ public function add()
     $this->set(compact('entry'));
     $this->setListValue();
 }
+
 
 
 
@@ -101,6 +109,7 @@ public function edit(?string $id = null)
         $data = [
             'item_name' => $data['item_name'] ?? $entry->item_name,
             'disp_cd'   => $data['disp_cd'] ?? $entry->disp_cd,
+            'active' => isset($data['active']) ? $data['active'] : 0, // default to 無効 if not set
             'updated'   => date('Y-m-d H:i:s'),
             'updated_user_id' => $this->getCurrentUser()?->id ?? 0
         ];
@@ -112,7 +121,9 @@ public function edit(?string $id = null)
             return $this->redirect(['action' => 'index']);
         }
 
-        $this->Flash->error(__('概要の更新に失敗しました。もう一度操作してください。'));
+        // Show validation errors if save fails
+        $errorMsg = $this->formatEntityErrors($entry);
+        $this->Flash->error(__('概要の更新に失敗しました。入力内容を確認してください。 {0}', $errorMsg));
     }
 
     $this->set(compact('entry'));
