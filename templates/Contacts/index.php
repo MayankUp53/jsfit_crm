@@ -85,6 +85,35 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
             </div>
         </td>
     </tr>
+    <tr>
+    <td class="search-label">概要</td>
+    <td>
+        <?= $this->Form->control('Search.summary', [
+            'label' => false,
+            'type' => 'select',
+            'options' => $overviewOpt ?? [],
+            'empty' => '-----',
+            'value' => $search['summary'] ?? '',
+            'class' => 'form-control'
+        ]) ?>
+    </td>
+
+    <td class="search-label">ステータス</td>
+    <td>
+        <?= $this->Form->control('Search.status', [
+            'label' => false,
+            'type' => 'select',
+            'options' => $statusOpt ?? [],
+            'empty' => '-----',
+            'value' => $search['status'] ?? '',
+            'class' => 'form-control'
+        ]) ?>
+    </td>
+
+    <td></td>
+    <td></td>
+</tr>
+
 </tbody>
 
     </table>

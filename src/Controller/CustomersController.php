@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -28,7 +29,7 @@ class CustomersController extends AppController
     {
         parent::initialize();
         $this->loadComponent('App.CallbackNotification');
-        
+
         // Load additional tables
         $this->Contacts = $this->fetchTable('Contacts');
         $this->Users = $this->fetchTable('Users');
@@ -53,91 +54,139 @@ class CustomersController extends AppController
      *
      * @return \Cake\Http\Response|null|void Renders view
      */
-  
-       public function index()
-{
-    $this->setListValue();
-    $session = $this->request->getSession();
 
-    if ($this->request->is('post')) {
+    public function index()
+    {
+        $this->setListValue();
+        $session = $this->request->getSession();
+
+        // Handle POST actions (search, clear, add)
+        if ($response = $this->handleCustomerPost($session)) {
+            return $response;
+        }
+
+        //  Get search data from session and defaults
+        $searchData = $this->getCustomerSearchData($session);
+
+        // Build query
+        $query = $this->buildCustomerQuery($searchData);
+
+        //  CSV download
+        if ($this->handleCustomerCsv($query)) {
+            return;
+        }
+
+        //  Pagination
+        $this->paginate = ['limit' => 50];
+        $customers = $this->paginate($query);
+
+        // Set variables for view
+        $this->set(compact('customers', 'searchData'));
+    }
+
+    // ====================
+    // Handle POST actions
+    // ====================
+    private function handleCustomerPost($session)
+    {
+        if (!$this->request->is('post')) return null;
+
         if ($this->request->getData('searching')) {
             $session->write('Customers.search', $this->request->getData('Search', []));
             return $this->redirect(['action' => 'index']);
         }
-        if ($this->request->getData('clear')) {
-            if (method_exists($this, 'clearSession')) {
-                return $this->clearSession();
-            }
+
+        if ($this->request->getData('clear') && method_exists($this, 'clearSession')) {
+            return $this->clearSession();
         }
+
         if ($this->request->getData('add')) {
             return $this->redirect(['action' => 'add']);
         }
+
+        return null;
     }
 
-    // Read search data from session and merge with defaults
-    $searchData = $session->read('Customers.search') ?? [];
-    $searchData += $this->customerSearchDefaults();
-
-    $query = $this->Customers->find()
-        ->where(['Customers.deleted IS' => null]);
-
-    // Safer checks for each search field
-    if (!empty($searchData['name'])) {
-        $query->where(['Customers.name LIKE' => '%' . $searchData['name'] . '%']);
+    // ====================
+    //  Get search data with defaults
+    // ====================
+    private function getCustomerSearchData($session): array
+    {
+        $searchData = $session->read('Customers.search') ?? [];
+        return $searchData + $this->customerSearchDefaults();
     }
 
-    if (!empty($searchData['phone'])) {
-        $query->where([
-            'OR' => [
-                'Customers.phone LIKE' => '%' . $searchData['phone'] . '%',
-                'Customers.tel LIKE' => '%' . $searchData['phone'] . '%',
-            ],
-        ]);
-    }
+    // ====================
+    //  Build query with filters
+    // ====================
+    private function buildCustomerQuery(array $searchData)
+    {
+        $query = $this->Customers->find()
+            ->where(['Customers.deleted IS' => null]);
 
-    if (!empty($searchData['email'])) {
-        $query->where([
-            'LOWER(Customers.email) LIKE' => '%' . strtolower(trim($searchData['email'])) . '%'
-        ]);
-    }
-
-    if (!empty($searchData['fax'])) {
-        $query->where(['Customers.fax LIKE' => '%' . $searchData['fax'] . '%']);
-    }
-
-    if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
-        $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
-    }
-
-    if (!empty($searchData['created_from'])) {
-        $query->where(['Customers.created >=' => $searchData['created_from']]);
-    }
-
-    if (!empty($searchData['created_to'])) {
-        $end = $searchData['created_to'];
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-            $end .= ' 23:59:59';
+        // Filters
+        if (!empty($searchData['name'])) {
+            $query->where(['Customers.name LIKE' => '%' . trim($searchData['name']) . '%']);
         }
-        $query->where(['Customers.created <=' => $end]);
+
+        if (!empty($searchData['phone'])) {
+            $query->where([
+                'OR' => [
+                    'Customers.phone LIKE' => '%' . trim($searchData['phone']) . '%',
+                    'Customers.tel LIKE'   => '%' . trim($searchData['phone']) . '%',
+                ],
+            ]);
+        }
+
+        if (!empty($searchData['email'])) {
+            $query->where(['LOWER(Customers.email) LIKE' => '%' . strtolower(trim($searchData['email'])) . '%']);
+        }
+
+        if (!empty($searchData['fax'])) {
+            $query->where(['Customers.fax LIKE' => '%' . trim($searchData['fax']) . '%']);
+        }
+
+        if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
+            $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
+        }
+
+        // ✅ Type of number dropdown
+        if (!empty($searchData['type_of_number'])) {
+            $query->where(['Customers.type_of_number' => $searchData['type_of_number']]);
+        }
+
+        if (!empty($searchData['created_from'])) {
+            $query->where(['Customers.created >=' => $searchData['created_from']]);
+        }
+
+        if (!empty($searchData['created_to'])) {
+            $end = $searchData['created_to'];
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+                $end .= ' 23:59:59';
+            }
+            $query->where(['Customers.created <=' => $end]);
+        }
+
+        // Order
+        return $query->orderBy(['Customers.client_cd' => 'DESC']);
     }
 
-    $query->orderBy(['Customers.client_cd' => 'DESC']);
+    // ====================
+    //  Handle CSV download
+    // ====================
+    private function handleCustomerCsv($query): ?\Cake\Http\Response
+    {
+        if (!$this->request->is('post') || !$this->request->getData('download')) {
+            return null;
+        }
 
-    // CSV download
-    if ($this->request->is('post') && $this->request->getData('download')) {
         $results = $query->all();
         if (method_exists($this, 'csv')) {
             return $this->csv($results->toArray());
         }
+
+        return null;
     }
-
-    // Pagination
-    $this->paginate = ['limit' => 50];
-    $customers = $this->paginate($query);
-
-    $this->set(compact('customers', 'searchData'));
-}
-
 
     /**
      * CSV export method
@@ -149,46 +198,12 @@ class CustomersController extends AppController
     {
         $filename = rawurlencode('顧客情報_' . date('Y-m-d H:i:s') . '.csv');
         $columns = $this->customerExportColumns();
-     $sexLabels = $this->sexOptions();
+        $sexLabels = $this->sexOptions();
 
-            $this->set(compact('filename', 'columns', 'results', 'sexLabels'))  ;
+        $this->set(compact('filename', 'columns', 'results', 'sexLabels'));
         $this->viewBuilder()->setLayout('ajax');
         $this->render('download');
     }
-//  public function csv(array $results = null, string $filename = null)
-// {
-//     // If no filename provided, create one
-//     $filename = $filename ?? '顧客情報_' . date('Y-m-d_H-i-s') . '.csv';
-
-//     // Disable CakePHP view/layout
-//     $this->autoRender = false;
-
-//     // Set CSV headers for download
-//     header('Content-Type: text/csv; charset=UTF-8');
-//     header('Content-Disposition: attachment; filename="' . $filename . '"');
-//     header('Cache-Control: max-age=0');
-
-//     // Open output stream
-//     $output = fopen('php://output', 'w');
-
-//     // Add UTF-8 BOM for Excel (important for Japanese)
-//     fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-
-//     // Output header row if results exist
-//     if (!empty($results)) {
-//         fputcsv($output, array_keys($results[0]));
-//     }
-
-//     // Output data rows
-//     foreach ($results as $row) {
-//         fputcsv($output, $row);
-//     }
-
-//     // Close stream and stop execution
-//     fclose($output);
-//     exit;
-// }
-
 
     /**
      * Jump method - search by phone number
@@ -325,7 +340,7 @@ class CustomersController extends AppController
         ?string $customerId = null
     ) {
         $session = $this->request->getSession();
-        
+
         // Clear session
         $session->delete('campaign');
         $session->delete('sessionId');
@@ -437,41 +452,41 @@ class CustomersController extends AppController
 
 
     public function add()
-{
-    $customer = $this->Customers->newEmptyEntity();
+    {
+        $customer = $this->Customers->newEmptyEntity();
 
-    if ($this->request->is('post')) {
+        if ($this->request->is('post')) {
 
-        // 🔙 Back / Cancel button
-        if ($this->request->getData('back')) {
-            return $this->redirect(['action' => 'index']);
+            // 🔙 Back / Cancel button
+            if ($this->request->getData('back')) {
+                return $this->redirect(['action' => 'index']);
+            }
+
+            $data = $this->request->getData();
+            $now = date('Y-m-d H:i:s');
+            $currentUser = $this->getCurrentUser();
+
+            // Audit fields
+            $data['created'] = $now;
+            $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
+            $data['updated'] = $now;
+            $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
+
+
+            $customer = $this->Customers->patchEntity($customer, $data);
+
+            if ($this->Customers->save($customer)) {
+                $this->Flash->success(__('顧客情報の登録が完了しました。'));
+                return $this->redirect(['action' => 'index']);
+            }
+
+            $errorMsg = $this->formatEntityErrors($customer);
+            $this->Flash->error(__('顧客情報の登録に失敗しました。 {0}', $errorMsg));
         }
 
-        $data = $this->request->getData();
-        $now = date('Y-m-d H:i:s');
-        $currentUser = $this->getCurrentUser();
-
-        // Audit fields
-        $data['created'] = $now;
-        $data['created_user_id'] = $currentUser ? $currentUser->id : 0;
-        $data['updated'] = $now;
-        $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
-
-
-        $customer = $this->Customers->patchEntity($customer, $data);
-
-        if ($this->Customers->save($customer)) {
-            $this->Flash->success(__('顧客情報の登録が完了しました。'));
-            return $this->redirect(['action' => 'index']);
-        }
-
-        $errorMsg = $this->formatEntityErrors($customer);
-        $this->Flash->error(__('顧客情報の登録に失敗しました。 {0}', $errorMsg));
+        $this->set(compact('customer'));
+        $this->setListValue();
     }
-
-    $this->set(compact('customer'));
-    $this->setListValue();
-}
 
 
     /**
@@ -481,43 +496,43 @@ class CustomersController extends AppController
      * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
-public function edit(?string $id = null)
-{
-    // Handle back button
-    if ($this->request->is('post') && $this->request->getData('back')) {
-        return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
-    }
-
-    // Fetch the customer or fail
-    $customer = $this->Customers->find()
-        ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
-        ->firstOrFail();
-
-    // Handle customer update
-    if ($this->request->is(['patch', 'post', 'put'])) {
-        $data = $this->request->getData();
-        $now = date('Y-m-d H:i:s');
-        $currentUser = $this->getCurrentUser();
-
-        // Update timestamps and user
-        $data['updated'] = $now;
-        $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
-
-        // Patch entity and save
-        $customer = $this->Customers->patchEntity($customer, $data);
-
-        if ($this->Customers->save($customer)) {
-            $this->Flash->success(__('顧客情報の更新が完了しました。'));
+    public function edit(?string $id = null)
+    {
+        // Handle back button
+        if ($this->request->is('post') && $this->request->getData('back')) {
             return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
         }
 
-        $errorMsg = $this->formatEntityErrors($customer);
-        $this->Flash->error(__('顧客情報の更新に失敗しました。もう一度操作してください。 {0}', $errorMsg));
-    }
+        // Fetch the customer or fail
+        $customer = $this->Customers->find()
+            ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
+            ->firstOrFail();
 
-    // Set customer for the template
-    $this->set(compact('customer'));
-}
+        // Handle customer update
+        if ($this->request->is(['patch', 'post', 'put'])) {
+            $data = $this->request->getData();
+            $now = date('Y-m-d H:i:s');
+            $currentUser = $this->getCurrentUser();
+
+            // Update timestamps and user
+            $data['updated'] = $now;
+            $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
+
+            // Patch entity and save
+            $customer = $this->Customers->patchEntity($customer, $data);
+
+            if ($this->Customers->save($customer)) {
+                $this->Flash->success(__('顧客情報の更新が完了しました。'));
+                return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
+            }
+
+            $errorMsg = $this->formatEntityErrors($customer);
+            $this->Flash->error(__('顧客情報の更新に失敗しました。もう一度操作してください。 {0}', $errorMsg));
+        }
+
+        // Set customer for the template
+        $this->set(compact('customer'));
+    }
 
     /**
      * Delete method (logical delete)
@@ -557,92 +572,58 @@ public function edit(?string $id = null)
         return $this->redirect(['action' => 'index']);
     }
 
-    /**
-     * Set list values for views
-     *
-     * @return void
-     */
-    // protected function setListValue(): void
-    // {
-    //     $warning = $this->CallbackNotification->getNumOfWarning();
-
-    //     // Active/Inactive options
-    //     $activeOpt = ['0' => '無効', '1' => '有効'];
-
-    //     // Gender options
-    //     $sexOpt = $this->sexOptions();
-
-    //     // Operators (users)
-    //     $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
-    //         ->where(['Users.deleted IS' => null])
-    //         ->orderBy(['Users.disp_cd' => 'ASC'])
-    //         ->toArray();
-
-    //     // All users (including deleted)
-    //     $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
-    //         ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
-    //         ->toArray();
-
-    //     // Status options
-    //     $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
-    //         ->where(['MtStatuses.active_flg' => 1])
-    //         ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
-    //         ->toArray();
-
-    //     $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt'));
-    // }
     protected function setListValue(): void
-{
-    $warning = $this->CallbackNotification->getNumOfWarning();
-    $activeOpt = ['0' => '無効', '1' => '有効'];
-    $sexOpt = $this->sexOptions();
+    {
+        $warning = $this->CallbackNotification->getNumOfWarning();
+        $activeOpt = ['0' => '無効', '1' => '有効'];
+        $sexOpt = $this->sexOptions();
 
-    // Operators (users)
-    $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
-        ->where(['Users.deleted IS' => null])
-        ->orderBy(['Users.disp_cd' => 'ASC'])
-        ->toArray();
+        // Operators (users)
+        $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
+            ->where(['Users.deleted IS' => null])
+            ->orderBy(['Users.disp_cd' => 'ASC'])
+            ->toArray();
 
-    // All users (including deleted)
-    $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
-        ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
-        ->toArray();
+        // All users (including deleted)
+        $allUsersOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
+            ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
+            ->toArray();
 
-    // Status options (removed active_flg filter)
-    $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
-        ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
-        ->toArray();
+        // Status options (removed active_flg filter)
+        $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
+            ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
+            ->toArray();
 
-    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt'));
-}
+        $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt'));
+    }
 
 
     protected function customerSearchDefaults(): array
     {
         return [
-          'client_cd' => '',
-        'company_name' => '',
-        'name'      => '',
-        'type_of_number' => '',
-        'tel'       => '',
-        'email'     => '',
-        'fax'       => '',
-        'created'   => '',
+            'client_cd' => '',
+            'company_name' => '',
+            'name'      => '',
+            'type_of_number' => '',
+            'tel'       => '',
+            'email'     => '',
+            'fax'       => '',
+            'created'   => '',
         ];
     }
 
     protected function customerExportColumns(): array
-    
+
     {
         return [
             'client_cd' => '得意先CD',
-        'company_name' => '会社・支店名',
-        'name'      => '氏名',
-        'type_of_number' => '番号種別',
-        'tel'       => '携帯番号',
-        'email'     => 'メール',
-        'fax'       => 'FAX',
-        'created'   => '登録日',
+            'company_name' => '会社・支店名',
+            'name'      => '氏名',
+            'type_of_number' => '番号種別',
+            'tel'       => '携帯番号',
+            'email'     => 'メール',
+            'fax'       => 'FAX',
+            'created'   => '登録日',
         ];
     }
 

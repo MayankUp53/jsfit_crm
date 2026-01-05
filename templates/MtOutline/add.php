@@ -7,6 +7,7 @@
 
     <table class="table table-hover">
         <tbody>
+            <!-- 表示順 -->
             <tr>
                 <td width="25%" style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">
                     表示順
@@ -16,10 +17,14 @@
                         'label' => false,
                         'div'   => false,
                         'class' => 'form-control',
-                        'id'    => 'disp_cd'
+                        'id'    => 'disp_cd',
+                        'type'  => 'number'
                     ]) ?>
+                    <?= $this->Form->error('disp_cd') ?>
                 </td>
             </tr>
+
+            <!-- 概要名称 -->
             <tr>
                 <td width="25%" style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">
                     *概要名称
@@ -32,6 +37,28 @@
                         'id'    => 'item_name',
                         'required' => true
                     ]) ?>
+                    <?= $this->Form->error('item_name') ?>
+                </td>
+            </tr>
+
+            <!-- 状態 -->
+            <tr>
+                <td width="25%" style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">
+                    状態
+                </td>
+                <td>
+                    <?= $this->Form->control('active', [
+                        'label' => false,
+                        'div'   => false,
+                        'class' => 'form-control',
+                        'id'    => 'active',
+                        'type'  => 'select',
+                        'options' => ['1' => '有効', '0' => '無効'],
+                        'empty' => '-- 選択してください --', // placeholder
+                        'required' => true,
+                        'value' => $entry->id ? $entry->active : '' // force empty for new record
+                    ]) ?>
+                    <?= $this->Form->error('active') ?>
                 </td>
             </tr>
         </tbody>
@@ -59,9 +86,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     submitBtn.addEventListener("click", function (e) {
         const itemName = document.getElementById("item_name").value.trim();
+        const isActive = document.getElementById("active").value;
+
         if (itemName === "") {
             alert("概要名称は必須です。");
             e.preventDefault(); // stop submit
+            return false;
+        }
+
+        if (isActive === "") {
+            alert("状態を選択してください。");
+            e.preventDefault(); // stop submit
+            return false;
         }
     });
 });
