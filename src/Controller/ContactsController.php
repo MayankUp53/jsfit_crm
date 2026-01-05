@@ -327,17 +327,6 @@ public function view(?string $id = null)
     $customer = $this->Customers->get($customer_id);
     $currentUser = $this->getCurrentUser();
 
-         $statusOpt = $this->MtStatuses
-    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
-    ->orderBy(['disp_cd' => 'ASC'])
-    ->toArray();
-
-     $overviewOpt = $this->MtOverview
-    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
-    ->orderBy(['disp_cd' => 'ASC'])
-    ->toArray();
-
-
     // Handle form submission
     if ($this->request->is('post')) {
         $data = $this->request->getData('Contact') ?: $this->request->getData();
@@ -380,7 +369,8 @@ public function view(?string $id = null)
         $contactItem->op_incharge = $user ? $user->user_name : '-';
     }
 
-    $this->set(compact('contact', 'contacts', 'customer', 'statusOpt', 'overviewOpt'));
+    $this->set(compact('contact', 'contacts', 'customer'));
+    $this->setListValue();
 }
 
 
@@ -487,7 +477,15 @@ public function edit(?string $id = null)
         ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
         ->toArray();
   
+        $statusOpt = $this->MtStatuses
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
 
+     $overviewOpt = $this->MtOverview
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
 
     $callbackStatusOpt = ['0' => '未', '1' => '完了', '2' => '中止', '3' => '破棄', '4' => '登録誤り', '99' => 'その他'];
 
@@ -496,7 +494,7 @@ public function edit(?string $id = null)
         ->orderBy(['MtQueues.disp_cd' => 'ASC'])
         ->toArray();
 
-    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt',));
+    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt', 'statusOpt', 'overviewOpt'));
 }
 
     protected function contactSearchDefaults(): array
