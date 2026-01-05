@@ -42,8 +42,6 @@ $search = $searchData ?? [];
         ]) 
     ?>
 </td>
-
-
     <td class="search-label">登録日</td>
     <td>
         <div class="d-flex align-items-center">
@@ -65,9 +63,6 @@ $search = $searchData ?? [];
         </div>
     </td>
 </tr>
-
-
-
 </tr>
         </tbody>
     </table>
