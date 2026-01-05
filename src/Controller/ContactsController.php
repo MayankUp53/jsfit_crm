@@ -482,7 +482,7 @@ public function edit(?string $id = null)
     ->toArray();
 
      $overviewOpt = $this->MtOverview
-    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null,  ])  
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null, 'active' => 1  ])  
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
 
