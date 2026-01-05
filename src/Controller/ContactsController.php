@@ -476,9 +476,13 @@ public function edit(?string $id = null)
         ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
         ->toArray();
   
+        $statusOpt = $this->MtStatuses
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null, 'active' => 1 ])  
+    ->orderBy(['disp_cd' => 'ASC'])
+    ->toArray();
 
      $overviewOpt = $this->MtOverview
-    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])  
+    ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null,  ])  
     ->orderBy(['disp_cd' => 'ASC'])
     ->toArray();
 
@@ -489,7 +493,7 @@ public function edit(?string $id = null)
         ->orderBy(['MtQueues.disp_cd' => 'ASC'])
         ->toArray();
 
-    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt',));
+    $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt', 'statusOpt', 'overviewOpt'));
 }
 
     protected function contactSearchDefaults(): array

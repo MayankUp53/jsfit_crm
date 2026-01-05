@@ -8,6 +8,7 @@
         <tr>
             <th>表示ID</th>
             <th>名称</th>
+            <th>状態</th> 
             <th>作成者</th>
             <th>更新者</th>
             <th>操作</th>
@@ -18,6 +19,12 @@
               <tr>
                 <td><?= h($row['disp_cd']) ?></td>
                 <td><?= h($row['item_name']) ?></td>
+                <td>
+                    <?= isset($row['active']) 
+                        ? ($row['active'] ? '有効' : '無効') 
+                        : '-' 
+                    ?>
+                </td>
                 <td><?= h($row['created_user_name']) ?></td>
                 <td><?= h($row['updated_user_name']) ?></td>
                 <td>
