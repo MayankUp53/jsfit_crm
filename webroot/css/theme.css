@@ -136,3 +136,8 @@ table.table thead tr {
     border-color: var(--amber) !important;
     color: #fff !important;
 }
+/* Fix month/year dropdown text for all jQuery UI datepickers */
+.ui-datepicker .ui-datepicker-title select {
+    color: #000 !important;
+    background-color: #fff !important;
+}

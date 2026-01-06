@@ -170,6 +170,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     <th>ステータス</th>
                     <th>担当OP</th>
                     <th>登録日</th>
+                    <th>更新日</th>
                     <th width="10%">操作</th>
                 </tr>
             </thead>
@@ -185,6 +186,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <td><?= h($row->status) ?></td>
                         <td><?= h($row->op_incharge) ?></td>
                         <td><?= h($row->created ? $row->created->format('Y-m-d H:i') : '') ?></td>
+                        <td><?= h($row->updated ? $row->updated->format('Y-m-d H:i') : '') ?></td>
                         <td>
                             <a href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>" class="btn btn-xs btn-primary">編集</a>
                             <?= $this->Form->postLink('削除', ['action' => 'delete', $row->id], [

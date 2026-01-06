@@ -38,9 +38,9 @@ $currentUser = $this->request->getAttribute('identity');
 
     <div class="text-right" style="margin-bottom:10px;">
         <a href="<?= $this->Url->build(['controller' => 'Customers', 'action' => 'edit', $customer->id]) ?>"
-           class="btn btn-warning btn-xs">顧客編集</a>
-      
- <?php if ($currentUser && $currentUser->getOriginalData()->auth != "0"): ?>
+            class="btn btn-warning btn-xs">顧客編集</a>
+
+        <?php if ($currentUser && $currentUser->getOriginalData()->auth != "0"): ?>
             <?= $this->Form->postLink(
                 '顧客削除',
                 ['controller' => 'Customers', 'action' => 'delete', $customer->id],
@@ -48,36 +48,6 @@ $currentUser = $this->request->getAttribute('identity');
             ) ?>
         <?php endif; ?>
     </div>
-</div>
-
-<!-- ================= Main Contact Detail ================= -->
-<div class="panel panel-primary">
-    <div class="panel-heading">
-        <h3 class="panel-title">対応履歴詳細</h3>
-    </div>
-
-    <table class="table table-bordered">
-        <tr>
-            <th width="20%">概要</th>
-            <td><?= h($contact->summary) ?></td>
-        </tr>
-        <tr>
-            <th>ステータス</th>
-            <td><?= h($contact->status) ?></td>
-        </tr>
-        <tr>
-            <th>対応内容</th>
-            <td><?= nl2br(h($contact->remark)) ?></td>
-        </tr>
-       
-    </table>
-
-<div class="btn_margin text-center" style="margin-top:10px;">
-    <a class="btn btn-xs btn-primary" href="<?= $this->Url->build(['action' => 'edit', $contact->id]) ?>">編集</a>
-   <a class="btn btn-xs btn-default" href="<?= $this->Url->build(['action' => 'index',]) ?>">一覧へ</a>
-
-</div>
-
 </div>
 
 <!-- ================= Customer Contact List ================= -->
@@ -127,3 +97,80 @@ $currentUser = $this->request->getAttribute('identity');
         </table>
     </div>
 </div>
+
+<!-- ================= Main Contact Detail ================= -->
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        <h3 class="panel-title">対応履歴更新</h3>
+    </div>
+
+    <?= $this->Form->create($contact, ['url' => ['action' => 'edit', $contact->id]]) ?>
+    <?= $this->Form->control('id', ['type' => 'hidden']) ?>
+    <?= $this->Form->control('customer_id', ['type' => 'hidden', 'value' => $contact->customer_id]) ?>
+
+    <div class="panel-body">
+        <!-- 概要 -->
+        <div class="form-group">
+            <label>概要</label>
+            <?= $this->Form->control('summary', [
+                'label' => false,
+                'type' => 'select',
+                'options' => $overviewOpt ?? [],
+                'empty' => '-----',
+                'class' => 'form-control',
+                'value' => $contact->summary
+            ]) ?>
+        </div>
+
+        <!-- ステータス -->
+        <div class="form-group">
+            <label>ステータス</label>
+            <?= $this->Form->control('status', [
+                'label' => false,
+                'type' => 'select',
+                'options' => $statusOpt ?? [],
+                'empty' => '-----',
+                'class' => 'form-control',
+                'value' => $contact->status
+            ]) ?>
+        </div>
+
+        <!-- 対応内容 -->
+        <div class="form-group">
+            <label>対応内容</label>
+            <?= $this->Form->control('remark', [
+                'label' => false,
+                'type' => 'textarea',
+                'rows' => 5,
+                'class' => 'form-control',
+                'value' => $contact->remark
+            ]) ?>
+        </div>
+    </div>
+
+
+<div class="text-center" style="margin-top:15px;">
+    <!-- Update -->
+    <?= $this->Form->button('更　新', [
+        'type' => 'submit',
+        'name' => 'update',
+        'value' => '1',
+        'class' => 'btn btn-info btn-xs',
+        'style' => 'width:150px;height:35px;margin:5px;'
+    ]) ?>
+
+    <!-- Delete -->
+    <?= $this->Form->postLink('削　除', ['action' => 'delete', $contact->id], [
+        'confirm' => '削除しますか？',
+        'class' => 'btn btn-danger btn-xs',
+        'style' => 'width:150px;height:35px;margin:5px;'
+    ]) ?>
+
+    <!-- New Registration -->
+    <a href="<?= $this->Url->build(['action' => 'add', $contact->customer_id]) ?>"
+       class="btn btn-success btn-xs" style="width:150px;height:35px;margin:5px;">
+       新規登録
+    </a>
+</div>
+
+

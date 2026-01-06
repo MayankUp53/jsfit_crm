@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use function Cake\Error\debug;
+use function Cake\Error\debug as ErrorDebug;
+use function Cake\Error\debug as CakeErrorDebug;
+
 /**
  * Contacts Controller now uses fixed field layouts (no custom field metadata).
  */
@@ -38,6 +42,7 @@ class ContactsController extends AppController
 
         return $this->redirect(['action' => 'index']);
     }
+
     public function index()
     {
         $this->setListValue();
@@ -63,8 +68,6 @@ class ContactsController extends AppController
 
         $this->set(compact('contacts', 'searchData'));
     }
-
-
 
     private function handleIndexPost()
     {
@@ -108,17 +111,23 @@ class ContactsController extends AppController
 
     private function applySearchFilters($query, array $searchData): void
     {
+        // =========================
         // Customer filters
+        // =========================
         if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
             $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
         }
 
         if (!empty($searchData['company_name'])) {
-            $query->where(['Customers.company_name LIKE' => '%' . trim($searchData['company_name']) . '%']);
+            $query->where([
+                'Customers.company_name LIKE' => '%' . trim($searchData['company_name']) . '%'
+            ]);
         }
 
         if (!empty($searchData['name'])) {
-            $query->where(['Customers.name LIKE' => '%' . trim($searchData['name']) . '%']);
+            $query->where([
+                'Customers.name LIKE' => '%' . trim($searchData['name']) . '%'
+            ]);
         }
 
         if (!empty($searchData['phone'])) {
@@ -137,10 +146,27 @@ class ContactsController extends AppController
         }
 
         if (!empty($searchData['fax'])) {
-            $query->where(['Customers.fax LIKE' => '%' . trim($searchData['fax']) . '%']);
+            $query->where([
+                'Customers.fax LIKE' => '%' . trim($searchData['fax']) . '%'
+            ]);
         }
 
+        if (!empty($searchData['op_incharge'])) {
+
+            $userIds = is_array($searchData['op_incharge'])
+                ? array_map('intval', $searchData['op_incharge'])
+                : [(int)$searchData['op_incharge']];
+
+
+            $query->where(['Contacts.updated_user_id IN' => $userIds]);
+        }
+
+
+
+        // =========================
         // Contact filters
+        // =========================
+
         // Summary (multi-select)
         if (!empty($searchData['summary'])) {
             $query->where(['Contacts.summary IN' => $searchData['summary']]);
@@ -151,8 +177,49 @@ class ContactsController extends AppController
             $query->where(['Contacts.status IN' => $searchData['status']]);
         }
 
+
         if (!empty($searchData['created_user_id'])) {
             $query->where(['Contacts.created_user_id' => $searchData['created_user_id']]);
+        }
+
+        if (!empty($searchData['created_from'])) {
+            $query->where([
+                'Contacts.created >=' => $searchData['created_from']
+            ]);
+        }
+
+        if (!empty($searchData['created_to'])) {
+            $end = $searchData['created_to'];
+
+            // If only date is provided, include the full day
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+                $end .= ' 23:59:59';
+            }
+
+            $query->where([
+                'Contacts.created <=' => $end
+            ]);
+        }
+
+
+
+        if (!empty($searchData['updated_from'])) {
+            $query->where([
+                'Contacts.updated >=' => $searchData['updated_from']
+            ]);
+        }
+
+        if (!empty($searchData['updated_to'])) {
+            $endUpdated = $searchData['updated_to'];
+
+            // If only date is provided, include the full day
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $endUpdated)) {
+                $endUpdated .= ' 23:59:59';
+            }
+
+            $query->where([
+                'Contacts.updated <=' => $endUpdated
+            ]);
         }
     }
 
@@ -175,8 +242,15 @@ class ContactsController extends AppController
                 'id'          => $contact->id,
                 'client_cd'   => $contact->customer->client_cd ?? '',
                 'company_name' => $contact->customer->company_name ?? '',
+                'customer_name' => $contact->customer->name ?? '',
+                'customer_email' => $contact->customer->email ?? '',
+                'customer_tel' => $contact->customer->tel ?? '',
+                'customer_fax' => $contact->customer->fax ?? '',
+                'remark'      => $contact->remark,
                 'summary'     => $contact->summary,
                 'status'      => $contact->status,
+                'created'      => $contact->created ? $contact->created->format('Y-m-d H:i:s') : '',
+                'updated'      => $contact->updated ? $contact->updated->format('Y-m-d H:i:s') : '',
                 'op_incharge' => $user ? $user->user_name : '-',
             ];
         }
@@ -224,58 +298,7 @@ class ContactsController extends AppController
     }
 
 
-    public function view(?string $id = null)
-    {
-        if (empty($id)) {
-            $this->Flash->error(__('無効なIDです。'));
-            return $this->redirect(['action' => 'index']);
-        }
 
-        // Fetch the main contact and its associated customer
-        $contact = $this->Contacts->find()
-            ->where(['Contacts.id' => $id, 'Contacts.deleted IS' => null])
-            ->contain(['Customers'])
-            ->first();
-
-        if (!$contact) {
-            $this->Flash->error(__('指定された対応履歴が存在しません。'));
-            return $this->redirect(['action' => 'index']);
-        }
-
-        // Convenience variable for the customer
-        $customer = $contact->customer;
-
-        // Fetch all contacts for the same customer (excluding deleted)
-        $contacts = $this->Contacts->find()
-            ->where([
-                'Contacts.customer_id' => $contact->customer_id,
-                'Contacts.deleted IS' => null
-            ])
-            ->orderBy(['Contacts.updated' => 'DESC'])
-            ->contain(['Customers']) // optional, for customer info in list
-            ->all();
-
-        // Add dynamic field 'op_incharge' like in index/add methods
-        foreach ($contacts as $contactItem) {
-            $user = $this->Users->find()
-                ->select(['user_name'])
-                ->where(['id' => $contactItem->updated_user_id])
-                ->first();
-
-            $contactItem->op_incharge = $user ? $user->user_name : '-';
-        }
-
-        // Also add op_incharge for main contact
-        $mainUser = $this->Users->find()
-            ->select(['user_name'])
-            ->where(['id' => $contact->updated_user_id])
-            ->first();
-
-        $contact->op_incharge = $mainUser ? $mainUser->user_name : '-';
-
-        $this->set(compact('contact', 'customer', 'contacts'));
-        $this->setListValue(); // keep for select options if needed in view
-    }
 
     public function add(?string $customer_id = null)
     {
@@ -351,6 +374,79 @@ class ContactsController extends AppController
         $this->setListValue();
     }
 
+    public function view(?string $id = null)
+    {
+
+  
+        if (empty($id)) {
+            $this->Flash->error(__('無効なIDです。'));
+            return $this->redirect(['action' => 'index']);
+        }
+
+        $contact = $this->Contacts->find()
+            ->where(['Contacts.id' => $id, 'Contacts.deleted IS' => null])
+            ->contain(['Customers'])
+            ->first();
+
+        if (!$contact) {
+            $this->Flash->error(__('指定された対応履歴が存在しません。'));
+            return $this->redirect(['action' => 'index']);
+        }
+
+        $currentUserId = $this->request->getAttribute('identity')->id;
+
+        // Handle form submission for Update and New Registration
+        if ($this->request->is('post')) {
+           
+            $data = $this->request->getData();
+
+            // Update
+            if (!empty($data['update'])) {
+                $contact = $this->Contacts->patchEntity($contact, $data);
+                $contact->updated_user_id = $currentUserId;
+
+                if ($this->Contacts->save($contact)) {
+                    $this->Flash->success(__('対応履歴を更新しました。'));
+                    return $this->redirect(['action' => 'view', $id]);
+                }
+                $this->Flash->error(__('更新に失敗しました。'));
+            }
+
+            // New Registration
+            if (!empty($data['add'])) {
+                return $this->redirect(['action' => 'add', $contact->customer_id]);
+            }
+        }
+
+        $customer = $contact->customer;
+
+        $contacts = $this->Contacts->find()
+            ->where(['Contacts.customer_id' => $contact->customer_id, 'Contacts.deleted IS' => null])
+            ->orderBy(['Contacts.updated' => 'DESC'])
+            ->contain(['Customers'])
+            ->all();
+
+        // Add dynamic field 'op_incharge'
+        foreach ($contacts as $contactItem) {
+            $user = $this->Users->find()
+                ->select(['user_name'])
+                ->where(['id' => $contactItem->updated_user_id])
+                ->first();
+            $contactItem->op_incharge = $user ? $user->user_name : '-';
+        }
+
+        // Main contact op_incharge
+        $mainUser = $this->Users->find()
+            ->select(['user_name'])
+            ->where(['id' => $contact->updated_user_id])
+            ->first();
+        $contact->op_incharge = $mainUser ? $mainUser->user_name : '-';
+
+        $this->set(compact('contact', 'customer', 'contacts'));
+        $this->setListValue(); // for select options
+    }
+
+
 
     public function edit(?string $id = null)
     {
@@ -409,26 +505,25 @@ class ContactsController extends AppController
 
 
 
-    public function delete(?string $id = null)
-    {
-        $this->request->allowMethod(['post', 'delete']);
-        $contact = $this->Contacts->get($id);
+ public function delete(?string $id = null)
+{
 
-        $now = date('Y-m-d H:i:s');
-        $currentUser = $this->getCurrentUser();
+    debug ('delete action called with id: ' . $id);
+    $this->request->allowMethod(['post', 'delete']);
+    $contact = $this->Contacts->get($id);
 
-        $contact->deleted = $now;
-        $contact->deleted_user_id = $currentUser ? $currentUser->id : 0;
+    $currentUser = $this->getCurrentUser();
+    $contact->deleted = date('Y-m-d H:i:s');
+    $contact->deleted_user_id = $currentUser ? $currentUser->id : 0;
 
-        if ($this->Contacts->save($contact, ['fields' => ['deleted', 'deleted_user_id']])) {
-            $this->Flash->success(__('対応履歴情報の削除が完了しました。'));
-        } else {
-            $this->Flash->error(__('対応履歴情報の削除に失敗しました。もう一度操作してください。'));
-        }
-
-        $customerId = $contact->customer_id;
-        return $this->redirect(['action' => 'add', $customerId]);
+    if ($this->Contacts->save($contact, ['fields' => ['deleted', 'deleted_user_id']])) {
+        $this->Flash->success(__('対応履歴を削除しました。'));
+    } else {
+        $this->Flash->error(__('削除に失敗しました。'));
     }
+
+    return $this->redirect(['action' => 'index']); // or view page
+}
 
     protected function setListValue(): void
     {

@@ -119,58 +119,68 @@ class CustomersController extends AppController
     // ====================
     //  Build query with filters
     // ====================
-    private function buildCustomerQuery(array $searchData)
-    {
-        $query = $this->Customers->find()
-            ->where(['Customers.deleted IS' => null]);
+  private function buildCustomerQuery(array $searchData)
+{
+    $query = $this->Customers->find()
+        ->where(['Customers.deleted IS' => null]);
 
-        // Filters
-        if (!empty($searchData['name'])) {
-            $query->where(['Customers.name LIKE' => '%' . trim($searchData['name']) . '%']);
-        }
-
-        if (!empty($searchData['phone'])) {
-            $query->where([
-                'OR' => [
-                    'Customers.phone LIKE' => '%' . trim($searchData['phone']) . '%',
-                    'Customers.tel LIKE'   => '%' . trim($searchData['phone']) . '%',
-                ],
-            ]);
-        }
-
-        if (!empty($searchData['email'])) {
-            $query->where(['LOWER(Customers.email) LIKE' => '%' . strtolower(trim($searchData['email'])) . '%']);
-        }
-
-        if (!empty($searchData['fax'])) {
-            $query->where(['Customers.fax LIKE' => '%' . trim($searchData['fax']) . '%']);
-        }
-
-        if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
-            $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
-        }
-
-        //  Type of number dropdown
-
-        if (!empty($searchData['type_of_number'])) {
-            $query->where(['Customers.type_of_number IN' => $searchData['type_of_number']]);
-        }
-
-        if (!empty($searchData['created_from'])) {
-            $query->where(['Customers.created >=' => $searchData['created_from']]);
-        }
-
-        if (!empty($searchData['created_to'])) {
-            $end = $searchData['created_to'];
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-                $end .= ' 23:59:59';
-            }
-            $query->where(['Customers.created <=' => $end]);
-        }
-
-        // Order
-        return $query->orderBy(['Customers.client_cd' => 'DESC']);
+    // Filters
+    if (!empty($searchData['name'])) {
+        $query->where(['Customers.name LIKE' => '%' . trim($searchData['name']) . '%']);
     }
+
+    if (!empty($searchData['phone'])) {
+        $query->where([
+            'OR' => [
+                'Customers.phone LIKE' => '%' . trim($searchData['phone']) . '%',
+                'Customers.tel LIKE'   => '%' . trim($searchData['phone']) . '%',
+            ],
+        ]);
+    }
+
+    if (!empty($searchData['email'])) {
+        $query->where(['LOWER(Customers.email) LIKE' => '%' . strtolower(trim($searchData['email'])) . '%']);
+    }
+
+    if (!empty($searchData['fax'])) {
+        $query->where(['Customers.fax LIKE' => '%' . trim($searchData['fax']) . '%']);
+    }
+
+    if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
+        $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
+    }
+
+    if (!empty($searchData['type_of_number'])) {
+        $query->where(['Customers.type_of_number IN' => $searchData['type_of_number']]);
+    }
+
+    // Created date range
+    if (!empty($searchData['created_from'])) {
+        $query->where(['Customers.created >=' => $searchData['created_from']]);
+    }
+    if (!empty($searchData['created_to'])) {
+        $end = $searchData['created_to'];
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+            $end .= ' 23:59:59';
+        }
+        $query->where(['Customers.created <=' => $end]);
+    }
+
+    // Updated date range
+    if (!empty($searchData['updated_from'])) {
+        $query->where(['Customers.updated >=' => $searchData['updated_from']]);
+    }
+    if (!empty($searchData['updated_to'])) {
+        $endUpdated = $searchData['updated_to'];
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $endUpdated)) {
+            $endUpdated .= ' 23:59:59';
+        }
+        $query->where(['Customers.updated <=' => $endUpdated]);
+    }
+
+    return $query->orderBy(['Customers.client_cd' => 'DESC']);
+}
+
 
     // ====================
     //  Handle CSV download
@@ -625,6 +635,7 @@ class CustomersController extends AppController
             'email'     => 'メール',
             'fax'       => 'FAX',
             'created'   => '登録日',
+            'updated'   => '更新日',
         ];
     }
 

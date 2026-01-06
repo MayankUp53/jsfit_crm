@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -37,7 +38,7 @@ class UsersController extends AppController
             ->orderBy(['Users.updated' => 'DESC', 'Users.created' => 'DESC']);
 
         $this->paginate = [
-            'limit' => 100,
+            'limit' => 10,
         ];
 
         $users = $this->paginate($query);
@@ -47,6 +48,8 @@ class UsersController extends AppController
 
         $this->setListValue();
     }
+
+
 
     /**
      * View method
