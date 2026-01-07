@@ -283,7 +283,8 @@ return [
             'className' => Connection::class,
             'driver' => Mysql::class,
             'persistent' => false,
-            'timezone' => 'Asia/Tokyo',
+          // 'timezone' => 'Asia/Tokyo',
+            'timezone' => 'UTC',
 
             /*
              * For MariaDB/MySQL the internal default changed from utf8 to utf8mb4, aka full utf-8 support

@@ -7,6 +7,7 @@ namespace App\Controller;
 use function Cake\Error\debug;
 use function Cake\Error\debug as ErrorDebug;
 use function Cake\Error\debug as CakeErrorDebug;
+use function Cake\Error\debug as DebugAlias;
 
 /**
  * Contacts Controller now uses fixed field layouts (no custom field metadata).
@@ -302,6 +303,7 @@ class ContactsController extends AppController
 
     public function add(?string $customer_id = null)
     {
+        // DebugAlias('add action called with customer_id: ' . $customer_id);
         // Check if customer ID is provided and exists
         if (empty($customer_id) || !$this->Customers->exists(['id' => $customer_id])) {
             $this->Flash->error(__('顧客を選択してから対応履歴を登録してください。'));
@@ -317,15 +319,7 @@ class ContactsController extends AppController
         $customer = $this->Customers->get($customer_id);
         $currentUser = $this->getCurrentUser();
 
-        $statusOpt = $this->MtStatuses
-            ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])
-            ->orderBy(['disp_cd' => 'ASC'])
-            ->toArray();
 
-        $overviewOpt = $this->MtOutline
-            ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null])
-            ->orderBy(['disp_cd' => 'ASC'])
-            ->toArray();
 
 
         // Handle form submission
@@ -377,12 +371,13 @@ class ContactsController extends AppController
     public function view(?string $id = null)
     {
 
-  
+        // 1️⃣ Validate ID
         if (empty($id)) {
             $this->Flash->error(__('無効なIDです。'));
             return $this->redirect(['action' => 'index']);
         }
 
+        // 2️⃣ Fetch main contact
         $contact = $this->Contacts->find()
             ->where(['Contacts.id' => $id, 'Contacts.deleted IS' => null])
             ->contain(['Customers'])
@@ -395,13 +390,15 @@ class ContactsController extends AppController
 
         $currentUserId = $this->request->getAttribute('identity')->id;
 
-        // Handle form submission for Update and New Registration
-        if ($this->request->is('post')) {
-           
-            $data = $this->request->getData();
 
-            // Update
+        if ($this->request->is('put', 'post')) {
+
+            // DebugAlias('this is clicked');
+            $data = $this->request->getData();
+            // DebugAlias('add action called with customer_id 1' . $id);
+
             if (!empty($data['update'])) {
+                // DebugAlias('add action called with customer_id update ' . $id);
                 $contact = $this->Contacts->patchEntity($contact, $data);
                 $contact->updated_user_id = $currentUserId;
 
@@ -412,21 +409,38 @@ class ContactsController extends AppController
                 $this->Flash->error(__('更新に失敗しました。'));
             }
 
-            // New Registration
+
             if (!empty($data['add'])) {
+                // DebugAlias('add action called with customer_id dd ' . $id);
                 return $this->redirect(['action' => 'add', $contact->customer_id]);
+            }
+
+
+            if (!empty($data['delete'])) {
+                // DebugAlias('add action called with customer_id delete ' . $id);
+                // Soft delete: mark deleted timestamp
+                $contact->deleted = date('Y-m-d H:i:s');
+                $contact->updated_user_id = $currentUserId;
+
+                if ($this->Contacts->save($contact)) {
+                    $this->Flash->success(__('対応履歴を削除しました。'));
+                    return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $contact->customer_id]);
+                }
+                $this->Flash->error(__('削除に失敗しました。'));
             }
         }
 
+
         $customer = $contact->customer;
+
 
         $contacts = $this->Contacts->find()
             ->where(['Contacts.customer_id' => $contact->customer_id, 'Contacts.deleted IS' => null])
-            ->orderBy(['Contacts.updated' => 'DESC'])
+            ->order(['Contacts.updated' => 'DESC'])
             ->contain(['Customers'])
             ->all();
 
-        // Add dynamic field 'op_incharge'
+
         foreach ($contacts as $contactItem) {
             $user = $this->Users->find()
                 ->select(['user_name'])
@@ -435,13 +449,14 @@ class ContactsController extends AppController
             $contactItem->op_incharge = $user ? $user->user_name : '-';
         }
 
-        // Main contact op_incharge
+
         $mainUser = $this->Users->find()
             ->select(['user_name'])
             ->where(['id' => $contact->updated_user_id])
             ->first();
         $contact->op_incharge = $mainUser ? $mainUser->user_name : '-';
 
+        // 8️⃣ Pass variables to view
         $this->set(compact('contact', 'customer', 'contacts'));
         $this->setListValue(); // for select options
     }
@@ -505,25 +520,25 @@ class ContactsController extends AppController
 
 
 
- public function delete(?string $id = null)
-{
+    public function delete(?string $id = null)
+    {
 
-    debug ('delete action called with id: ' . $id);
-    $this->request->allowMethod(['post', 'delete']);
-    $contact = $this->Contacts->get($id);
+        //DebugAlias('delete action called with id: ' . $id);
+        $this->request->allowMethod(['post', 'delete']);
+        $contact = $this->Contacts->get($id);
 
-    $currentUser = $this->getCurrentUser();
-    $contact->deleted = date('Y-m-d H:i:s');
-    $contact->deleted_user_id = $currentUser ? $currentUser->id : 0;
+        $currentUser = $this->getCurrentUser();
+        $contact->deleted = date('Y-m-d H:i:s');
+        $contact->deleted_user_id = $currentUser ? $currentUser->id : 0;
 
-    if ($this->Contacts->save($contact, ['fields' => ['deleted', 'deleted_user_id']])) {
-        $this->Flash->success(__('対応履歴を削除しました。'));
-    } else {
-        $this->Flash->error(__('削除に失敗しました。'));
+        if ($this->Contacts->save($contact, ['fields' => ['deleted', 'deleted_user_id']])) {
+            $this->Flash->success(__('対応履歴を削除しました。'));
+        } else {
+            $this->Flash->error(__('削除に失敗しました。'));
+        }
+
+        return $this->redirect(['action' => 'index']);
     }
-
-    return $this->redirect(['action' => 'index']); // or view page
-}
 
     protected function setListValue(): void
     {
