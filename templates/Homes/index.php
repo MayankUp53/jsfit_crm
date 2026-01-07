@@ -58,10 +58,17 @@
         </div>
 
         <!-- ================= Client-side Search Input ================= -->
-    <div style="margin:10px 0; width:25%;">
-    <input type="text" id="callSearch" class="form-control"
-           placeholder="検索: キャンペーン名、結果、電話番号など">
+<div style="margin:10px 0; width:25%; display:flex; align-items:center;">
+    <span style="margin-right:8px; margin-left:8px; white-space:nowrap;">
+        検索:
+    </span>
+    <input type="text"
+           id="callSearch"
+           class="form-control"
+           style="width:100%;"
+            placeholder="キャンペーン名、結果、	電話番号">
 </div>
+
 
         <!-- ================= Call History Table ================= -->
         <table id="callsTable" class="table table-hover" style="font-size:12px">
