@@ -98,13 +98,14 @@ $currentUser = $this->request->getAttribute('identity');
     </div>
 </div>
 
-<!-- ================= Main Contact Detail ================= -->
+ <!-- ================= Main Contact Detail ================= -->
 <div class="panel panel-primary">
     <div class="panel-heading">
         <h3 class="panel-title">対応履歴更新</h3>
     </div>
 
-    <?= $this->Form->create($contact, ['url' => ['action' => 'edit', $contact->id]]) ?>
+    <!-- Form bound to contact, posts to view() action -->
+    <?= $this->Form->create($contact, ['url' => ['action' => 'view', $contact->id, 'type' => 'post' ]]) ?>
     <?= $this->Form->control('id', ['type' => 'hidden']) ?>
     <?= $this->Form->control('customer_id', ['type' => 'hidden', 'value' => $contact->customer_id]) ?>
 
@@ -148,29 +149,39 @@ $currentUser = $this->request->getAttribute('identity');
         </div>
     </div>
 
+    <!-- ================= Buttons ================= -->
+    <div class="text-center" style="margin-top:15px;">
 
-<div class="text-center" style="margin-top:15px;">
-    <!-- Update -->
-    <?= $this->Form->button('更　新', [
-        'type' => 'submit',
-        'name' => 'update',
-        'value' => '1',
-        'class' => 'btn btn-info btn-xs',
-        'style' => 'width:150px;height:35px;margin:5px;'
-    ]) ?>
+     
+        <?= $this->Form->button('更　新', [
+            'type' => 'submit',
+            'name' => 'update',
+            'value' => '1',
+            'class' => 'btn btn-info btn-xs',
+            'style' => 'width:150px;height:35px;margin:5px;'
+        ]) ?>
 
-    <!-- Delete -->
-    <?= $this->Form->postLink('削　除', ['action' => 'delete', $contact->id], [
-        'confirm' => '削除しますか？',
-        'class' => 'btn btn-danger btn-xs',
-        'style' => 'width:150px;height:35px;margin:5px;'
-    ]) ?>
+       
+        <?= $this->Form->button('削　除', [
+            'type' => 'submit',
+            'name' => 'delete',
+            'value' => '1',
+            'class' => 'btn btn-danger btn-xs',
+            'style' => 'width:150px;height:35px;margin:5px;',
+            'onclick' => "return confirm('削除しますか？');"
+        ]) ?>
 
-    <!-- New Registration -->
-    <a href="<?= $this->Url->build(['action' => 'add', $contact->customer_id]) ?>"
-       class="btn btn-success btn-xs" style="width:150px;height:35px;margin:5px;">
-       新規登録
-    </a>
+      
+        <?= $this->Form->button('新規登録', [
+            'type' => 'submit',
+            'name' => 'add',
+            'value' => '1',
+            'class' => 'btn btn-success btn-xs',
+            'style' => 'width:150px;height:35px;margin:5px;'
+        ]) ?>
+    </div>
+
+    <?= $this->Form->end() ?>
 </div>
 
 
