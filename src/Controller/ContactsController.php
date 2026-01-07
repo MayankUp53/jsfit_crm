@@ -436,7 +436,7 @@ class ContactsController extends AppController
 
         $contacts = $this->Contacts->find()
             ->where(['Contacts.customer_id' => $contact->customer_id, 'Contacts.deleted IS' => null])
-            ->order(['Contacts.updated' => 'DESC'])
+            ->orderBy(['Contacts.updated' => 'DESC'])
             ->contain(['Customers'])
             ->all();
 
