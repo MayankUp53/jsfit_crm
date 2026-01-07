@@ -1,56 +1,65 @@
-<div class="panel panel-primary">
-    <div class="panel-heading">
-        <h3 class="panel-title">ユーザ一覧</h3>
-    </div>
+<?php
+$this->assign('title', 'ユーザ一覧');
+?>
 
-    <!-- ================= Search Box ================= -->
-    <div style="width:300px;margin:10px;">
-        <input type="text" id="searchInput" class="form-control" placeholder="ユーザを検索...">
-    </div>
-
-    <table id="usersTable" class="table table-striped table-hover">
+<!-- ================= Users Table ================= -->
+<div class="container-fluid" style="margin-top:20px; padding-left:5px; padding-right:5px;">
+    <table id="usersTable" class="table table-striped table-bordered table-hover" style="width:100%">
         <thead>
             <tr>
-                <th width="10%" style="vertical-align:middle;color:#ffffff;" bgcolor="#149c82">ID</th>
-                <th width="15%" style="vertical-align:middle;color:#ffffff;" bgcolor="#149c82">氏名</th>
-                <th width="15%" style="vertical-align:middle;color:#ffffff;" bgcolor="#149c82">権限</th>
-                <th width="15%" style="vertical-align:middle;color:#ffffff;" bgcolor="#149c82">ログインＩＤ</th>
-                <th width="15%" style="vertical-align:middle;color:#ffffff;" bgcolor="#149c82">パスワード</th>
-                <th width="20%" style="vertical-align:middle;color:#ffffff;" bgcolor="#149c82">登録日</th>
+                <th>ID</th>
+                <th>氏名</th>
+                <th>権限</th>
+                <th>ログインID</th>
+                <th>パスワード</th>
+                <th>登録日</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($users as $user): ?>
-                <tr ondblclick="location.href='<?= $this->Url->build(['action' => 'edit', $user->id]) ?>'">
-                    <td><?= h($user->disp_cd) ?></td>
-                    <td><?= h($user->user_name) ?></td>
-                    <td><?= h($authOpt[$user->auth] ?? $user->auth) ?></td>
-                    <td><?= h($user->loginid) ?></td>
-                    <td><?= h($user->password) ?></td>
-                    <td><?= h($user->created) ?></td>
-                </tr>
+            <tr ondblclick="location.href='<?= $this->Url->build(['action' => 'edit', $user->id]) ?>'">
+                <td><?= h($user->disp_cd) ?></td>
+                <td><?= h($user->user_name) ?></td>
+                <td><?= h($authOpt[$user->auth] ?? $user->auth) ?></td>
+                <td><?= h($user->loginid) ?></td>
+                <td><?= h($user->password) ?></td>
+                <td><?= h($user->created?->format('Y-m-d')) ?></td>
+            </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
 
-    <div style="width:95%;margin-bottom:5px;margin-top:5px;" align="center" class="btn_margin">
-        <button style="width:150px;height:30px;cursor:pointer;" 
-                onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>';" 
-                class="btn-info btn-xs">
+
+    <div style="text-align:center;margin-top:15px;">
+        <button class="btn btn-info btn-xs" style="width:150px;height:30px;"
+                onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>'">
             新規作成
         </button>
     </div>
 </div>
 
-<!-- ================= Client-Side Search Script ================= -->
-<script>
-document.getElementById('searchInput').addEventListener('keyup', function() {
-    let filter = this.value.toLowerCase(); // get typed text
-    let rows = document.querySelectorAll('#usersTable tbody tr');
 
-    rows.forEach(row => {
-        let text = row.textContent.toLowerCase(); // all text in row
-        row.style.display = text.includes(filter) ? '' : 'none';
+<?php $this->start('script'); ?>
+<script>
+jQuery(document).ready(function($) {
+    var table = $('#usersTable').DataTable({
+        pageLength: 10,
+        lengthChange: false,
+        ordering: true,
+        searching: true,
+        responsive: true,
+        language: {
+            search: "ユーザを検索:",
+            paginate: { previous: "前", next: "次" },
+            info: "_START_ - _END_ / _TOTAL_ 件表示",
+            infoEmpty: "0 件表示",
+            zeroRecords: "該当データがありません"
+        },
+        // Move search box to the left
+        dom: '<"row"<"col-sm-6"f><"col-sm-6"l>>tip' // f=filter, l=length
     });
+
+ 
 });
 </script>
+<?php $this->end(); ?>

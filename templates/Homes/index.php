@@ -1,7 +1,7 @@
 <?php
 /**
  * Homes/index
- * AmeyoJ Dashboard with Manual Dial + Call History + Client-side Search
+ * AmeyoJ Dashboard with Manual Dial + Call History + DataTables
  */
 ?>
 
@@ -57,94 +57,78 @@
             コール履歴一覧（直近<?= h($limit) ?>件まで表示）
         </div>
 
-        <!-- ================= Client-side Search Input ================= -->
-<div style="margin:10px 0; width:25%; display:flex; align-items:center;">
-    <span style="margin-right:8px; margin-left:8px; white-space:nowrap;">
-        検索:
-    </span>
-    <input type="text"
-           id="callSearch"
-           class="form-control"
-           style="width:100%;"
-            placeholder="キャンペーン名、結果、	電話番号">
+        <!-- ================= Call History Table ================= -->
+        <table id="callsTable" class="table table-hover table-bordered" style="font-size:12px; width:100%;">
+    <thead>
+        <tr style="vertical-align:middle;color:#ffffff;" bgcolor="#46b8da">
+            <th>No.</th>
+            <th>キャンペーン</th>
+            <th>結果</th>
+            <th>電話番号</th>
+            <th>対応者</th>
+            <th>発信日時</th>
+            <th>通話時間(秒)</th>
+            <th>録音</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php $calls = $pagedCalls ?? $response ?? []; ?>
+        <?php if (!empty($calls)): ?>
+            <?php foreach ($calls as $row): ?>
+                <tr>
+                    <td><?= h($row['row_number'] ?? '') ?></td>
+                    <td><?= h($row['campaign_name'] ?? '') ?></td>
+                    <td><?= h($row['result'] ?? '') ?></td>
+                    <td><?= h($row['phone'] ?? '') ?></td>
+                    <td><?= h($row['user_name'] ?? '') ?></td>
+                    <td><?= h($row['call_originate_time'] ?? '') ?></td>
+                    <td><?= h($row['talk_time'] ?? '') ?></td>
+                    <td>
+                        <?php if (!empty($row['call_id']) && !empty($row['crt_object_id'])): ?>
+                            <a href="javascript:void(0);" onclick="window.open('<?= $this->Url->build(['action' => 'play', $row['call_id'], $row['crt_object_id']]) ?>','','width=310,height=80');">
+                                再生
+                            </a>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>コール履歴が見つかりません。</td>
+            </tr>
+        <?php endif; ?>
+    </tbody>
+</table>
+
+   </div>
 </div>
 
-
-        <!-- ================= Call History Table ================= -->
-        <table id="callsTable" class="table table-hover" style="font-size:12px">
-            <thead>
-                <tr style="vertical-align:middle;color:#ffffff;" bgcolor="#46b8da">
-                    <th>No.</th>
-                    <th>キャンペーン</th>
-                    <th>結果</th>
-                    <th>電話番号</th>
-                    <th>対応者</th>
-                    <th>発信日時</th>
-                    <th>通話時間(秒)</th>
-                    <th>録音</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php $calls = $pagedCalls ?? $response ?? []; ?>
-                <?php if (!empty($calls)): ?>
-                    <?php foreach ($calls as $row): ?>
-                        <tr>
-                            <td><?= h($row['row_number'] ?? '') ?></td>
-                            <td><?= h($row['campaign_name'] ?? '') ?></td>
-                            <td><?= h($row['result'] ?? '') ?></td>
-                            <td><?= h($row['phone'] ?? '') ?></td>
-                            <td><?= h($row['user_name'] ?? '') ?></td>
-                            <td><?= h($row['call_originate_time'] ?? '') ?></td>
-                            <td><?= h($row['talk_time'] ?? '') ?></td>
-                            <td>
-                                <?php if (!empty($row['call_id']) && !empty($row['crt_object_id'])): ?>
-                                    <a href="javascript:void(0);" onclick="window.open('<?= $this->Url->build(['action' => 'play', $row['call_id'], $row['crt_object_id']]) ?>','','width=310,height=80');">
-                                        再生
-                                    </a>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr><td colspan="8">コール履歴が見つかりません。</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-   </div>
-
-    <!-- ================= Pagination (Optional) ================= -->
-    <?php if (!empty($pageCount) && $pageCount > 1): ?>
-    <div style="width:100%" align="center" class="paginateLinks btn_margin">
-        <ul class="pagination pagination-sm">
-            <?php for ($p = 1; $p <= $pageCount; $p++): ?>
-                <?php if ($p === ($page ?? 1)): ?>
-                    <li class="active"><span><?= $p ?></span></li>
-                <?php else: ?>
-                    <li><a href="<?= $this->Url->build(['?' => ['page' => $p]]) ?>"><?= $p ?></a></li>
-                <?php endif; ?>
-            <?php endfor; ?>
-        </ul>
-    </div>
-    <?php endif; ?>
-
-    <!-- ================= Client-side Search Script ================= -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const input = document.getElementById('callSearch');
-        const table = document.getElementById('callsTable');
-        const rows = table.querySelectorAll('tbody tr');
-
-        input.addEventListener('keyup', function () {
-            const filter = input.value.toLowerCase();
-
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(filter)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
+<!-- ================= DataTables Initialization ================= -->
+<?php $this->start('script'); ?>
+<script>
+jQuery(document).ready(function($) {
+    $('#callsTable').DataTable({
+        pageLength: 25,
+        lengthChange: false,
+        ordering: true,
+        responsive: true,
+        language: {
+            search: "検索:",
+            paginate: { previous: "前", next: "次" },
+            info: "_START_ - _END_ / _TOTAL_ 件表示",
+            infoEmpty: "0 件表示",
+            zeroRecords: "該当データがありません"
+        },
+        // Optional: move search box to left
+        dom: '<"row"<"col-sm-6"f><"col-sm-6"l>>tip'
     });
-    </script>
+});
+</script>
+<?php $this->end(); ?>

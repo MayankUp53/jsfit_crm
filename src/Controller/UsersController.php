@@ -43,11 +43,8 @@ class UsersController extends AppController
 
         // $users = $this->paginate($query);
 
-        $warning = $this->CallbackNotification->getNumOfWarning();
-        $this->set(compact('users', 'warning'));
-
-        $this->setListValue();
-    }
+    $this->set(compact('users', ));
+}
 
 
 

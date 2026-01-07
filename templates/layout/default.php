@@ -108,10 +108,23 @@ $users_active = ($controller == 'Users') ? 'active' : null;
     </div>
 
     <!-- JS -->
+     
+  
+     
     <?= $this->Html->script('https://code.jquery.com/jquery-1.12.4.min.js') ?>
-    <?= $this->Html->script('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js') ?>
-    <?= $this->Html->script('https://code.jquery.com/ui/1.12.1/jquery-ui.min.js') ?>
-    <?= $this->Html->script('https://code.jquery.com/ui/1.12.1/i18n/jquery-ui-i18n.min.js') ?>
+<?= $this->Html->script('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js') ?>
+<?= $this->Html->script('https://code.jquery.com/ui/1.12.1/jquery-ui.min.js') ?>
+<?= $this->Html->script('https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js') ?>
+<?= $this->Html->script('https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap.min.js') ?>
+   <?= $this->Html->script('https://code.jquery.com/ui/1.12.1/i18n/jquery-ui-i18n.min.js') ?>
+
+
+    
+ 
+ 
+ 
+
+
     <script>
         $(function() {
             // Japanese locale for datepicker
