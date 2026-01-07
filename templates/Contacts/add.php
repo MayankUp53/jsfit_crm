@@ -44,19 +44,26 @@ $currentUser = $this->request->getAttribute('identity');
             <th>登録日</th>
             <td><?= h($customer->created?->format('Y-m-d')) ?></td>
         </tr>
+        <tr>
+    <th>更新日</th>
+    <td><?= h($customer->updated?->format('Y-m-d')) ?></td>
+    <th></th>
+    <td></td>
+</tr>
+
     </table>
 
-    <div class="text-right" style="margin-bottom:10px;">
+    <div class="text-right" style="margin-bottom:10px;margin-right:10px;">
         <a href="<?= $this->Url->build(['controller' => 'Customers', 'action' => 'edit', $customer->id]) ?>"
            class="btn btn-warning btn-xs">顧客編集</a>
 
-        <?php if ($currentUser && $currentUser->getOriginalData()->auth != "0"): ?>
+        <!-- <?php if ($currentUser && $currentUser->getOriginalData()->auth != "0"): ?>
             <?= $this->Form->postLink(
                 '顧客削除',
                 ['controller' => 'Customers', 'action' => 'delete', $customer->id],
                 ['confirm' => '顧客情報を削除します。よろしいですか？', 'class' => 'btn btn-danger btn-xs']
             ) ?>
-        <?php endif; ?>
+        <?php endif; ?> -->
     </div>
 </div>
 
