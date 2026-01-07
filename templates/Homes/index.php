@@ -1,8 +1,7 @@
 <?php
 /**
  * Homes/index
- * Simplified port of the CakePHP 2.x dashboard with manual dial + call history.
- * DataTables/JS can be re-added later if needed; keeping markup readable for now.
+ * AmeyoJ Dashboard with Manual Dial + Call History + Client-side Search
  */
 ?>
 
@@ -53,11 +52,18 @@
             <?= $this->Form->end() ?>
         <?php endif; ?>
 
+        <!-- ================= Call History Header ================= -->
         <div class="panel-heading" style="background-color:midnightblue;color:#fff">
             コール履歴一覧（直近<?= h($limit) ?>件まで表示）
         </div>
 
-        <table class="table table-hover" style="font-size:12px">
+        <!-- ================= Client-side Search Input ================= -->
+        <div style="margin:10px 0;">
+            <input type="text" id="callSearch" class="form-control" placeholder="検索: キャンペーン名、結果、電話番号など">
+        </div>
+
+        <!-- ================= Call History Table ================= -->
+        <table id="callsTable" class="table table-hover" style="font-size:12px">
             <thead>
                 <tr style="vertical-align:middle;color:#ffffff;" bgcolor="#46b8da">
                     <th>No.</th>
@@ -98,6 +104,7 @@
         </table>
    </div>
 
+    <!-- ================= Pagination (Optional) ================= -->
     <?php if (!empty($pageCount) && $pageCount > 1): ?>
     <div style="width:100%" align="center" class="paginateLinks btn_margin">
         <ul class="pagination pagination-sm">
@@ -112,29 +119,24 @@
     </div>
     <?php endif; ?>
 
-    <!-- <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">リマインダー（コールバック）</h3>
-        </div>
-        <table class="table table-striped table-condensed">
-            <thead>
-                <tr>
-                    <th>予定日時</th>
-                    <th>電話番号</th>
-                    <th>備考</th>
-                    <th>登録者</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($callbacks as $callback): ?>
-                    <tr>
-                        <td><?= h($callback->callback_datetime) ?></td>
-                        <td><?= h($callback->phone) ?></td>
-                        <td><?= h($callback->remark) ?></td>
-                        <td><?= h($opeOpt[$callback->created_user_id] ?? '') ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div> -->
-</div>
+    <!-- ================= Client-side Search Script ================= -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('callSearch');
+        const table = document.getElementById('callsTable');
+        const rows = table.querySelectorAll('tbody tr');
+
+        input.addEventListener('keyup', function () {
+            const filter = input.value.toLowerCase();
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+    </script>

@@ -33,15 +33,15 @@ class UsersController extends AppController
      */
     public function index()
     {
-        $query = $this->Users->find()
+         $users = $this->Users->find()
             ->where(['Users.deleted IS' => null])
             ->orderBy(['Users.updated' => 'DESC', 'Users.created' => 'DESC']);
 
-        $this->paginate = [
-            'limit' => 10,
-        ];
+        // $this->paginate = [
+        //     'limit' => 10
+        // ];
 
-        $users = $this->paginate($query);
+        // $users = $this->paginate($query);
 
         $warning = $this->CallbackNotification->getNumOfWarning();
         $this->set(compact('users', 'warning'));
