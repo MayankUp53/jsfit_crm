@@ -76,6 +76,10 @@ $currentUser = $this->request->getAttribute('identity');
     <?= $this->Form->create($contact, ['url' => ['action' => 'add', $customer->id], 'id' => 'contactForm']) ?>
     <?= $this->Form->control('customer_id', ['type' => 'hidden', 'value' => $customer->id]) ?>
     <?= $this->Form->control('crtObjectId', ['type' => 'hidden', 'value' => $this->request->getSession()->read('crtObjectId')]) ?>
+    <?= $this->Form->control('crt_object_id', [
+        'type' => 'hidden',
+        'value' => $this->request->getSession()->read('crtObjectId')
+    ]) ?>
 
     <div class="panel-body">
         <!-- 概要 -->

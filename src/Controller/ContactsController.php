@@ -325,6 +325,13 @@ class ContactsController extends AppController
         // Handle form submission
         if ($this->request->is('post')) {
             $data = $this->request->getData('Contact') ?: $this->request->getData();
+
+            // Force crt_object_id from session if present (more reliable than hidden input)
+            $sessionCrt = (string)($this->request->getSession()->read('crtObjectId') ?? '');
+            if ($sessionCrt !== '') {
+                $data['crt_object_id'] = $sessionCrt;
+            }
+
             $now = date('Y-m-d H:i:s');
 
             // Set default fields
@@ -487,6 +494,13 @@ class ContactsController extends AppController
         // Handle update
         if ($this->request->is(['patch', 'post', 'put'])) {
             $data = $this->request->getData('Contact') ?: $this->request->getData();
+
+            // Force crt_object_id from session if present (more reliable than hidden input)
+            $sessionCrt = (string)($this->request->getSession()->read('crtObjectId') ?? '');
+            if ($sessionCrt !== '') {
+                $data['crt_object_id'] = $sessionCrt;
+            }
+
             $now = date('Y-m-d H:i:s');
             $currentUser = $this->getCurrentUser();
 
