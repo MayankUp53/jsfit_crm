@@ -318,7 +318,7 @@ class CustomersController extends AppController
         $customer->updated = $now;
         $customer->updated_user_id = $currentUser ? $currentUser->id : 0;
         $customer->disp_no = $dispNo;
-        $customer->client_cd = 'ameyo_' . bin2hex(random_bytes(4));
+        $customer->client_cd = 'ameyo_' . bin2hex(random_bytes(8));
         $customer->tel = $phone;
         $customer->zip_cd = '';
         $customer->addr1 = '';
