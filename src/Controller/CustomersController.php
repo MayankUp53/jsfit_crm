@@ -318,6 +318,7 @@ class CustomersController extends AppController
         $customer->updated = $now;
         $customer->updated_user_id = $currentUser ? $currentUser->id : 0;
         $customer->disp_no = $dispNo;
+        $customer->client_cd = uniqid('ameyo_', true);
         $customer->tel = $phone;
         $customer->zip_cd = '';
         $customer->addr1 = '';
