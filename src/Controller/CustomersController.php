@@ -348,7 +348,8 @@ class CustomersController extends AppController
         ?string $queueName = null,
         ?string $phone = null,
         ?string $dstPhone = null,
-        ?string $customerId = null
+        ?string $customerId = null,
+        ?string $crtObjectId = null
     ) {
         $session = $this->request->getSession();
 
@@ -360,6 +361,7 @@ class CustomersController extends AppController
         $session->delete('phone');
         $session->delete('dstPhone');
         $session->delete('customerId');
+        $session->delete('crtObjectId');
 
         // Set session values
         $session->write([
@@ -370,6 +372,7 @@ class CustomersController extends AppController
             'phone' => $phone,
             'dstPhone' => $dstPhone,
             'customerId' => $customerId,
+            'crtObjectId' => $crtObjectId,
         ]);
 
         // Handle unknown/anonymous phone numbers

@@ -107,23 +107,31 @@ $users_active = ($controller == 'Users') ? 'active' : null;
         <?= $this->fetch('content') ?>
     </div>
 
+    <!-- Global Voice Log Modal -->
+    <div class="modal fade" id="voiceLogModal" tabindex="-1" aria-labelledby="voiceLogModalLabel">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!-- Bootstrap 3 close button -->
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h5 class="modal-title" id="voiceLogModalLabel">録音再生</h5>
+                </div>
+                <div class="modal-body p-0">
+                    <iframe id="voiceLogFrame" src="" width="100%" height="80" frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JS -->
-     
-  
-     
     <?= $this->Html->script('https://code.jquery.com/jquery-1.12.4.min.js') ?>
-<?= $this->Html->script('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js') ?>
-<?= $this->Html->script('https://code.jquery.com/ui/1.12.1/jquery-ui.min.js') ?>
-<?= $this->Html->script('https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js') ?>
-<?= $this->Html->script('https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap.min.js') ?>
-   <?= $this->Html->script('https://code.jquery.com/ui/1.12.1/i18n/jquery-ui-i18n.min.js') ?>
-
-
-    
- 
- 
- 
-
+    <?= $this->Html->script('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js') ?>
+    <?= $this->Html->script('https://code.jquery.com/ui/1.12.1/jquery-ui.min.js') ?>
+    <?= $this->Html->script('https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js') ?>
+    <?= $this->Html->script('https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap.min.js') ?>
+    <?= $this->Html->script('https://code.jquery.com/ui/1.12.1/i18n/jquery-ui-i18n.min.js') ?>
 
     <script>
         $(function() {
@@ -146,6 +154,46 @@ $users_active = ($controller == 'Users') ? 'active' : null;
                 dateFormat: dateFormat2,
             });
         });
+
+        // Accessibility helpers for modal
+        (function() {
+            var $modal = $('#voiceLogModal');
+            $modal.on('shown.bs.modal', function() {
+                // Ensure assistive tech can access modal when shown
+                $modal.attr('aria-hidden', 'false');
+                // Move focus to modal for screen readers
+                $modal.attr('tabindex', '-1').focus();
+            });
+            $modal.on('hidden.bs.modal', function() {
+                // Restore aria-hidden and clear iframe
+                $modal.attr('aria-hidden', 'true');
+                var iframe = document.getElementById('voiceLogFrame');
+                if (iframe) iframe.src = '';
+                // Move focus away from hidden modal
+                document.activeElement && document.activeElement.blur();
+            });
+        })();
+
+        // Global function to open voice log modal with given IDs
+        function openVoiceLogModal(callId, crtObjectId) {
+            try {
+                var url = '<?= $this->Url->build(['controller' => 'Homes', 'action' => 'play']) ?>' + '/' + encodeURIComponent(callId) + '/' + encodeURIComponent(crtObjectId);
+                var iframe = document.getElementById('voiceLogFrame');
+                iframe.src = url;
+
+                var modalEl = document.getElementById('voiceLogModal');
+                // Use Bootstrap 3 jQuery plugin for modal
+                $(modalEl).modal('show');
+
+                // Clear iframe on modal hide (defensive in case plugin doesn't fire)
+                var clearSrc = function() { iframe.src = ''; };
+                if (modalEl.addEventListener) {
+                    modalEl.addEventListener('hidden.bs.modal', clearSrc, { once: true });
+                } else {
+                    $(modalEl).one('hidden.bs.modal', clearSrc);
+                }
+            } catch (e) { console.error(e); }
+        }
     </script>
     <?= $this->fetch('script') ?>
 </body>

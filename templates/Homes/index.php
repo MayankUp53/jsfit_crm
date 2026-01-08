@@ -85,7 +85,7 @@
                     <td><?= h($row['talk_time'] ?? '') ?></td>
                     <td>
                         <?php if (!empty($row['call_id']) && !empty($row['crt_object_id'])): ?>
-                            <a href="javascript:void(0);" onclick="window.open('<?= $this->Url->build(['action' => 'play', $row['call_id'], $row['crt_object_id']]) ?>','','width=310,height=80');">
+                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row['call_id']) ?>','<?= h($row['crt_object_id']) ?>');">
                                 再生
                             </a>
                         <?php endif; ?>

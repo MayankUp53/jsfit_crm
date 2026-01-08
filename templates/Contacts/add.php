@@ -75,6 +75,7 @@ $currentUser = $this->request->getAttribute('identity');
 
     <?= $this->Form->create($contact, ['url' => ['action' => 'add', $customer->id], 'id' => 'contactForm']) ?>
     <?= $this->Form->control('customer_id', ['type' => 'hidden', 'value' => $customer->id]) ?>
+    <?= $this->Form->control('crtObjectId', ['type' => 'hidden', 'value' => $this->request->getSession()->read('crtObjectId')]) ?>
 
     <div class="panel-body">
         <!-- 概要 -->
@@ -110,7 +111,7 @@ $currentUser = $this->request->getAttribute('identity');
                 'rows' => 4,
                 'class' => 'form-control'
             ]) ?>
-        </div>
+        </div>        
 
         <div style="text-align:center; margin:15px 0;">
             <!-- Cancel button -->
@@ -178,12 +179,17 @@ document.addEventListener("DOMContentLoaded", function() {
                     <th>担当OP</th>
                     <th>登録日</th>
                     <th>更新日</th>
+                    <th>録音</th>
                     <th width="10%">操作</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($contacts as $row): ?>
-                    <tr>
+                    <tr ondblclick="window.location='<?= $this->Url->build([
+                                                            'controller' => 'Contacts',
+                                                            'action' => 'view',
+                                                            $row->id ?? ''
+                                                        ]) ?>'">
                         <td><?= h($row->customer->client_cd ?? '') ?></td>
                         <td><?= h($row->customer->company_name ?? '') ?></td>
                         <td><?= h($row->customer->name ?? '') ?></td>
@@ -195,12 +201,14 @@ document.addEventListener("DOMContentLoaded", function() {
                         <td><?= h($row->created ? $row->created->format('Y-m-d H:i') : '') ?></td>
                         <td><?= h($row->updated ? $row->updated->format('Y-m-d H:i') : '') ?></td>
                         <td>
-                            <a href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>" class="btn btn-xs btn-primary">編集</a>
+                                <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? ($row->call_id ?? '')) ?>','<?= h($row->crtObjectId ?? '') ?>');">再生</a>
+                        </td>
+                        <td>                            
                             <?= $this->Form->postLink('削除', ['action' => 'delete', $row->id], [
                                 'confirm' => '削除しますか？', 
                                 'class' => 'btn btn-xs btn-danger'
-                            ]) ?>
-                        </td>
+                            ]) ?> </td>
+                            
                     </tr>
                 <?php endforeach; ?>
             </tbody>

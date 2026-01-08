@@ -221,6 +221,8 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
                                     'style' => 'margin-left:6px;',
                                 ]) ?>
                             <?php endif; ?>
+
+                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row['call_id'] ?? ($row['id'] ?? '')) ?>','<?= h($row['crtObjectId'] ?? '') ?>');">再生</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
