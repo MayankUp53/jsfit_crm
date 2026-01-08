@@ -183,6 +183,7 @@ class HomesController extends AppController
             'sessionId' => (string)$sessionId,
             'command-request-id' => (string)$cmdreqId,
             'phone' => (string)$tel,
+            'shouldAddCustomer' => false,
             'additionalParams' => [
                 'caller_id' => (string)$callerId,
             ],
