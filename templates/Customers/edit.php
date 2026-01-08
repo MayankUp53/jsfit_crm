@@ -14,7 +14,7 @@ $this->assign('title', '顧客詳細情報更新');
             <!-- 得意先CD -->
             <div class="col-sm-6 form-group">
                 <label>得意先CD</label>
-                <?= $this->Form->control('client_cd', ['label' => false, 'class' => 'form-control', 'type' => 'number']) ?>
+                <?= $this->Form->control('client_cd', ['label' => false, 'class' => 'form-control']) ?>
             </div>
 
             <!-- 会社・支店名 -->
