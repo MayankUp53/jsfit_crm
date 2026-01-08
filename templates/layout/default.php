@@ -119,7 +119,14 @@ $users_active = ($controller == 'Users') ? 'active' : null;
                     <h5 class="modal-title" id="voiceLogModalLabel">録音再生</h5>
                 </div>
                 <div class="modal-body p-0">
-                    <iframe id="voiceLogFrame" src="" width="100%" height="80" frameborder="0"></iframe>
+                    <iframe
+                        id="voiceLogFrame"
+                        src=""
+                        width="100%"
+                        height="120"
+                        frameborder="0"
+                        style="border:0; overflow:hidden;"
+                    ></iframe>
                 </div>
             </div>
         </div>
