@@ -205,7 +205,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <td><?= h($row->created ? $row->created->format('Y-m-d H:i') : '') ?></td>
                         <td><?= h($row->updated ? $row->updated->format('Y-m-d H:i') : '') ?></td>
                         <td>
-                                <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? ($row->call_id ?? '')) ?>','<?= h($row->crtObjectId ?? '') ?>');">再生</a>
+                                <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? ($row->call_id ?? '')) ?>','<?= h($row->crt_object_id ?? '') ?>');">再生</a>
                         </td>
                         <td>                            
                             <?= $this->Form->postLink('削除', ['action' => 'delete', $row->id], [

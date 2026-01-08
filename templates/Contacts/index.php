@@ -211,7 +211,7 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
                         <td width="8%"><?= $row->created ? h($row->created->format('Y-m-d H:i')) : '' ?></td>
                         <td width="8%"><?= $row->updated ? h($row->updated->format('Y-m-d H:i')) : '' ?></td>
                         <td>
-                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? '') ?>','<?= h($row->crtObjectId ?? '') ?>');">再生</a>
+                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? '') ?>','<?= h($row->crt_object_id ?? '') ?>');">再生</a>
                         </td>               
 
                         <td width="13%">
