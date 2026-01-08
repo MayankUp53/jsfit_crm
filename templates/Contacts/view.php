@@ -78,8 +78,7 @@ $currentUser = $this->request->getAttribute('identity');
             <th>担当OP</th>
             <th>登録日</th>
             <th>更新日</th> <!-- new column -->
-            <th>録音</th>
-            <th width="4%">操作</th>
+            <th>録音</th>            
         </tr>
     </thead>
     <tbody>
@@ -97,12 +96,7 @@ $currentUser = $this->request->getAttribute('identity');
                 <td><?= h($row->updated ? $row->updated->format('Y-m-d H:i') : '') ?></td> 
                 <td>
                     <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? '') ?>','<?= h($row->crtObjectId ?? '') ?>');">再生</a>
-                </td>
-                <td>                    
-                    <?= $this->Form->postLink('削除', ['action' => 'delete', $row->id], [
-                        'confirm' => '削除しますか？', 
-                        'class' => 'btn btn-xs btn-danger'
-                    ]) ?> </td>
+                </td>               
                 
             </tr>
         <?php endforeach; ?>

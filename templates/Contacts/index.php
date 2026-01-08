@@ -186,6 +186,7 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
                     <th width="8%">担当</th>
                     <th width="8%">登録日</th>
                     <th width="8%">更新日</th>
+                    <th width="13%">録音</th>
                     <th width="13%">操作</th>
                 </tr>
             </thead>
@@ -209,6 +210,9 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
                         <td width="8%"><?= h($row->op_incharge) ?></td>
                         <td width="8%"><?= $row->created ? h($row->created->format('Y-m-d H:i')) : '' ?></td>
                         <td width="8%"><?= $row->updated ? h($row->updated->format('Y-m-d H:i')) : '' ?></td>
+                        <td>
+                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? '') ?>','<?= h($row->crtObjectId ?? '') ?>');">再生</a>
+                        </td>               
 
                         <td width="13%">
                             <a href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>"
@@ -220,10 +224,8 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
                                     'class' => 'btn btn-xs btn-danger',
                                     'style' => 'margin-left:6px;',
                                 ]) ?>
-                            <?php endif; ?>
-
-                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row['call_id'] ?? ($row['id'] ?? '')) ?>','<?= h($row['crtObjectId'] ?? '') ?>');">再生</a>
-                        </td>
+                            <?php endif; ?> </td>
+                            
                     </tr>
                 <?php endforeach; ?>
             </tbody>
