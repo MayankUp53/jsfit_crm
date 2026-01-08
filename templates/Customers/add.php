@@ -40,8 +40,7 @@ $this->assign('title', '顧客詳細情報新規登録 ');
                         <label>得意先CD</label>
                         <?= $this->Form->control('client_cd', [
                             'label' => false,
-                            'class' => 'form-control',
-                            'type' => 'number'
+                            'class' => 'form-control'                            
                         ]) ?>
                     </td>
                 </tr>
