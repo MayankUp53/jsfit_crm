@@ -11,7 +11,7 @@ $this->assign('title', 'ユーザ一覧');
                 <th>氏名</th>
                 <th>権限</th>
                 <th>ログインID</th>
-                <th>パスワード</th>
+                <!-- <th>パスワード</th> -->
                 <th>登録日</th>
             </tr>
         </thead>
@@ -22,7 +22,7 @@ $this->assign('title', 'ユーザ一覧');
                 <td><?= h($user->user_name) ?></td>
                 <td><?= h($authOpt[$user->auth] ?? $user->auth) ?></td>
                 <td><?= h($user->loginid) ?></td>
-                <td><?= h($user->password) ?></td>
+                <!-- <td><?= h($user->password) ?></td> -->
                 <td><?= h($user->created?->format('Y-m-d')) ?></td>
             </tr>
             <?php endforeach; ?>

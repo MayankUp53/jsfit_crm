@@ -44,6 +44,7 @@ class UsersController extends AppController
         // $users = $this->paginate($query);
 
     $this->set(compact('users', ));
+    $this->setListValue();
 }
 
 
