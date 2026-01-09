@@ -67,8 +67,7 @@ class CustomersTable extends Table
         $validator
             ->scalar('name')
             ->maxLength('name', 255)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name', '氏名は必須です。入力してください。');
+            ->allowEmptyString('name'); // name is optional
 
         $validator
             ->scalar('phone')
@@ -108,16 +107,17 @@ class CustomersTable extends Table
         $validator
             ->integer('deleted_user_id')
             ->allowEmptyString('deleted_user_id');
-            $validator
-        ->scalar('client_cd')
-        ->maxLength('client_cd', 255)
-        ->requirePresence('client_cd', 'create')
-        ->notEmptyString('client_cd')
-        ->add('client_cd', 'unique', [
-            'rule' => 'validateUnique',
-            'provider' => 'table',
-            'message' => 'この client_cd は既に存在します'
-        ]);
+
+        $validator
+            ->scalar('client_cd')
+            ->maxLength('client_cd', 255)
+            ->requirePresence('client_cd', 'create')
+            ->notEmptyString('client_cd')
+            ->add('client_cd', 'unique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table',
+                'message' => 'この client_cd は既に存在します'
+            ]);
 
         return $validator;
     }

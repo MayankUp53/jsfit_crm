@@ -50,7 +50,7 @@ $id = $row?->id;
         </tr>
         <tr>
             <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">更新者</td>
-            <td><?= h(($opeOpt[$row->updated_user_id] ?? '') ?: '') ?>&nbsp;</td>
+            <td><?= h(($opeOpt[$row->updated_user_id ?? ''] ?? '') ?: '') ?>&nbsp;</td>
         </tr>
         <tr>
             <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">更新日時</td>
