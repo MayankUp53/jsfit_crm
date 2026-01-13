@@ -25,33 +25,35 @@ class ImportsController extends AppController
         $this->set(compact('warning'));
     }
 
-    /**
-     * Download import template
-     */
-    public function template()
-    {
-        $headers = [
-            '得意先CD',
-            '会社・支店名',
-            '氏名',
-            '番号種別',
-            'Tel',
-            'Fax',
-            'メールアドレス',
-            '登録日'
-        ];
+  /**
+ * Download import template
+ */
+public function template()
+{
+    $headers = [
+        '得意先CD',
+        '会社・支店名',
+        '氏名',
+        '番号種別',
+        'Tel',
+        'Fax',
+        'メールアドレス',
+        '登録日',
+        'メモ'
+    ];
 
-        $filename = 'import_template_customers.csv';
-        $this->response = $this->response
-            ->withType('csv')
-            ->withDownload($filename);
+    $filename = 'import_template_customers.csv';
+    $this->response = $this->response
+        ->withType('csv')
+        ->withDownload($filename);
 
-        $out = fopen('php://output', 'w');
-        fputcsv($out, $headers);
-        fclose($out);
+    $out = fopen('php://output', 'w');
+    fputcsv($out, $headers);
+    fclose($out);
 
-        return $this->response;
-    }
+    return $this->response;
+}
+
 
     /**
      * Basic CSV import for customers.
@@ -118,7 +120,8 @@ public function import()
             $tel,
             $fax,
             $email,
-            $remark
+            $memo,
+    
         ] = $row;
 
         $entity = $this->Customers->newEmptyEntity();
@@ -131,7 +134,7 @@ public function import()
             'tel' => $tel,
             'fax' => $fax,
             'email' => $email,
-            'remark' => $remark,
+            'memo' => $memo,
             'zip_cd' => '',
             'addr1' => '',
             'disp_no' => date('ymdHis') . substr((string)microtime(true), -3),

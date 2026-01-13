@@ -89,12 +89,21 @@ $this->assign('title', '顧客詳細情報新規登録 ');
                 </tr>
 
                 <tr>
-                    <td colspan="2">
+                    <td >
                         <label>メールアドレス</label>
                         <?= $this->Form->control('email', [
                             'label' => false,
                             'class' => 'form-control',
                             'type' => 'email'
+                        ]) ?>
+                    </td>
+                     <td >
+                        <label>メモ</label>
+                        <?= $this->Form->control('memo', [
+                            'label' => false,
+                            'class' => 'form-control'
+                        ]) ?>
+                    </td>
                         ]) ?>
                     </td>
                 </tr>
