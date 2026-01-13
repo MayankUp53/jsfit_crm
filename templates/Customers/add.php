@@ -104,8 +104,7 @@ $this->assign('title', '顧客詳細情報新規登録 ');
                             'class' => 'form-control'
                         ]) ?>
                     </td>
-                        ]) ?>
-                    </td>
+                
                 </tr>
             </tbody>
         </table>
