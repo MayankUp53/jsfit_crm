@@ -118,14 +118,17 @@ $search = $searchData ?? [];
                         <td><?= h($customer->company_name) ?></td>
                         <td><?= h($customer->name) ?></td>
                         <td><?= h($customer->type_of_number) ?></td>
-                        <td>
-                            <!-- Clickable number -->
-                            <span class="tel-link"
-                                style="color:#007bff;text-decoration:underline;cursor:pointer;"
-                                data-tel="<?= h($customer->tel) ?>">
-                                <?= h($customer->tel) ?>
-                            </span>
+                      <td>
+    <!-- Clickable number -->
+<span class="tel-link"
+      style="color:#007bff; text-decoration:underline; cursor:pointer;"
+      data-tel="<?= h($customer->tel) ?>"
+      data-name="<?= h($customer->name) ?>">
+      <?= h($customer->tel) ?>
+</span>
                         </td>
+
+
 
                         <td><?= h($customer->fax ?? '') ?></td>
                         <td><?= h($customer->memo ?? '') ?></td>
@@ -175,7 +178,7 @@ $search = $searchData ?? [];
     <div style="background:white; padding:30px 25px; border-radius:12px; width:350px; 
         box-shadow:0 8px 25px rgba(0,0,0,0.3); text-align:center; font-family:Arial, sans-serif; max-height:90vh; overflow:auto;">
 
-        <h2 style="margin-top:0; font-size:20px; color:#333; margin-bottom:20px;">Make Call</h2>
+        <h2 style="margin-top:0; font-size:20px; color:#333; margin-bottom:20px;">通話する</h2>
 
         <?= $this->Form->create(null, [
             'url' => ['controller' => 'Homes', 'action' => 'manualDialApi'],
@@ -183,22 +186,32 @@ $search = $searchData ?? [];
             'id' => 'callForm'
         ]) ?>
 
-        <!-- Selected Number -->
+        <!-- Hidden input for phone number -->
         <?= $this->Form->hidden('tel', ['id' => 'modalTel']) ?>
+
+        <!-- Name & Number Table Row -->
         <div style="margin-bottom:20px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Number</label>
-            <span id="displayTel" style="display:block; font-size:16px; color:#007bff;"></span>
+            <table style="width:100%; font-size:16px; border-collapse:collapse;">
+                <tr>
+                    <td style="font-weight:bold; color:#555; width:30%;">氏名</td>
+                    <td id="displayName" style="color:#007bff;"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:bold; color:#555;">番号</td>
+                    <td id="displayTel" style="color:#007bff;"></td>
+                </tr>
+            </table>
         </div>
 
         <!-- CID Custom Scrollable Dropdown -->
         <div style="margin-bottom:25px; text-align:left;">
-            <label for="cidSelect" style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">CID</label>
+            <label for="cidSelect" style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">発信者ID (CID)</label>
 
             <?= $this->Form->control('cid', [
                 'type' => 'select',
                 'id' => 'cidSelect',
                 'options' => $cidOpt,
-                'empty' => 'Select CID',
+                'empty' => 'CIDを選択',
                 'label' => false,
                 'style' => 'width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:14px; max-height:150px; overflow-y:auto;'
             ]) ?>
@@ -206,7 +219,7 @@ $search = $searchData ?? [];
 
         <!-- Buttons -->
         <div style="display:flex; gap:15px; justify-content:center;">
-            <?= $this->Form->button('Call', [
+            <?= $this->Form->button('通話', [
                 'type' => 'submit',
                 'style' => 'flex:1; padding:12px; background:#28a745; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:15px; transition:0.3s;',
                 'onmouseover' => "this.style.background='#218838'",
@@ -216,7 +229,7 @@ $search = $searchData ?? [];
                 style="flex:1; padding:12px; background:#f0f0f0; color:#333; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:15px; transition:0.3s;"
                 onmouseover="this.style.background='#e0e0e0'"
                 onmouseout="this.style.background='#f0f0f0'">
-                Cancel
+                キャンセル
             </button>
         </div>
 
@@ -229,8 +242,9 @@ $search = $searchData ?? [];
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('callModal');
     const displayTel = document.getElementById('displayTel');
-    const modalTel = document.getElementById('modalTel');
+    const modalTel = document.getElementById('modalTel'); // now exists
     const cancelBtn = document.getElementById('cancelBtn');
+    const displayName = document.getElementById('displayName'); 
 
     // Ensure modal is hidden initially
     modal.style.display = 'none';
@@ -238,13 +252,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Open modal when a phone number is clicked
     document.querySelectorAll('.tel-link').forEach(el => {
         el.addEventListener('click', function(e) {
-            e.preventDefault(); // prevent default action if any
+            e.preventDefault();
+            let tel = this.dataset.tel || '';
+            let cleanTel = tel.replace(/-/g, '');
+            let name = this.dataset.name || '';
 
-            let tel = this.dataset.tel; 
-            let cleanTel = tel.replace(/-/g, ''); // remove dashes
+            displayTel.textContent = cleanTel;
+            modalTel.value = cleanTel;
+            displayName.textContent = name || '名前なし';
 
-            displayTel.textContent = cleanTel; // display number without dashes
-            modalTel.value = cleanTel;         // submit number without dashes
             modal.style.display = 'flex';
         });
     });
@@ -260,3 +276,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
