@@ -159,7 +159,17 @@ $currentUser = $this->request->getAttribute('identity');
 
     <!-- ================= Buttons ================= -->
     <div class="text-center" style="margin-top:15px;">
-
+       
+           <!-- Cancel button (submit to controller) -->
+    <?= $this->Form->button('キャンセル', [
+        'type'  => 'submit',
+        'name'  => 'back',   
+        'value' => '1',
+        'id'    => 'cancelBtn',
+         'formnovalidate' => true,  
+        'class' => 'btn-default btn-xs',
+        'style' => 'width:150px;height:30px;cursor:pointer; margin-right:10px;'
+    ]) ?>
      
         <?= $this->Form->button('更　新', [
             'type' => 'submit',

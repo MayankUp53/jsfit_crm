@@ -45,24 +45,24 @@ $currentUser = $this->request->getAttribute('identity');
             <td><?= h($customer->created?->format('Y-m-d')) ?></td>
         </tr>
         <tr>
-    <th>更新日</th>
-    <td><?= h($customer->updated?->format('Y-m-d')) ?></td>
-    <th></th>
-    <td></td>
-</tr>
+            <th>更新日</th>
+            <td><?= h($customer->updated?->format('Y-m-d')) ?></td>
+            <th></th>
+            <td></td>
+        </tr>
 
     </table>
 
     <div class="text-right" style="margin-bottom:10px;margin-right:10px;">
         <a href="<?= $this->Url->build(['controller' => 'Customers', 'action' => 'edit', $customer->id]) ?>"
-           class="btn btn-warning btn-xs">顧客編集</a>
+            class="btn btn-warning btn-xs">顧客編集</a>
 
         <!-- <?php if ($currentUser && $currentUser->getOriginalData()->auth != "0"): ?>
             <?= $this->Form->postLink(
-                '顧客削除',
-                ['controller' => 'Customers', 'action' => 'delete', $customer->id],
-                ['confirm' => '顧客情報を削除します。よろしいですか？', 'class' => 'btn btn-danger btn-xs']
-            ) ?>
+                        '顧客削除',
+                        ['controller' => 'Customers', 'action' => 'delete', $customer->id],
+                        ['confirm' => '顧客情報を削除します。よろしいですか？', 'class' => 'btn btn-danger btn-xs']
+                    ) ?>
         <?php endif; ?> -->
     </div>
 </div>
@@ -88,7 +88,7 @@ $currentUser = $this->request->getAttribute('identity');
             <?= $this->Form->control('summary', [
                 'label' => false,
                 'type' => 'select',
-                'options' =>$overviewOpt ?? [],
+                'options' => $overviewOpt ?? [],
                 'empty' => '-----',
                 'class' => 'form-control'
             ]) ?>
@@ -100,7 +100,7 @@ $currentUser = $this->request->getAttribute('identity');
             <?= $this->Form->control('status', [
                 'label' => false,
                 'type' => 'select',
-               'options' => $statusOpt ??[],
+                'options' => $statusOpt ?? [],
                 'empty' => '-----',
                 'class' => 'form-control'
             ]) ?>
@@ -115,17 +115,19 @@ $currentUser = $this->request->getAttribute('identity');
                 'rows' => 4,
                 'class' => 'form-control'
             ]) ?>
-        </div>        
+        </div>
 
         <div style="text-align:center; margin:15px 0;">
-            <!-- Cancel button -->
+            <!-- Cancel button (submit to controller) -->
             <?= $this->Form->button('キャンセル', [
-                'type' => 'button',        // prevent default submit / validation
-                'id' => 'cancelBtn',
+                'type'  => 'submit',
+                'name'  => 'back',
+                'value' => '1',
+                'id'    => 'cancelBtn',
+                'formnovalidate' => true,
                 'class' => 'btn-default btn-xs',
                 'style' => 'width:150px;height:30px;cursor:pointer; margin-right:10px;'
             ]) ?>
-
             <!-- Submit button -->
             <?= $this->Form->button('登　録', [
                 'type' => 'submit',
@@ -138,31 +140,9 @@ $currentUser = $this->request->getAttribute('identity');
     <?= $this->Form->end() ?>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const form = document.getElementById("contactForm");
-    const cancelBtn = document.getElementById("cancelBtn");
 
-    // Cancel button bypasses validation
-    cancelBtn.addEventListener("click", function() {
-        window.location.href = '<?= $this->Url->build(["controller" => "Contacts", "action" => "index"]) ?>';
-    });
 
-    // Form submit validation
-    form.addEventListener("submit", function(e) {
-        // Skip validation if Cancel button triggered submit (just in case)
-        if (document.activeElement === cancelBtn) return;
 
-        const summary = form.querySelector("select[name='summary']")?.value || "";
-        const status = form.querySelector("select[name='status']")?.value || "";
-
-        if (summary === "" || status === "") {
-            alert("概要とステータスは必ず選択してください。");
-            e.preventDefault(); // stop form submission
-        }
-    });
-});
-</script>
 
 <!-- 対応履歴一覧テーブル -->
 <div class="panel panel-default">
@@ -205,14 +185,14 @@ document.addEventListener("DOMContentLoaded", function() {
                         <td><?= h($row->created ? $row->created->format('Y-m-d H:i') : '') ?></td>
                         <td><?= h($row->updated ? $row->updated->format('Y-m-d H:i') : '') ?></td>
                         <td>
-                                <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? ($row->call_id ?? '')) ?>','<?= h($row->crt_object_id ?? '') ?>');">再生</a>
+                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? ($row->call_id ?? '')) ?>','<?= h($row->crt_object_id ?? '') ?>');">再生</a>
                         </td>
-                        <td>                            
+                        <td>
                             <?= $this->Form->postLink('削除', ['action' => 'delete', $row->id], [
-                                'confirm' => '削除しますか？', 
+                                'confirm' => '削除しますか？',
                                 'class' => 'btn btn-xs btn-danger'
                             ]) ?> </td>
-                            
+
                     </tr>
                 <?php endforeach; ?>
             </tbody>
