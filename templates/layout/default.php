@@ -46,60 +46,61 @@ $users_active = ($controller == 'Users') ? 'active' : null;
     <div class="container-fluid">
         <?php if ($controller != 'Users' || $action != 'login'): ?>
             <!-- Navbar -->
-            <div class="bs-docs-section clearfix">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="bs-component">
-                            <nav class="navbar navbar-inverse">
-                                <div class="container-fluid">
-                                    <div class="navbar-header">
-                                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
-                                            <span class="sr-only">Toggle navigation</span>
-                                            <span class="icon-bar"></span>
-                                            <span class="icon-bar"></span>
-                                            <span class="icon-bar"></span>
-                                        </button>
-                                    </div>
+          <div class="bs-docs-section clearfix">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="bs-component">
+                <nav class="navbar navbar-inverse" style="background-color:#20b2aa !important; border-color:#20b2aa !important;">
+                    <div class="container-fluid">
+                        <div class="navbar-header">
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2" style="border-color:#20b2aa;">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="icon-bar" style="background-color:#ffffff;"></span>
+                                <span class="icon-bar" style="background-color:#ffffff;"></span>
+                                <span class="icon-bar" style="background-color:#ffffff;"></span>
+                            </button>
+                        </div>
 
-                                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
-                                        <ul class="nav navbar-nav">
-                                            <li class="<?= $home_active ?>">
-                                                <a href="<?= $this->Url->build('/homes') ?>">Home
-                                                    <span class="sr-only">(current)</span>
-                                                </a>
-                                            </li>
-                                            <li class="<?= $customers_active ?>">
-                                                <a href="<?= $this->Url->build('/customers') ?>">顧客検索<span class="sr-only">(current)</span></a>
-                                            </li>
-                                            <li class="<?= $contacts_active ?>">
-                                                <a href="<?= $this->Url->build('/contacts') ?>">対応履歴検索<span class="sr-only">(current)</span></a>
-                                            </li>
-                                            <?php if ($currentUser && $currentUser->auth != 0): ?>
-                                                <li class="<?= $settings_active ?>">
-                                                    <a href="<?= $this->Url->build('/settings') ?>">設定</a>
-                                                </li>
-                                            <?php endif; ?>
-                                            <?php if ($currentUser): ?>
-                                                <li class="<?= $users_active ?>">
-                                                    <a href="<?= $this->Url->build('/users') ?>">ユーザ管理</a>
-                                                </li>
-                                            <?php endif; ?>
-                                            <li>
-                                                <a href="<?= $this->Url->build('/users/logout') ?>">ログアウト</a>
-                                            </li>
-                                        </ul>
-                                        <ul class="nav navbar-nav navbar-right">
-                                            <?php if ($currentUser): ?>
-                                                <li><a href="#" target="_blank"><?= h($currentUser->user_name) ?></a></li>
-                                            <?php endif; ?>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </nav>
+                        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
+                            <ul class="nav navbar-nav">
+                                <li class="<?= $home_active ?>">
+                                    <a href="<?= $this->Url->build('/homes') ?>" style="color:#ffffff !important;">Home
+                                        <span class="sr-only">(current)</span>
+                                    </a>
+                                </li>
+                                <li class="<?= $customers_active ?>">
+                                    <a href="<?= $this->Url->build('/customers') ?>" style="color:#ffffff !important;">顧客検索<span class="sr-only">(current)</span></a>
+                                </li>
+                                <li class="<?= $contacts_active ?>">
+                                    <a href="<?= $this->Url->build('/contacts') ?>" style="color:#ffffff !important;">対応履歴検索<span class="sr-only">(current)</span></a>
+                                </li>
+                                <?php if ($currentUser && $currentUser->auth != 0): ?>
+                                    <li class="<?= $settings_active ?>">
+                                        <a href="<?= $this->Url->build('/settings') ?>" style="color:#ffffff !important;">設定</a>
+                                    </li>
+                                <?php endif; ?>
+                                <?php if ($currentUser): ?>
+                                    <li class="<?= $users_active ?>">
+                                        <a href="<?= $this->Url->build('/users') ?>" style="color:#ffffff !important;">ユーザ管理</a>
+                                    </li>
+                                <?php endif; ?>
+                                <li>
+                                    <a href="<?= $this->Url->build('/users/logout') ?>" style="color:#ffffff !important;">ログアウト</a>
+                                </li>
+                            </ul>
+                            <ul class="nav navbar-nav navbar-right">
+                                <?php if ($currentUser): ?>
+                                    <li><a href="#" target="_blank" style="color:#ffffff !important;"><?= h($currentUser->user_name) ?></a></li>
+                                <?php endif; ?>
+                            </ul>
                         </div>
                     </div>
-                </div>
+                </nav>
             </div>
+        </div>
+    </div>
+</div>
+
         <?php endif; ?>
 
         <?= $this->Flash->render() ?>

@@ -7,6 +7,8 @@ namespace App\Controller;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
 
+use function Cake\Error\debug;
+
 /**
  * Customers Controller
  *
@@ -20,6 +22,7 @@ class CustomersController extends AppController
     protected $Contacts;
     protected $Users;
     protected $MtStatuses;
+    protected $MtCids;
     /**
      * Initialization hook method.
      *
@@ -34,6 +37,7 @@ class CustomersController extends AppController
         $this->Contacts = $this->fetchTable('Contacts');
         $this->Users = $this->fetchTable('Users');
         $this->MtStatuses = $this->fetchTable('MtStatuses');
+        $this->MtCids = $this->fetchTable('MtCids');
     }
 
     /**
@@ -609,7 +613,20 @@ class CustomersController extends AppController
             ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
             ->toArray();
 
-        $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt'));
+
+
+        $cidOpt = $this->MtCids
+            ->find('list', keyField: 'cid', valueField: 'item_name')
+            ->where([
+                'deleted IS' => null,
+                //'campaign_id IS' => $session->read('campaign'),
+                     'campaign_id IS' => 1,
+            ])
+            ->orderBy(['disp_cd' => 'ASC'])
+            ->toArray();
+        
+
+        $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt', 'cidOpt'));
     }
 
 

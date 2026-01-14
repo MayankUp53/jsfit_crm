@@ -141,3 +141,32 @@ table.table thead tr {
     color: #000 !important;
     background-color: #fff !important;
 }
+
+/* Navbar background color */
+.navbar.navbar-inverse {
+    background-color: #20b2aa !important;
+    border-color: #20b2aa !important;
+}
+
+/* Navbar text color */
+.navbar.navbar-inverse .navbar-nav > li > a,
+.navbar.navbar-inverse .navbar-brand {
+    color: #ffffff !important;
+}
+
+/* Hover & active menu */
+.navbar.navbar-inverse .navbar-nav > li > a:hover,
+.navbar.navbar-inverse .navbar-nav > li.active > a,
+.navbar.navbar-inverse .navbar-nav > li.active > a:hover {
+    background-color: #149c82 !important;
+    color: #ffffff !important;
+}
+
+/* Mobile toggle button */
+.navbar-inverse .navbar-toggle {
+    border-color: #ffffff;
+}
+.navbar-inverse .navbar-toggle .icon-bar {
+    background-color: #ffffff;
+}
+

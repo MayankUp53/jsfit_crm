@@ -32,7 +32,7 @@ $search = $searchData ?? [];
                 <td><?= $this->Form->control('Search.fax', ['label' => false, 'value' => $search['fax'] ?? '', 'class' => 'form-control']) ?></td>
 
                 <td class="search-label">得意先CD</td>
-                <td><?= $this->Form->control('Search.client_cd', ['label' => false, 'value' => $search['client_cd'] ?? '', 'class' => 'form-control', 'type' => 'number']) ?></td>
+                <td><?= $this->Form->control('Search.client_cd', ['label' => false, 'value' => $search['client_cd'] ?? '', 'class' => 'form-control']) ?></td>
 
                 <td class="search-label">番号種別</td>
                 <td>
@@ -119,18 +119,12 @@ $search = $searchData ?? [];
                         <td><?= h($customer->name) ?></td>
                         <td><?= h($customer->type_of_number) ?></td>
                         <td>
-                            <?= $this->Form->create(null, [
-                                'url' => ['controller' => 'Homes', 'action' => 'manualDialApi'],
-                                'type' => 'post',
-                                'style' => 'display:inline'
-                            ]) ?>
-                            <?= $this->Form->hidden('tel', ['value' => $customer->tel]) ?>
-                            <?= $this->Form->button(h($customer->tel), [
-                                'type' => 'submit',
-                                'class' => 'tel-link',
-                                'style' => 'background:none;border:none;padding:0;color:#007bff;text-decoration:underline;cursor:pointer;'
-                            ]) ?>
-                            <?= $this->Form->end() ?>
+                            <!-- Clickable number -->
+                            <span class="tel-link"
+                                style="color:#007bff;text-decoration:underline;cursor:pointer;"
+                                data-tel="<?= h($customer->tel) ?>">
+                                <?= h($customer->tel) ?>
+                            </span>
                         </td>
 
                         <td><?= h($customer->fax ?? '') ?></td>
@@ -173,3 +167,96 @@ $search = $searchData ?? [];
         background-color: #149c82;
     }
 </style>
+
+<!-- Popup Modal -->
+<div id="callModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+    background: rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:9999;">
+
+    <div style="background:white; padding:30px 25px; border-radius:12px; width:350px; 
+        box-shadow:0 8px 25px rgba(0,0,0,0.3); text-align:center; font-family:Arial, sans-serif; max-height:90vh; overflow:auto;">
+
+        <h2 style="margin-top:0; font-size:20px; color:#333; margin-bottom:20px;">Make Call</h2>
+
+        <?= $this->Form->create(null, [
+            'url' => ['controller' => 'Homes', 'action' => 'manualDialApi'],
+            'type' => 'post',
+            'id' => 'callForm'
+        ]) ?>
+
+        <!-- Selected Number -->
+        <?= $this->Form->hidden('tel', ['id' => 'modalTel']) ?>
+        <div style="margin-bottom:20px;">
+            <label style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">Number</label>
+            <span id="displayTel" style="display:block; font-size:16px; color:#007bff;"></span>
+        </div>
+
+        <!-- CID Custom Scrollable Dropdown -->
+        <div style="margin-bottom:25px; text-align:left;">
+            <label for="cidSelect" style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">CID</label>
+
+            <?= $this->Form->control('cid', [
+                'type' => 'select',
+                'id' => 'cidSelect',
+                'options' => $cidOpt,
+                'empty' => 'Select CID',
+                'label' => false,
+                'style' => 'width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:14px; max-height:150px; overflow-y:auto;'
+            ]) ?>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex; gap:15px; justify-content:center;">
+            <?= $this->Form->button('Call', [
+                'type' => 'submit',
+                'style' => 'flex:1; padding:12px; background:#28a745; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:15px; transition:0.3s;',
+                'onmouseover' => "this.style.background='#218838'",
+                'onmouseout' => "this.style.background='#28a745'"
+            ]) ?>
+            <button type="button" id="cancelBtn"
+                style="flex:1; padding:12px; background:#f0f0f0; color:#333; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:15px; transition:0.3s;"
+                onmouseover="this.style.background='#e0e0e0'"
+                onmouseout="this.style.background='#f0f0f0'">
+                Cancel
+            </button>
+        </div>
+
+        <?= $this->Form->end() ?>
+    </div>
+</div>
+
+<!-- JS for popup -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('callModal');
+    const displayTel = document.getElementById('displayTel');
+    const modalTel = document.getElementById('modalTel');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    // Ensure modal is hidden initially
+    modal.style.display = 'none';
+
+    // Open modal when a phone number is clicked
+    document.querySelectorAll('.tel-link').forEach(el => {
+        el.addEventListener('click', function(e) {
+            e.preventDefault(); // prevent default action if any
+
+            let tel = this.dataset.tel; 
+            let cleanTel = tel.replace(/-/g, ''); // remove dashes
+
+            displayTel.textContent = cleanTel; // display number without dashes
+            modalTel.value = cleanTel;         // submit number without dashes
+            modal.style.display = 'flex';
+        });
+    });
+
+    // Close modal when clicking Cancel button
+    cancelBtn.addEventListener('click', () => modal.style.display = 'none');
+
+    // Close modal if clicking outside the popup
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
+</script>

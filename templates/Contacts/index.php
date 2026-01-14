@@ -58,7 +58,7 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
                         'label' => false,
                         'value' => $search['client_cd'] ?? '',
                         'class' => 'form-control',
-                        'type' => 'number'
+        
                     ]) ?>
                 </td>
 
