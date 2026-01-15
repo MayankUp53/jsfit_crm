@@ -36,4 +36,11 @@
     <div style="width:50%;" align="center" class="btn_margin">
         <button type="button" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer" onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>'">新規登録</button>
     </div>
+
+     <button type="button"
+            class="btn-default btn-xs"
+            style="width:150px; height:30px; cursor:pointer; margin-left:10px;"
+            onclick="history.back();">
+        戻る
+    </button>
 </div>
