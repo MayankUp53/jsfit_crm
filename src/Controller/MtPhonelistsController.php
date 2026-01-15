@@ -116,28 +116,36 @@ class MtPhonelistsController extends AppController
         return $this->redirect(['action' => 'index']);
     }
 
-    public function sortupdate()
-    {
-        $id = $this->request->getData('ids'); // Get from POST
-        if (!$id) return $this->redirect(['action' => 'index']);
+public function sortupdate()
+{
+    // Get POST data
+    $idString = $this->request->getData('ids');
+    if (!$idString) return $this->redirect(['action' => 'index']);
 
-        $sortArray = explode('-', (string)$id);
-        $idx = 1;
-        foreach ($sortArray as $itemId) {
-            if (!$itemId) continue;
+    $sortArray = explode('-', $idString);
+    $idx = 1;
 
-            $entry = $this->MtPhonelists->find()
-                ->where(['id' => $itemId, 'deleted IS' => null])
-                ->first();
-            if ($entry) {
-                $entry->disp_cd = $idx++;
-                $this->MtPhonelists->save($entry);
-            }
+    foreach ($sortArray as $itemId) {
+        if (!$itemId) continue;
+
+        $entry = $this->MtPhonelists->get($itemId); // simpler than find()->first()
+        if ($entry) {
+            $entry->disp_cd = $idx++;
+            $this->MtPhonelists->save($entry);
         }
-
-        $this->Flash->success('表示順序を更新しました。');
-        return $this->redirect(['action' => 'index']);
     }
+
+    // Return JSON if AJAX
+    if ($this->request->is('ajax')) {
+        $this->set('success', true);
+        $this->viewBuilder()->setOption('serialize', ['success']);
+        return;
+    }
+
+    $this->Flash->success('表示順序を更新しました。');
+    return $this->redirect(['action' => 'index']);
+}
+
 
 
     protected function setListValue(): void

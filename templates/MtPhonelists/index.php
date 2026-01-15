@@ -7,7 +7,7 @@ $(function() {
     $("#submitSortable").on("click", function() {
         var itemIDs = [];
 
-        // Collect IDs
+        // Collect IDs in drag order
         $("#jquery-ui-sortable li").each(function() {
             var id = $(this).find("span.sort-id").text().trim();
             if(id) itemIDs.push(id);
@@ -19,16 +19,28 @@ $(function() {
         }
 
         if (confirm("この順番で更新します。よろしいですか？")) {
-            // Join IDs with dash, no trailing dash
-            var idString = itemIDs.join('-');
-
-            // Redirect to controller action with IDs as parameter
-            location.href = "<?= $this->Url->build(['controller' => 'MtPhonelists', 'action' => 'sortupdate']) ?>/" + idString;
+            // Send drag order via POST
+            $.ajax({
+                url: "<?= $this->Url->build(['controller' => 'MtPhonelists', 'action' => 'sortupdate']) ?>",
+                type: "POST",
+                data: {
+                    ids: itemIDs.join('-'),
+                    _csrfToken: "<?= $this->request->getAttribute('csrfToken') ?>"
+                },
+                success: function(response){
+                    alert("表示順序を更新しました。");
+                    location.reload(); // refresh page to show new order
+                },
+                error: function(){
+                    alert("順序の更新に失敗しました。");
+                }
+            });
         }
     });
 });
 </script>
 <?php $this->end(); ?>
+
 
 
 <?php $this->start('css'); ?>
