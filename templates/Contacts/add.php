@@ -47,8 +47,8 @@ $currentUser = $this->request->getAttribute('identity');
         <tr>
             <th>更新日</th>
             <td><?= h($customer->updated?->format('Y-m-d')) ?></td>
-            <th></th>
-            <td></td>
+            <th>メモ</th>
+            <td><?= h($customer->memo) ?></td>
         </tr>
 
     </table>
