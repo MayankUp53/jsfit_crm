@@ -5,19 +5,31 @@ $(function() {
     $("#jquery-ui-sortable").disableSelection();
 
     $("#submitSortable").on("click", function() {
-        var itemIDs = "";
+        var itemIDs = [];
+
+        // Collect IDs
         $("#jquery-ui-sortable li").each(function() {
-            itemIDs += $(this).find("span.sort-id").text().trim() + "-";
+            var id = $(this).find("span.sort-id").text().trim();
+            if(id) itemIDs.push(id);
         });
 
+        if(itemIDs.length === 0){
+            alert("並べ替え可能な項目がありません。");
+            return;
+        }
+
         if (confirm("この順番で更新します。よろしいですか？")) {
-            // /mt-phonelists/sortupdate/{ids}
-            location.href = "<?= $this->Url->build(['controller' => 'MtPhonelists', 'action' => 'sortupdate', '']) ?>" + itemIDs;
+            // Join IDs with dash, no trailing dash
+            var idString = itemIDs.join('-');
+
+            // Redirect to controller action with IDs as parameter
+            location.href = "<?= $this->Url->build(['controller' => 'MtPhonelists', 'action' => 'sortupdate']) ?>/" + idString;
         }
     });
 });
 </script>
 <?php $this->end(); ?>
+
 
 <?php $this->start('css'); ?>
 <style>
