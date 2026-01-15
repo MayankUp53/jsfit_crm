@@ -116,35 +116,38 @@ class MtPhonelistsController extends AppController
         return $this->redirect(['action' => 'index']);
     }
 
-public function sortupdate()
-{
-    // Get POST data
-    $idString = $this->request->getData('ids');
-    if (!$idString) return $this->redirect(['action' => 'index']);
+    public function sortupdate()
+    {
+        $this->request->allowMethod(['post', 'ajax']); // only allow POST
 
-    $sortArray = explode('-', $idString);
-    $idx = 1;
-
-    foreach ($sortArray as $itemId) {
-        if (!$itemId) continue;
-
-        $entry = $this->MtPhonelists->get($itemId); // simpler than find()->first()
-        if ($entry) {
-            $entry->disp_cd = $idx++;
-            $this->MtPhonelists->save($entry);
+        $idString = $this->request->getData('ids');
+        if (!$idString) {
+            throw new \Cake\Http\Exception\BadRequestException('IDs are required');
         }
+
+        $sortArray = explode('-', $idString);
+        $idx = 1;
+
+        foreach ($sortArray as $itemId) {
+            if (!$itemId) continue;
+
+            $entry = $this->MtPhonelists->get($itemId);
+            if ($entry) {
+                $entry->disp_cd = $idx++;
+                $this->MtPhonelists->save($entry);
+            }
+        }
+
+        if ($this->request->is('ajax')) {
+            $this->set('success', true);
+            $this->viewBuilder()->setOption('serialize', ['success']);
+            return;
+        }
+
+        $this->Flash->success('表示順序を更新しました。');
+        return $this->redirect(['action' => 'index']);
     }
 
-    // Return JSON if AJAX
-    if ($this->request->is('ajax')) {
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['success']);
-        return;
-    }
-
-    $this->Flash->success('表示順序を更新しました。');
-    return $this->redirect(['action' => 'index']);
-}
 
 
 

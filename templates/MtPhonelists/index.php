@@ -5,38 +5,38 @@ $(function() {
     $("#jquery-ui-sortable").disableSelection();
 
     $("#submitSortable").on("click", function() {
-        var itemIDs = [];
+    var itemIDs = [];
 
-        // Collect IDs in drag order
-        $("#jquery-ui-sortable li").each(function() {
-            var id = $(this).find("span.sort-id").text().trim();
-            if(id) itemIDs.push(id);
-        });
-
-        if(itemIDs.length === 0){
-            alert("並べ替え可能な項目がありません。");
-            return;
-        }
-
-        if (confirm("この順番で更新します。よろしいですか？")) {
-            // Send drag order via POST
-            $.ajax({
-                url: "<?= $this->Url->build(['controller' => 'MtPhonelists', 'action' => 'sortupdate']) ?>",
-                type: "POST",
-                data: {
-                    ids: itemIDs.join('-'),
-                    _csrfToken: "<?= $this->request->getAttribute('csrfToken') ?>"
-                },
-                success: function(response){
-                    alert("表示順序を更新しました。");
-                    location.reload(); // refresh page to show new order
-                },
-                error: function(){
-                    alert("順序の更新に失敗しました。");
-                }
-            });
-        }
+    $("#jquery-ui-sortable li").each(function() {
+        var id = $(this).find("span.sort-id").text().trim();
+        if(id) itemIDs.push(id);
     });
+
+    if(itemIDs.length === 0){
+        alert("並べ替え可能な項目がありません。");
+        return;
+    }
+
+    if(confirm("この順番で更新します。よろしいですか？")) {
+        $.ajax({
+            url: "<?= $this->Url->build(['controller' => 'MtPhonelists', 'action' => 'sortupdate']) ?>",
+            type: "POST",
+            data: {
+                ids: itemIDs.join('-'),
+                _csrfToken: $('meta[name="csrfToken"]').attr('content')
+            },
+            success: function(response){
+                alert("表示順序を更新しました。");
+                location.reload();
+            },
+            error: function(xhr){
+                console.log(xhr.responseText); // debug error
+                alert("順序の更新に失敗しました。");
+            }
+        });
+    }
+});
+
 });
 </script>
 <?php $this->end(); ?>
