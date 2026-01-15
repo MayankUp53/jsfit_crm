@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -42,7 +43,7 @@ class MtPhonelistsController extends AppController
 
             // Ensure unique disp_cd (idx_mt_phonelists_disp)
             $maxDisp = $this->MtPhonelists->find()
-                ->select(['max_disp' => $this->MtPhonelists->find()->func()->max('disp_cd')])                
+                ->select(['max_disp' => $this->MtPhonelists->find()->func()->max('disp_cd')])
                 ->first();
             $nextDisp = (int)($maxDisp?->max_disp ?? 0) + 1;
             $data['disp_cd'] = $nextDisp;
@@ -115,31 +116,29 @@ class MtPhonelistsController extends AppController
         return $this->redirect(['action' => 'index']);
     }
 
-    public function sortupdate(?string $id = null)
+    public function sortupdate()
     {
+        $id = $this->request->getData('ids'); // Get from POST
+        if (!$id) return $this->redirect(['action' => 'index']);
+
         $sortArray = explode('-', (string)$id);
         $idx = 1;
-
         foreach ($sortArray as $itemId) {
-            if ($itemId === '' || $itemId === null) {
-                continue;
-            }
+            if (!$itemId) continue;
 
             $entry = $this->MtPhonelists->find()
-                ->where([
-                    'id' => $itemId,
-                    'deleted IS' => null,
-                ])
+                ->where(['id' => $itemId, 'deleted IS' => null])
                 ->first();
-
             if ($entry) {
                 $entry->disp_cd = $idx++;
                 $this->MtPhonelists->save($entry);
             }
         }
 
+        $this->Flash->success('表示順序を更新しました。');
         return $this->redirect(['action' => 'index']);
     }
+
 
     protected function setListValue(): void
     {
