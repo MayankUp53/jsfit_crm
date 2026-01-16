@@ -63,12 +63,16 @@
         <tr style="vertical-align:middle;color:#ffffff;" bgcolor="#46b8da">
             <th>No.</th>
             <th>キャンペーン</th>
-            <th>結果</th>
-            <th>電話番号</th>
-            <th>対応者</th>
-            <th>発信日時</th>
-            <th>通話時間(秒)</th>
-            <th>録音</th>
+            <th>種別</th>
+            <th>キュー名</th>
+            <th>発信元</th>
+            <th>発信先</th>
+            <th>コール結果</th>
+            <th>転送先</th>
+            <th>ユーザ名</th>
+            <th>開始日時</th>
+            <th>通話時間</th>
+            <th>通録</th>
         </tr>
     </thead>
     <tbody>
@@ -78,14 +82,27 @@
                 <tr>
                     <td><?= h($row['row_number'] ?? '') ?></td>
                     <td><?= h($row['campaign_name'] ?? '') ?></td>
-                    <td><?= h($row['result'] ?? '') ?></td>
-                    <td><?= h($row['phone'] ?? '') ?></td>
+                    <td><?= h($row['call_type'] ?? '') ?></td>
+                    <td><?= h($row['agent_queue_name'] ?? '') ?></td>
+                    <td>
+                        <?php if (!empty($row['phone'])): ?>
+                            <a href="<?= $this->Url->build(['controller' => 'Customers', 'action' => 'jump', $row['phone']]) ?>">
+                                <?= h($row['srcphone'] ?? '') ?>
+                            </a>
+                        <?php else: ?>
+                            <?= h($row['srcphone'] ?? '') ?>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= h($row['dstphone'] ?? '') ?></td>
+                    <td><?= h($row['disposition_code'] ?? '') ?></td>
+                    <td><?= h($row['transfer_to'] ?? '') ?></td>
                     <td><?= h($row['user_name'] ?? '') ?></td>
-                    <td><?= h($row['call_originate_time'] ?? '') ?></td>
+                    <td><?= h(isset($row['call_originate_time']) ? substr($row['call_originate_time'], 0, 16) : '') ?></td>
                     <td><?= h($row['talk_time'] ?? '') ?></td>
                     <td>
                         <?php if (!empty($row['call_id']) && !empty($row['crt_object_id'])): ?>
-                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row['call_id']) ?>','<?= h($row['crt_object_id']) ?>');">
+                            <a href="javascript:void(0);"
+                               onclick="openVoiceLogModal('<?= h($row['call_id']) ?>','<?= h($row['crt_object_id']) ?>');">
                                 再生
                             </a>
                         <?php endif; ?>
@@ -94,14 +111,7 @@
             <?php endforeach; ?>
         <?php else: ?>
             <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>コール履歴が見つかりません。</td>
+                <td colspan="12">コール履歴が見つかりません。</td>
             </tr>
         <?php endif; ?>
     </tbody>
