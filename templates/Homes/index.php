@@ -79,28 +79,14 @@
         <?php $calls = $pagedCalls ?? $response ?? []; ?>
         <?php if (!empty($calls)): ?>
             <?php foreach ($calls as $row): ?>
-                <?php
-                    $type = strtolower($row['call_type'] ?? '');
-                    $isInbound =
-                        $type === 'inbound.call.dial' ||
-                        $type === 'transferred.to.campaign.dial';
-
-                    // decide which phone is the customer’s number and which is the other side
-                    if ($isInbound) {
-                        $customerNumber = $row['srcphone'] ?? '';
-                        $otherNumber    = $row['dstphone'] ?? '';
-                    } else {
-                        $customerNumber = $row['dstphone'] ?? '';
-                        $otherNumber    = $row['srcphone'] ?? '';
-                    }
-                ?>
                 <tr>
                     <td><?= h($row['row_number'] ?? '') ?></td>
                     <td><?= h($row['campaign_name'] ?? '') ?></td>
+                    <!-- 種別: already mapped in SQL with CASE ... end as call_type -->
                     <td><?= h($row['call_type'] ?? '') ?></td>
                     <td><?= h($row['agent_queue_name'] ?? '') ?></td>
 
-                    <!-- 発信元（顧客番号＋ジャンプ） -->
+                    <!-- 発信元: 旧画面と同じく srcphone を表示（ジャンプは phone をキーに） -->
                     <td>
                         <?php if (!empty($row['phone'])): ?>
                             <a href="<?= $this->Url->build([
@@ -108,15 +94,16 @@
                                     'action' => 'jump',
                                     $row['phone']
                                 ]) ?>">
-                                <?= h($customerNumber) ?>
+                                <?= h($row['srcphone'] ?? '') ?>
                             </a>
                         <?php else: ?>
-                            <?= h($customerNumber) ?>
+                            <?= h($row['srcphone'] ?? '') ?>
                         <?php endif; ?>
                     </td>
 
-                    <!-- 発信先（方向に応じて表示） -->
-                    <td><?= h($otherNumber) ?></td>
+                    <!-- 発信先: 旧画面と同じく dstphone をそのまま表示 -->
+                    <td><?= h($row['dstphone'] ?? '') ?></td>
+
                     <td><?= h($row['disposition_code'] ?? '') ?></td>
                     <td><?= h($row['transfer_to'] ?? '') ?></td>
                     <td><?= h($row['user_name'] ?? '') ?></td>
