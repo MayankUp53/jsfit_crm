@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use Cake\Log\Log;
+
 /**
  * MtPhonelists Controller
  *
@@ -58,7 +60,7 @@ class MtPhonelistsController extends AppController
                 $this->Flash->success(__('電話帳データの登録が完了しました。'));
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('電話帳データの登録に失敗しました。もう一度操作してください。'));
+            $this->Flash->error(__('電話帳データの登録に失敗しました。もう一度操作してください。 または表示順序がすでに存在する'));
         }
 
         $this->set(compact('entry'));
@@ -116,37 +118,63 @@ class MtPhonelistsController extends AppController
         return $this->redirect(['action' => 'index']);
     }
 
-    public function sortupdate()
+
+
+    public function updateOrder()
     {
-        $this->request->allowMethod(['post', 'ajax']); // only allow POST
+        $this->request->allowMethod(['post']);
 
-        $idString = $this->request->getData('ids');
-        if (!$idString) {
-            throw new \Cake\Http\Exception\BadRequestException('IDs are required');
-        }
+        try {
+            // Read JSON payload from request body
+            $data = json_decode($this->request->getBody()->getContents(), true);
+            Log::debug('AJAX payload: ' . json_encode($data));
 
-        $sortArray = explode('-', $idString);
-        $idx = 1;
-
-        foreach ($sortArray as $itemId) {
-            if (!$itemId) continue;
-
-            $entry = $this->MtPhonelists->get($itemId);
-            if ($entry) {
-                $entry->disp_cd = $idx++;
-                $this->MtPhonelists->save($entry);
+            if (empty($data['orderData'])) {
+                throw new \Exception('No orderData received');
             }
-        }
 
-        if ($this->request->is('ajax')) {
-            $this->set('success', true);
-            $this->viewBuilder()->setOption('serialize', ['success']);
-            return;
-        }
+            $mtPhonelistsTable = $this->getTableLocator()->get('MtPhonelists');
 
-        $this->Flash->success('表示順序を更新しました。');
-        return $this->redirect(['action' => 'index']);
+            // STEP 1: temporary negative disp_cd to avoid unique conflicts
+            $entities = [];
+            foreach ($data['orderData'] as $index => $item) {
+                $entity = $mtPhonelistsTable->get($item['id']);
+                $entity->disp_cd = - ($index + 1);
+                $entities[] = $entity;
+            }
+            $mtPhonelistsTable->saveMany($entities, ['atomic' => true]);
+
+            // STEP 2: assign final sequential numbers
+            $entities = [];
+            foreach ($data['orderData'] as $index => $item) {
+                $entity = $mtPhonelistsTable->get($item['id']);
+                $entity->disp_cd = $index + 1;
+                $entities[] = $entity;
+            }
+            if (!$mtPhonelistsTable->saveMany($entities, ['atomic' => true])) {
+                $errors = [];
+                foreach ($entities as $e) {
+                    $errors[$e->id] = $e->getErrors();
+                }
+                Log::error('SaveMany failed: ' . json_encode($errors));
+                throw new \Exception('SaveMany failed, check logs');
+            }
+
+            // Success response
+            $this->set(['message' => 'Order updated successfully']);
+            $this->viewBuilder()->setOption('serialize', ['message']);
+        } catch (\Exception $e) {
+            Log::error('updateOrder failed: ' . $e->getMessage());
+
+            $this->response = $this->response->withStatus(500);
+            $this->set([
+                'message' => 'Error saving order',
+                'error' => $e->getMessage()
+            ]);
+            $this->viewBuilder()->setOption('serialize', ['message', 'error']);
+        }
     }
+
 
 
 

@@ -26,6 +26,9 @@ $users_active = ($controller == 'Users') ? 'active' : null;
         <?= $cakeDescription ?>
     </title>
     <?= $this->Html->meta('icon') ?>
+    <!-- In <head> -->
+<?= $this->Html->meta('csrfToken', $this->getRequest()->getAttribute('csrfToken')) ?>
+
 
     <!-- CSS -->
     <?= $this->Html->css('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css') ?>
@@ -134,12 +137,15 @@ $users_active = ($controller == 'Users') ? 'active' : null;
     </div>
 
     <!-- JS -->
+         <?= $this->Html->meta('csrfToken', $this->getRequest()->getAttribute('csrfToken')) ?>
     <?= $this->Html->script('https://code.jquery.com/jquery-1.12.4.min.js') ?>
     <?= $this->Html->script('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js') ?>
     <?= $this->Html->script('https://code.jquery.com/ui/1.12.1/jquery-ui.min.js') ?>
     <?= $this->Html->script('https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js') ?>
     <?= $this->Html->script('https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap.min.js') ?>
     <?= $this->Html->script('https://code.jquery.com/ui/1.12.1/i18n/jquery-ui-i18n.min.js') ?>
+
+
 
     <script>
         $(function() {

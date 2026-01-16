@@ -1,78 +1,46 @@
-<?php $this->start('script'); ?>
-<script>
-    $(function() {
-        $("#jquery-ui-sortable").sortable();
-        $("#jquery-ui-sortable").disableSelection();
-
-        $("#submitSortable").on("click", function() {
-            var itemIDs = [];
-
-            $("#jquery-ui-sortable li").each(function() {
-                var id = $(this).find("span.sort-id").text().trim();
-                if (id) itemIDs.push(id);
-            });
-
-            if (itemIDs.length === 0) {
-                alert("並べ替え可能な項目がありません。");
-                return;
-            }
-
-            if (confirm("この順番で更新します。よろしいですか？")) {
-                $.ajax({
-                    url: "<?= $this->Url->build(['controller' => 'MtPhonelists', 'action' => 'sortupdate']) ?>",
-                    type: "POST",
-                    data: {
-                        ids: itemIDs.join('-'),
-                        _csrfToken: $('meta[name="csrfToken"]').attr('content')
-                    },
-                    success: function(response) {
-                        alert("表示順序を更新しました。");
-                        location.reload();
-                    },
-                    error: function(xhr) {
-                        console.log(xhr.responseText); // debug error
-                        alert("順序の更新に失敗しました。");
-                    }
-                });
-            }
-        });
-
-    });
-</script>
-<?php $this->end(); ?>
-
-
+<?php $this->Html->meta('csrfToken', $this->request->getAttribute('csrfToken')); ?>
 
 <?php $this->start('css'); ?>
 <style>
-    #jquery-ui-sortable {
+    #phone-list {
         list-style-type: none;
         margin: 0;
         padding: 0;
-        width: 50%;
+        width: 60%;
     }
+    .center-btn {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
 
-    #jquery-ui-sortable li {
-        margin: 0 3px 3px 3px;
+
+    #phone-list li {
+        margin: 3px 0;
         padding: 0.6em 0.8em;
         font-size: 15px;
         font-weight: bold;
-        cursor: move;
         border-radius: 4px;
+        background-color: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
-    #jquery-ui-sortable li.inactive {
-        background-color: #dcdcdc;
-    }
-
-    #jquery-ui-sortable .actions {
-        float: right;
-        margin-top: -2px;
-    }
-
-    #jquery-ui-sortable .meta {
+    #phone-list .meta {
         font-weight: normal;
         margin-left: 10px;
+    }
+
+    .btn-group {
+        margin-top: 20px;
+    }
+
+    .btn-group button {
+        margin-right: 10px;
+        height: 30px;
+        width: 150px;
+        cursor: pointer;
     }
 </style>
 <?php $this->end(); ?>
@@ -84,13 +52,10 @@
 
     <br />
 
-    <ul id="jquery-ui-sortable">
+    <ul id="phone-list">
         <?php foreach ($mtPhonelists as $row): ?>
-            <?php $inactive = ((string)$row->active_flg !== '1'); ?>
-            <li class="ui-state-default <?= $inactive ? 'inactive' : '' ?>">
-                <span class="sort-id" style="display:none;"><?= h($row->id) ?></span>
-
-                <?= h($row->disp_cd) ?>.
+            <li>
+                <span class="disp-cd"><?= h($row->disp_cd) ?></span>
                 <?= h($row->item_name) ?>
                 <span class="meta">
                     <?= h($row->phone) ?>
@@ -99,27 +64,33 @@
 
                 <span class="actions">
                     <a class="btn btn-xs btn-success"
-                        href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>">編集</a>
+                       href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>">
+                        編集
+                    </a>
 
                     <?= $this->Form->postLink(
                         '削除',
                         ['action' => 'delete', $row->id],
-                        ['confirm' => '削除しますか？', 'class' => 'btn btn-xs btn-danger']
+                        [
+                            'confirm' => '削除しますか？',
+                            'class' => 'btn btn-xs btn-danger'
+                        ]
                     ) ?>
                 </span>
             </li>
         <?php endforeach; ?>
     </ul>
 
-    <div style="width:50%;" align="center" class="btn_margin">
-        <button type="button" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer"
-            onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>'">新規登録</button>
+    <div class="btn-group center-btn" style="margin-bottom:20px;">
+    <button type="button" class="btn-default btn-xs"
+            onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>'">
+        新規登録
+    </button>
 
-        <input type="button" id="submitSortable" value="表示順序を変更"
-            class="btn-default btn-xs" style="width:150px;height:30px;">
-        <button type="button"
-            class="btn-default btn-xs"
-            style="width:150px; height:30px; cursor:pointer; margin-left:10px;"
+    <button type="button" class="btn-default btn-xs"
             onclick="history.back();">
-    </div>
+        戻る
+    </button>
+</div>
+
 </div>

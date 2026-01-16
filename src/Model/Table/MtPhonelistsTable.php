@@ -55,6 +55,8 @@ class MtPhonelistsTable extends Table
             ->integer('active_flg')
             ->notEmptyString('active_flg', '有効無効を選択してください。');
 
+            
+
         return $validator;
     }
 

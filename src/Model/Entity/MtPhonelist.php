@@ -18,16 +18,7 @@ class MtPhonelist extends Entity
      * @var array<string, bool>
      */
     protected array $_accessible = [
-        'disp_cd' => true,
-        'item_name' => true,
-        'phone' => true,
-        'item_memo' => true,
-        'active_flg' => true,
-        'created' => true,
-        'created_user_id' => true,
-        'updated' => true,
-        'updated_user_id' => true,
-        'deleted' => true,
-        'deleted_user_id' => true,
+         '*' => true,
+    'id' => false
     ];
 }
