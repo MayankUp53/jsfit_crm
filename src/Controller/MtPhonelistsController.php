@@ -60,7 +60,7 @@ class MtPhonelistsController extends AppController
                 $this->Flash->success(__('電話帳データの登録が完了しました。'));
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('電話帳データの登録に失敗しました。もう一度操作してください。 または表示順序がすでに存在する'));
+            $this->Flash->error(__('電話帳データの登録に失敗しました。もう一度操作してください。'));
         }
 
         $this->set(compact('entry'));
@@ -87,7 +87,7 @@ class MtPhonelistsController extends AppController
                 $this->Flash->success(__('電話帳データの更新が完了しました。'));
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('電話帳データの更新に失敗しました。もう一度操作してください。'));
+            $this->Flash->error(__('電話帳データの更新に失敗しました。もう一度操作してください。  または表示順序がすでに存在する'));
         }
 
         $this->set(compact('entry'));
