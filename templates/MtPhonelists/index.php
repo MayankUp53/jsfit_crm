@@ -1,96 +1,53 @@
-<?php $this->Html->meta('csrfToken', $this->request->getAttribute('csrfToken')); ?>
-
-<?php $this->start('css'); ?>
-<style>
-    #phone-list {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-        width: 60%;
-    }
-    .center-btn {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-
-    #phone-list li {
-        margin: 3px 0;
-        padding: 0.6em 0.8em;
-        font-size: 15px;
-        font-weight: bold;
-        border-radius: 4px;
-        background-color: #f5f5f5;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    #phone-list .meta {
-        font-weight: normal;
-        margin-left: 10px;
-    }
-
-    .btn-group {
-        margin-top: 20px;
-    }
-
-    .btn-group button {
-        margin-right: 10px;
-        height: 30px;
-        width: 150px;
-        cursor: pointer;
-    }
-</style>
-<?php $this->end(); ?>
-
 <div class="panel panel-primary filterable">
     <div class="panel-heading">
         <h3 class="panel-title">電話帳</h3>
     </div>
 
-    <br />
+    <table class="table table-hover">
+        <thead>
+      <tr>
+    <th>表示順</th>
+    <th>名称</th>
+    <th>電話番号</th>
+    <th>有効無効</th>
+    <th>操作</th>
+</tr>
 
-    <ul id="phone-list">
-        <?php foreach ($mtPhonelists as $row): ?>
-            <li>
-                <span class="disp-cd"><?= h($row->disp_cd) ?></span>
-                <?= h($row->item_name) ?>
-                <span class="meta">
-                    <?= h($row->phone) ?>
-                    (<?= h($activeOpt[$row->active_flg] ?? '') ?>)
-                </span>
+        </thead>
+        <tbody>
+            <?php foreach ($mtPhonelists as $row): ?>
+                <tr>
+                    <td><?= h($row->disp_cd) ?></td>
+                    <td><?= h($row->item_name) ?></td>
+                    <td><?= h($row->phone) ?></td>
+                    <td><?= h($activeOpt[$row->active_flg] ?? '') ?></td>
+                    <td>
+                        <a class="btn btn-xs btn-success"
+                           href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>">編集</a>
+                        <?= $this->Form->postLink(
+                            '削除',
+                            ['action' => 'delete', $row->id],
+                            ['confirm' => '削除しますか？', 'class' => 'btn btn-xs btn-danger']
+                        ) ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
 
-                <span class="actions">
-                    <a class="btn btn-xs btn-success"
-                       href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>">
-                        編集
-                    </a>
+    <div style="width:50%;" align="center" class="btn_margin">
+        <button type="button"
+                class="btn-info btn-xs"
+                style="width:150px;height:30px;cursor:pointer"
+                onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>'">
+            新規登録
+        </button>
 
-                    <?= $this->Form->postLink(
-                        '削除',
-                        ['action' => 'delete', $row->id],
-                        [
-                            'confirm' => '削除しますか？',
-                            'class' => 'btn btn-xs btn-danger'
-                        ]
-                    ) ?>
-                </span>
-            </li>
-        <?php endforeach; ?>
-    </ul>
-
-    <div class="btn-group center-btn" style="margin-bottom:20px;">
-    <button type="button" class="btn-default btn-xs"
-            onclick="location.href='<?= $this->Url->build(['action' => 'add']) ?>'">
-        新規登録
-    </button>
-
-    <button type="button" class="btn-default btn-xs"
-            onclick="history.back();">
-        戻る
-    </button>
-</div>
-
+        <button type="button"
+                class="btn-default btn-xs"
+                style="width:150px;height:30px;cursor:pointer; margin-left:10px;"
+                onclick="history.back();">
+            戻る
+        </button>
+    </div>
 </div>
