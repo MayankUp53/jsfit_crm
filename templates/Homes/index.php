@@ -79,20 +79,39 @@
         <?php $calls = $pagedCalls ?? $response ?? []; ?>
         <?php if (!empty($calls)): ?>
             <?php foreach ($calls as $row): ?>
+                <?php
+                    $type = strtolower($row['call_type'] ?? '');
+                    $isInbound =
+                        $type === 'inbound.call.dial' ||
+                        $type === 'transferred.to.campaign.dial';
+
+                    // decide which phone is the customer’s number for display
+                    $customerNumber = $isInbound
+                        ? ($row['srcphone'] ?? '')
+                        : ($row['dstphone'] ?? '');
+                ?>
                 <tr>
                     <td><?= h($row['row_number'] ?? '') ?></td>
                     <td><?= h($row['campaign_name'] ?? '') ?></td>
                     <td><?= h($row['call_type'] ?? '') ?></td>
                     <td><?= h($row['agent_queue_name'] ?? '') ?></td>
+
+                    <!-- 発信元（顧客番号＋ジャンプ） -->
                     <td>
                         <?php if (!empty($row['phone'])): ?>
-                            <a href="<?= $this->Url->build(['controller' => 'Customers', 'action' => 'jump', $row['phone']]) ?>">
-                                <?= h($row['srcphone'] ?? '') ?>
+                            <a href="<?= $this->Url->build([
+                                    'controller' => 'Customers',
+                                    'action' => 'jump',
+                                    $row['phone']
+                                ]) ?>">
+                                <?= h($customerNumber) ?>
                             </a>
                         <?php else: ?>
-                            <?= h($row['srcphone'] ?? '') ?>
+                            <?= h($customerNumber) ?>
                         <?php endif; ?>
                     </td>
+
+                    <!-- 発信先（そのまま表示） -->
                     <td><?= h($row['dstphone'] ?? '') ?></td>
                     <td><?= h($row['disposition_code'] ?? '') ?></td>
                     <td><?= h($row['transfer_to'] ?? '') ?></td>
