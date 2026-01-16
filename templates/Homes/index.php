@@ -85,10 +85,14 @@
                         $type === 'inbound.call.dial' ||
                         $type === 'transferred.to.campaign.dial';
 
-                    // decide which phone is the customer’s number for display
-                    $customerNumber = $isInbound
-                        ? ($row['srcphone'] ?? '')
-                        : ($row['dstphone'] ?? '');
+                    // decide which phone is the customer’s number and which is the other side
+                    if ($isInbound) {
+                        $customerNumber = $row['srcphone'] ?? '';
+                        $otherNumber    = $row['dstphone'] ?? '';
+                    } else {
+                        $customerNumber = $row['dstphone'] ?? '';
+                        $otherNumber    = $row['srcphone'] ?? '';
+                    }
                 ?>
                 <tr>
                     <td><?= h($row['row_number'] ?? '') ?></td>
@@ -111,8 +115,8 @@
                         <?php endif; ?>
                     </td>
 
-                    <!-- 発信先（そのまま表示） -->
-                    <td><?= h($row['dstphone'] ?? '') ?></td>
+                    <!-- 発信先（方向に応じて表示） -->
+                    <td><?= h($otherNumber) ?></td>
                     <td><?= h($row['disposition_code'] ?? '') ?></td>
                     <td><?= h($row['transfer_to'] ?? '') ?></td>
                     <td><?= h($row['user_name'] ?? '') ?></td>
