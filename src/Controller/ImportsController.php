@@ -115,6 +115,12 @@ class ImportsController extends AppController
                 $memo,
             ] = $row;
 
+                if (empty($clientCd)) {
+        $failed++;
+        $errorMessages['client_cd_missing'] = 'client_cdが空の行があります。';
+        continue; 
+    }
+
             $entity = $this->Customers->find()
                 ->where(['client_cd' => $clientCd])
                 ->first();
