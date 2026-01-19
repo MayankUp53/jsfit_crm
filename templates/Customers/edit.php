@@ -10,28 +10,26 @@ $this->assign('title', '顧客詳細情報更新');
     <?= $this->Form->create($customer, ['url' => ['action' => 'edit', $customer->id]]) ?>
 
     <div class="panel-body">
+        <!-- Row 1: 得意先CD & 会社・支店名 -->
         <div class="row">
-            <!-- 得意先CD -->
             <div class="col-sm-6 form-group">
                 <label>得意先CD</label>
                 <?= $this->Form->control('client_cd', ['label' => false, 'class' => 'form-control']) ?>
             </div>
 
-            <!-- 会社・支店名 -->
             <div class="col-sm-6 form-group">
                 <label>会社・支店名</label>
                 <?= $this->Form->control('company_name', ['label' => false, 'class' => 'form-control']) ?>
             </div>
         </div>
 
+        <!-- Row 2: 氏名 & 番号種別 -->
         <div class="row">
-            <!-- 氏名 -->
             <div class="col-sm-6 form-group">
                 <label>氏名</label>
                 <?= $this->Form->control('name', ['label' => false, 'class' => 'form-control']) ?>
             </div>
 
-            <!-- 番号種別 -->
             <div class="col-sm-6 form-group">
                 <label>番号種別</label>
                 <?= $this->Form->control('type_of_number', [
@@ -48,29 +46,44 @@ $this->assign('title', '顧客詳細情報更新');
             </div>
         </div>
 
+        <!-- Row 3: TEL & FAX -->
         <div class="row">
-            <!-- TEL -->
             <div class="col-sm-6 form-group">
                 <label>TEL</label>
                 <?= $this->Form->control('tel', ['label' => false, 'class' => 'form-control']) ?>
             </div>
 
-            <!-- FAX -->
             <div class="col-sm-6 form-group">
                 <label>FAX</label>
                 <?= $this->Form->control('fax', ['label' => false, 'class' => 'form-control']) ?>
             </div>
         </div>
 
+        <!-- Row 4: メール & メモ -->
         <div class="row">
-            <!-- メールアドレス -->
-            <div class="col-sm-12 form-group">
+            <div class="col-sm-6 form-group">
                 <label>メールアドレス</label>
-                <?= $this->Form->control('email', ['label' => false, 'class' => 'form-control', 'type' => 'email']) ?>
+                <?= $this->Form->control('email', [
+                    'label' => false,
+                    'class' => 'form-control',
+                    'type' => 'email'
+                ]) ?>
+            </div>
+
+            <div class="col-sm-6 form-group">
+                <label>メモ</label>
+                <?= $this->Form->control('memo', [
+                    'label' => false,
+                    'class' => 'form-control',
+                    'type' => 'textarea',
+                    'rows' => 4,
+                    'value' => $customer->memo ?? ''
+                ]) ?>
             </div>
         </div>
     </div>
 
+    <!-- Registration Info -->
     <div class="panel panel-default">
         <div class="panel-heading"><strong>登録情報</strong></div>
         <table class="table">
@@ -91,32 +104,34 @@ $this->assign('title', '顧客詳細情報更新');
         </table>
     </div>
 
-    <div style="width:95%;margin-bottom:5px;margin-top:5px;" align="center" class="btn_margin">
+    <!-- Buttons -->
+    <div class="panel-body text-center" style="margin-top:10px;">
         <?php
         $currentUser = $this->request->getAttribute('identity');
-        if ($currentUser && $currentUser->getOriginalData()->auth != "0") {
-            echo $this->Form->postLink('削　除', ['action' => 'delete', $customer->id], [
+        ?>
+
+        <!-- Delete button (outside main form to avoid nested forms) -->
+        <?php if ($currentUser && $currentUser->getOriginalData()->auth != "0"): ?>
+            <?= $this->Form->postLink('削　除', ['action' => 'delete', $customer->id], [
                 'confirm' => __('顧客情報を削除します。よろしいですか？'),
                 'class' => 'btn btn-danger btn-xs',
-                'style' => 'width:150px;cursor:pointer',
-                'escape' => false
-            ]);
-        }
-        ?>
+                'style' => 'width:150px;margin:5px;'
+            ]) ?>
+        <?php endif; ?>
+
+        <!-- Cancel / Update buttons -->
         <?= $this->Form->button('キャンセル', [
-            'div' => false,
-            'value' => '1',
-            'name' => 'back',
             'type' => 'submit',
-            'style' => 'width:150px;cursor:pointer',
-            'class' => 'btn btn-default btn-xs'
+            'name' => 'back',
+            'value' => '1',
+            'class' => 'btn btn-default btn-xs',
+            'style' => 'width:150px;margin:5px;'
         ]) ?>
         <?= $this->Form->button('更　新', [
-            'div' => false,
-            'name' => 'add',
             'type' => 'submit',
-            'style' => 'width:150px;cursor:pointer',
-            'class' => 'btn btn-warning btn-xs'
+            'name' => 'add',
+            'class' => 'btn btn-warning btn-xs',
+            'style' => 'width:150px;margin:5px;'
         ]) ?>
     </div>
 

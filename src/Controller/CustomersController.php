@@ -524,9 +524,8 @@ private function buildCustomerQuery(array $searchData)
     {
         // Handle back button
         if ($this->request->is('post') && $this->request->getData('back')) {
-            return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
+            return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
         }
-
         // Fetch the customer or fail
         $customer = $this->Customers->find()
             ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
@@ -547,7 +546,7 @@ private function buildCustomerQuery(array $searchData)
 
             if ($this->Customers->save($customer)) {
                 $this->Flash->success(__('顧客情報の更新が完了しました。'));
-                return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
+                return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
             }
 
             $errorMsg = $this->formatEntityErrors($customer);
@@ -624,8 +623,8 @@ private function buildCustomerQuery(array $searchData)
             ->find('list', keyField: 'cid', valueField: 'item_name')
             ->where([
                 'deleted IS' => null,
-                'campaign_id IS' => $session->read('campaign'),
-                    //  'campaign_id IS' => 1,
+               'campaign_id IS' => $session->read('campaign'),
+                     // 'campaign_id IS' => 1,
             ])
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
@@ -634,7 +633,6 @@ private function buildCustomerQuery(array $searchData)
 
         $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt', 'cidOpt'));
     }
-
 
     protected function customerSearchDefaults(): array
     {

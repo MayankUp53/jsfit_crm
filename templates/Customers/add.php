@@ -101,7 +101,9 @@ $this->assign('title', '顧客詳細情報新規登録 ');
                         <label>メモ</label>
                         <?= $this->Form->control('memo', [
                             'label' => false,
-                            'class' => 'form-control'
+                            'class' => 'form-control',
+            'type' => 'textarea',
+            'rows' => 2,
                         ]) ?>
                     </td>
                 
