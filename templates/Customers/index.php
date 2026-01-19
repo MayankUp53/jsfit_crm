@@ -27,25 +27,37 @@ $search = $searchData ?? [];
             </tr>
 
             <!-- Second Row: FAX, Customer CD, Number Type -->
-            <tr>
-                <td class="search-label">FAX</td>
-                <td><?= $this->Form->control('Search.fax', ['label' => false, 'value' => $search['fax'] ?? '', 'class' => 'form-control']) ?></td>
+        <tr>
+    <!-- FAX -->
+    <td class="search-label">FAX</td>
+    <td>
+        <?= $this->Form->control('Search.fax', [
+            'label' => false,
+            'value' => $search['fax'] ?? '',
+            'class' => 'form-control'
+        ]) ?>
+    </td>
 
-                <td class="search-label">得意先CD</td>
-                <td><?= $this->Form->control('Search.client_cd', ['label' => false, 'value' => $search['client_cd'] ?? '', 'class' => 'form-control']) ?></td>
+    <!-- 得意先CD -->
+    <td class="search-label">得意先CD</td>
+    <td>
+        <?= $this->Form->control('Search.client_cd', [
+            'label' => false,
+            'value' => $search['client_cd'] ?? '',
+            'class' => 'form-control'
+        ]) ?>
+    </td>
 
-                <td class="search-label">番号種別</td>
-                <td>
-                    <?= $this->Form->control('Search.type_of_number', [
-                        'label' => false,
-                        'type' => 'select',
-                        'multiple' => true,
-                        'options' => ['営業所' => '営業所', '私用携帯' => '私用携帯', '固定電話' => '固定電話'],
-                        'class' => 'form-control',
-                        'value' => $search['type_of_number'] ?? []
-                    ]) ?>
-                </td>
-            </tr>
+    <!-- 会社・支店名 -->
+    <td class="search-label">会社・支店名</td>
+    <td>
+        <?= $this->Form->control('Search.company_name', [
+            'label' => false,
+            'value' => $search['company_name'] ?? '',
+            'class' => 'form-control'
+        ]) ?>
+    </td>
+</tr>
 
             <tr>
                 <!-- Registration Date -->
@@ -68,9 +80,18 @@ $search = $searchData ?? [];
                     </div>
                 </td>
 
-                <!-- Empty Space -->
-                <td></td>
-                <td></td>
+        
+              <td class="search-label">番号種別</td>
+                <td>
+                    <?= $this->Form->control('Search.type_of_number', [
+                        'label' => false,
+                        'type' => 'select',
+                        'multiple' => true,
+                        'options' => ['営業所' => '営業所', '私用携帯' => '私用携帯', '固定電話' => '固定電話'],
+                        'class' => 'form-control',
+                        'value' => $search['type_of_number'] ?? []
+                    ]) ?>
+                </td>
             </tr>
 
         </tbody>
@@ -118,15 +139,20 @@ $search = $searchData ?? [];
                         <td><?= h($customer->company_name) ?></td>
                         <td><?= h($customer->name) ?></td>
                         <td><?= h($customer->type_of_number) ?></td>
-                      <td>
-    <!-- Clickable number -->
-<span class="tel-link"
-      style="color:#007bff; text-decoration:underline; cursor:pointer;"
-      data-tel="<?= h($customer->tel) ?>"
-      data-name="<?= h($customer->name) ?>">
-      <?= h($customer->tel) ?>
-</span>
-                        </td>
+                    <td>
+    <?php if (!empty($cidOpt)): ?>
+        <!-- Clickable number -->
+        <span class="tel-link"
+              style="color:#007bff; text-decoration:underline; cursor:pointer;"
+              data-tel="<?= h($customer->tel) ?>"
+              data-name="<?= h($customer->name) ?>">
+            <?= h($customer->tel) ?>
+        </span>
+    <?php else: ?>
+        <!-- Plain text -->
+        <?= h($customer->tel) ?>
+    <?php endif; ?>
+</td>
 
 
 
@@ -238,18 +264,24 @@ $search = $searchData ?? [];
 </div>
 
 <!-- JS for popup -->
+<!-- JS for popup / direct call -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('callModal');
     const displayTel = document.getElementById('displayTel');
-    const modalTel = document.getElementById('modalTel'); // now exists
+    const modalTel = document.getElementById('modalTel');
     const cancelBtn = document.getElementById('cancelBtn');
-    const displayName = document.getElementById('displayName'); 
+    const displayName = document.getElementById('displayName');
+    const callForm = document.getElementById('callForm');
+    const cidSelect = document.getElementById('cidSelect');
+
+    // Count of CID options (excluding placeholder)
+    const cidCount = cidSelect.options.length - 1;
 
     // Ensure modal is hidden initially
     modal.style.display = 'none';
 
-    // Open modal when a phone number is clicked
+    // Handle click on phone numbers
     document.querySelectorAll('.tel-link').forEach(el => {
         el.addEventListener('click', function(e) {
             e.preventDefault();
@@ -257,11 +289,18 @@ document.addEventListener('DOMContentLoaded', function() {
             let cleanTel = tel.replace(/-/g, '');
             let name = this.dataset.name || '';
 
-            displayTel.textContent = cleanTel;
-            modalTel.value = cleanTel;
-            displayName.textContent = name || '名前なし';
-
-            modal.style.display = 'flex';
+            if (cidCount === 1) {
+                // Only one CID option, direct call
+                modalTel.value = cleanTel;
+                cidSelect.selectedIndex = 1; // Select the single CID
+                callForm.submit();
+            } else {
+                // Multiple CID options, open modal
+                displayTel.textContent = cleanTel;
+                modalTel.value = cleanTel;
+                displayName.textContent = name || '名前なし';
+                modal.style.display = 'flex';
+            }
         });
     });
 
@@ -276,4 +315,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
 

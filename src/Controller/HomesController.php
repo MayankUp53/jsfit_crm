@@ -288,8 +288,8 @@ $tel = str_replace('-', '', $tel); // removes all dashes
             ->find('list', keyField: 'cid', valueField: 'item_name')
             ->where([
                 'deleted IS' => null,
-                //'campaign_id IS' => $session->read('campaign'),
-                     'campaign_id IS' => 1,
+                'campaign_id IS' => $session->read('campaign'),
+                  //   'campaign_id IS' => 1,
             ])
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();

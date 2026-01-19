@@ -123,7 +123,7 @@ class CustomersController extends AppController
     // ====================
     //  Build query with filters
     // ====================
-  private function buildCustomerQuery(array $searchData)
+private function buildCustomerQuery(array $searchData)
 {
     $query = $this->Customers->find()
         ->where(['Customers.deleted IS' => null]);
@@ -152,6 +152,10 @@ class CustomersController extends AppController
 
     if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
         $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
+    }
+
+    if (!empty($searchData['company_name'])) {
+        $query->where(['Customers.company_name LIKE' => '%' . trim($searchData['company_name']) . '%']);
     }
 
     if (!empty($searchData['type_of_number'])) {
@@ -184,6 +188,7 @@ class CustomersController extends AppController
 
     return $query->orderBy(['Customers.client_cd' => 'DESC']);
 }
+
 
 
     // ====================
@@ -613,18 +618,19 @@ class CustomersController extends AppController
             ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
             ->toArray();
 
-
+ $session = $this->request->getSession();
 
         $cidOpt = $this->MtCids
             ->find('list', keyField: 'cid', valueField: 'item_name')
             ->where([
                 'deleted IS' => null,
-                //'campaign_id IS' => $session->read('campaign'),
-                     'campaign_id IS' => 1,
+                'campaign_id IS' => $session->read('campaign'),
+                    //  'campaign_id IS' => 1,
             ])
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
-        
+
+      //  $cidOpt =[1=>'着信専用','2'=>'発信専用','3'=>'着信・発信両用'];
 
         $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'statusOpt', 'cidOpt'));
     }

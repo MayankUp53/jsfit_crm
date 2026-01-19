@@ -61,18 +61,16 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
         
                     ]) ?>
                 </td>
-
-                <td class="search-label">ステータス</td>
-                <td>
-                    <?= $this->Form->control('Search.status', [
-                        'label' => false,
-                        'type' => 'select',
-                        'multiple' => true,
-                        'options' => $statusOpt ?? [],
-                        'value' => $search['status'] ?? [],
-                        'class' => 'form-control'
-                    ]) ?>
-                </td>
+ 
+                 <td class="search-label">会社・支店名</td>
+    <td>
+        <?= $this->Form->control('Search.company_name', [
+            'label' => false,
+            'value' => $search['company_name'] ?? '',
+            'class' => 'form-control'
+        ]) ?>
+    </td>
+             
             </tr>
 
             <!-- Row 3 -->
@@ -142,9 +140,17 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
                     ]) ?>
                 </td>
 
-
-                <td></td>
-                <td></td>
+   <td class="search-label">ステータス</td>
+                <td>
+                    <?= $this->Form->control('Search.status', [
+                        'label' => false,
+                        'type' => 'select',
+                        'multiple' => true,
+                        'options' => $statusOpt ?? [],
+                        'value' => $search['status'] ?? [],
+                        'class' => 'form-control'
+                    ]) ?>
+                </td>
                 <td></td>
                 <td></td>
             </tr>
