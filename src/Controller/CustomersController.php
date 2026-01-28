@@ -520,42 +520,48 @@ private function buildCustomerQuery(array $searchData)
      * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
-    public function edit(?string $id = null)
-    {
-        // Handle back button
-        if ($this->request->is('post') && $this->request->getData('back')) {
+   public function edit(?string $id = null)
+{
+    // Fetch customer
+    $customer = $this->Customers->find()
+        ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
+        ->firstOrFail();
+
+    // Handle form submission
+    if ($this->request->is(['post', 'patch', 'put'])) {
+
+        // CANCEL button
+        if ($this->request->getData('back')) {
             return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
         }
-        // Fetch the customer or fail
-        $customer = $this->Customers->find()
-            ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
-            ->firstOrFail();
 
-        // Handle customer update
-        if ($this->request->is(['patch', 'post', 'put'])) {
+        // DELETE button
+        if ($this->request->getData('delete')) {
+            return $this->redirect(['action' => 'delete', $customer->id]);
+        }
+        
+
+        // UPDATE button
+        if ($this->request->getData('add')) {
             $data = $this->request->getData();
             $now = date('Y-m-d H:i:s');
             $currentUser = $this->getCurrentUser();
 
-            // Update timestamps and user
             $data['updated'] = $now;
             $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
 
-            // Patch entity and save
             $customer = $this->Customers->patchEntity($customer, $data);
-
             if ($this->Customers->save($customer)) {
                 $this->Flash->success(__('顧客情報の更新が完了しました。'));
                 return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
             }
-
             $errorMsg = $this->formatEntityErrors($customer);
-            $this->Flash->error(__('顧客情報の更新に失敗しました。もう一度操作してください。 {0}', $errorMsg));
+            $this->Flash->error(__('顧客情報の更新に失敗しました。 {0}', $errorMsg));
         }
-
-        // Set customer for the template
-        $this->set(compact('customer'));
     }
+
+    $this->set(compact('customer'));
+}
 
     /**
      * Delete method (logical delete)
@@ -566,7 +572,8 @@ private function buildCustomerQuery(array $searchData)
      */
     public function delete(?string $id = null)
     {
-        $this->request->allowMethod(['post', 'delete']);
+
+        $this->request->allowMethod(['post', 'delete', 'get']);
         $customer = $this->Customers->find()
             ->where(['Customers.id' => $id])
             ->firstOrFail();
