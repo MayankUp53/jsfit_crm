@@ -27,8 +27,8 @@
             <tr>
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">Manual Dial API URL</td>
                 <td><?= $this->Form->control('dial_api_url', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
-                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">コール履歴表示件数</td>
-                <td><?= $this->Form->control('limit', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
+                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">コール履歴表示件数 </td>
+                <td><?= $this->Form->control('limit_value', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
             </tr>
             <tr>
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">コールバック通知時間（分）</td>

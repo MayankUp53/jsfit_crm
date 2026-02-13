@@ -34,7 +34,7 @@ $id = $row?->id;
         </tr>
         <tr>
             <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">コール履歴表示件数</td>
-            <td><?= h($row->limit ?? '') ?>&nbsp;</td>
+            <td><?= h($row->limit_value ?? '') ?>&nbsp;</td>
         </tr>
         <tr>
             <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">Manual Dial API URL</td>

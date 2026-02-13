@@ -76,7 +76,7 @@
         </tr>
     </thead>
     <tbody>
-        <?php $calls = $pagedCalls ?? $response ?? []; ?>
+        <?php $calls =  $response ?? []; ?>
         <?php if (!empty($calls)): ?>
             <?php foreach ($calls as $row): ?>
                 <tr>

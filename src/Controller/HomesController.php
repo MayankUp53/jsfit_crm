@@ -60,7 +60,7 @@ class HomesController extends AppController
 
         $voicelogUrl = $core?->voicelog_url;
         $ccid = $core?->ccid;
-        $limit = (int)($core?->limit ?? 50);
+        $limit = (int)($core?->limit_value ?? 50);
         $callbackNoticeTime = (int)($core?->callback_notice_time ?? 0);
 
         $session = $this->request->getSession();
@@ -79,14 +79,14 @@ class HomesController extends AppController
             $dateTo
         );
 
-        // Paginate call history (array from API)
-        $page = (int)$this->request->getQuery('page', 1);
-        $perPage = 25;
-        $response = is_array($response) ? $response : [];
-        $total = count($response);
-        $offset = max(0, ($page - 1) * $perPage);
-        $pagedCalls = array_slice($response, $offset, $perPage);
-        $pageCount = (int)ceil($total / $perPage);
+        // // Paginate call history (array from API)
+        // $page = (int)$this->request->getQuery('page', 1);
+        // $perPage = (int)($core?->limit ?? 50);
+        // $response = is_array($response) ? $response : [];
+        // $total = count($response);
+        // $offset = max(0, ($page - 1) * $perPage);
+        // $pagedCalls = array_slice($response, $offset, $perPage);
+        // $pageCount = (int)ceil($total / $perPage);
 
         $warning = $this->CallbackNotification->getNumOfWarning();
         $callbackNoticeTimeString = '+' . $callbackNoticeTime . ' minute';
@@ -94,10 +94,10 @@ class HomesController extends AppController
         $this->set(compact(
             'callbacks',
             'response',
-            'pagedCalls',
-            'page',
-            'pageCount',
-            'total',
+          //  'pagedCalls',
+         //   'page',
+          //  'pageCount',
+          //  'total',
             'voicelogUrl',
             'callbackNoticeTimeString',
             'userId',
