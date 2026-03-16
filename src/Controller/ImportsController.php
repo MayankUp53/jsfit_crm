@@ -52,146 +52,169 @@ class ImportsController extends AppController
      * Basic CSV import for customers.
      */
 
-    public function import()
-    {
-        if (!$this->request->is('post')) {
-            return $this->redirect(['action' => 'index']);
-        }
+   public function import()
+{
+    if (!$this->request->is('post')) {
+        return $this->redirect(['action' => 'index']);
+    }
 
-        $file = $this->request->getData('result');
-        if (empty($file) || $file->getError() !== UPLOAD_ERR_OK) {
-            $this->Flash->error(__('ファイルのアップロードに失敗しました。'));
-            return $this->redirect(['action' => 'index']);
-        }
+    $file = $this->request->getData('result');
+    if (empty($file) || $file->getError() !== UPLOAD_ERR_OK) {
+        $this->Flash->error(__('ファイルのアップロードに失敗しました。'));
+        return $this->redirect(['action' => 'index']);
+    }
 
-        $handle = fopen($file->getStream()->getMetadata('uri'), 'r');
-        if ($handle === false) {
-            $this->Flash->error(__('ファイルを読み込めませんでした。'));
-            return $this->redirect(['action' => 'index']);
-        }
-      $header = fgetcsv($handle);
+    $handle = fopen($file->getStream()->getMetadata('uri'), 'r');
+    if ($handle === false) {
+        $this->Flash->error(__('ファイルを読み込めませんでした。'));
+        return $this->redirect(['action' => 'index']);
+    }
+
+    $header = fgetcsv($handle);
     $template = $this->getCsvTemplate();
 
-    // Check header matches template exactly
     if ($header !== $template) {
         fclose($handle);
         $this->Flash->error(__('CSVのヘッダーが正しくありません。列の順番や名称を確認してください。'));
         return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
     }
 
-        $imported = 0;
-        $failed = 0;
-        $errorMessages = [];
+    $imported = 0;
+    $updated = 0;
+    $reactivated = 0;
+    $failed = 0;
+    $errorMessages = [];
 
-        $now = date('Y-m-d H:i:s');
-        $currentUser = $this->getCurrentUser();
-        $userId = $currentUser?->id ?? 0;
+    $now = date('Y-m-d H:i:s');
+    $currentUser = $this->getCurrentUser();
+    $userId = $currentUser?->id ?? 0;
 
-        while (($row = fgetcsv($handle)) !== false) {
-            $row = array_map(function ($v) {
-                if ($v === null) return null;
-                $v = (string)$v;
-                $v = preg_replace('/^\xEF\xBB\xBF/', '', $v); // remove BOM
-                return mb_convert_encoding($v, 'UTF-8', 'UTF-8, SJIS-win, CP932, SJIS, EUC-JP');
-            }, $row);
-             // Pad row to ensure it has 8 columns, filling only for last columns with empty strings
-              $row = array_pad($row, 8, '');
-            // Check column count
-            if (count($row) < 8) {
-                $failed++;
-                $errorMessages['column_count'] = 'CSVのカラム数が不足している行があります。';
-                continue;
-            }
-            [
-                $clientCd,
-                $companyName,
-                $nameKj,
-                $typeOfNumber,
-                $tel,
-                $fax,
-                $email,
-                $memo,
-            ] = $row;
+    while (($row = fgetcsv($handle)) !== false) {
 
-            if (empty($clientCd)) {
-                $failed++;
-                $errorMessages['client_cd_missing'] = 'client_cdが空の行があります。';
-                continue;
-            }
+        $row = array_map(function ($v) {
+            if ($v === null) return null;
+            $v = (string)$v;
+            $v = preg_replace('/^\xEF\xBB\xBF/', '', $v);
+            return mb_convert_encoding($v, 'UTF-8', 'UTF-8, SJIS-win, CP932, SJIS, EUC-JP');
+        }, $row);
 
-            $entity = $this->Customers->find()
-                ->where(['client_cd' => $clientCd])
-                ->first();
+        $row = array_pad($row, 8, '');
 
-            if ($entity) {
-                $data = [
-                    'company_name' => $companyName,
-                    'name' => $nameKj,
-                    'type_of_number' => $typeOfNumber,
-                    'tel' => $tel,
-                    'fax' => $fax,
-                    'email' => $email,
-                    'memo' => $memo,
-                    'updated' => $now,
-                    'updated_user_id' => $userId,
-                ];
+        if (count($row) < 8) {
+            $failed++;
+            $errorMessages['column_count'] = 'CSVのカラム数が不足している行があります。';
+            continue;
+        }
+
+        [
+            $clientCd,
+            $companyName,
+            $nameKj,
+            $typeOfNumber,
+            $tel,
+            $fax,
+            $email,
+            $memo,
+        ] = $row;
+
+        if (empty($clientCd)) {
+            $failed++;
+            $errorMessages['client_cd_missing'] = 'client_cdが空の行があります。';
+            continue;
+        }
+
+        $entity = $this->Customers->find()
+            ->where(['client_cd' => $clientCd])
+            ->first();
+
+        if ($entity) {
+
+            if (!empty($entity->deleted)) {
+                $reactivated++;
             } else {
-                $entity = $this->Customers->newEmptyEntity();
-                $data = [
-                    'client_cd' => $clientCd,
-                    'company_name' => $companyName,
-                    'name' => $nameKj,
-                    'type_of_number' => $typeOfNumber,
-                    'tel' => $tel,
-                    'fax' => $fax,
-                    'email' => $email,
-                    'memo' => $memo,
-                    'zip_cd' => '',
-                    'addr1' => '',
-                    'disp_no' => date('ymdHis') . substr((string)microtime(true), -3),
-                    'created' => $now,
-                    'created_user_id' => $userId,
-                    'updated' => $now,
-                    'updated_user_id' => $userId,
-                ];
+                $updated++;
             }
 
-            $entity = $this->Customers->patchEntity($entity, $data);
+            $data = [
+                'company_name' => $companyName,
+                'name' => $nameKj,
+                'type_of_number' => $typeOfNumber,
+                'tel' => $tel,
+                'fax' => $fax,
+                'email' => $email,
+                'memo' => $memo,
+                'updated' => $now,
+                'updated_user_id' => $userId,
 
-            if ($this->Customers->save($entity)) {
-                $imported++;
-            } else {
-                $failed++;
-                foreach ($entity->getErrors() as $field => $messages) {
-                    foreach ($messages as $message) {
-                        $key = $field . ':' . $message;
-                        if (!isset($errorMessages[$key])) {
-                            $errorMessages[$key] = $message;
-                        }
+                // Reactivate if deleted
+                'deleted' => null,
+                'deleted_user_id' => null,
+            ];
+
+        } else {
+
+            $entity = $this->Customers->newEmptyEntity();
+
+            $data = [
+                'client_cd' => $clientCd,
+                'company_name' => $companyName,
+                'name' => $nameKj,
+                'type_of_number' => $typeOfNumber,
+                'tel' => $tel,
+                'fax' => $fax,
+                'email' => $email,
+                'memo' => $memo,
+                'zip_cd' => '',
+                'addr1' => '',
+                'disp_no' => date('ymdHis') . substr((string)microtime(true), -3),
+                'created' => $now,
+                'created_user_id' => $userId,
+                'updated' => $now,
+                'updated_user_id' => $userId,
+            ];
+
+            $imported++;
+        }
+
+        $entity = $this->Customers->patchEntity($entity, $data);
+
+        if (!$this->Customers->save($entity)) {
+            $failed++;
+            foreach ($entity->getErrors() as $field => $messages) {
+                foreach ($messages as $message) {
+                    $key = $field . ':' . $message;
+                    if (!isset($errorMessages[$key])) {
+                        $errorMessages[$key] = $message;
                     }
                 }
             }
         }
-
-        fclose($handle);
-
-        if (!empty($errorMessages)) {
-            $this->Flash->error(
-                __("取込エラー:\n") . implode("\n", $errorMessages)
-            );
-        }
-
-        $summary = sprintf('取込完了: %d件 / 失敗: %d件', $imported, $failed);
-
-        if ($imported > 0) {
-            $this->Flash->success(__($summary));
-            return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
-        }
-
-        $this->Flash->error(__('全件の取込に失敗しました。 ') . $summary);
-        return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
     }
 
+    fclose($handle);
+
+    if (!empty($errorMessages)) {
+        $this->Flash->error(
+            __("取込エラー:\n") . implode("\n", $errorMessages)
+        );
+    }
+
+    $summary = sprintf(
+        '取込結果: 新規 %d件 / 更新 %d件 / 再有効化 %d件 / 失敗 %d件',
+        $imported,
+        $updated,
+        $reactivated,
+        $failed
+    );
+
+    if (($imported + $updated + $reactivated) > 0) {
+        $this->Flash->success(__($summary));
+        return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
+    }
+
+    $this->Flash->error(__('全件の取込に失敗しました。 ') . $summary);
+    return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+}
 
     /**
      * Remove hyphens/spaces from phone string.
@@ -203,19 +226,18 @@ class ImportsController extends AppController
         }
         return preg_replace('/[^0-9]/', '', $phone);
     }
-    function getCsvTemplate() {
-    return [
-        '得意先CD',
-        '会社・支店名',
-        '氏名',
-        '番号種別',
-        'Tel',
-        'Fax',
-        'メールアドレス',
-        '登録日',
-        'メモ'
-    ];
-}
-
-    
+    function getCsvTemplate()
+    {
+        return [
+            '得意先CD',
+            '会社・支店名',
+            '氏名',
+            '番号種別',
+            'Tel',
+            'Fax',
+            'メールアドレス',
+            '登録日',
+            'メモ'
+        ];
+    }
 }

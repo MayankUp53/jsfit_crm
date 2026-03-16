@@ -8,6 +8,7 @@ use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
 
 use function Cake\Error\debug;
+use function Cake\Error\debug as ErrorDebug;
 
 /**
  * Customers Controller
@@ -520,14 +521,13 @@ private function buildCustomerQuery(array $searchData)
      * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
-   public function edit(?string $id = null)
+public function edit(?string $id = null)
 {
     // Fetch customer
     $customer = $this->Customers->find()
         ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
         ->firstOrFail();
 
-    // Handle form submission
     if ($this->request->is(['post', 'patch', 'put'])) {
 
         // CANCEL button
@@ -539,10 +539,10 @@ private function buildCustomerQuery(array $searchData)
         if ($this->request->getData('delete')) {
             return $this->redirect(['action' => 'delete', $customer->id]);
         }
-        
 
         // UPDATE button
         if ($this->request->getData('add')) {
+
             $data = $this->request->getData();
             $now = date('Y-m-d H:i:s');
             $currentUser = $this->getCurrentUser();
@@ -550,11 +550,48 @@ private function buildCustomerQuery(array $searchData)
             $data['updated'] = $now;
             $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
 
+            // ===== Custom Email Validation =====
+            if (!empty($data['email'])) {
+
+                // Split emails by ; or ,
+                $emails = preg_split('/[;,]+/', $data['email']);
+                $invalidEmails = [];
+
+                foreach ($emails as $email) {
+                    $email = trim($email);
+
+                    // Only validate non-empty emails
+                    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $invalidEmails[] = [
+                            'email' => $email,
+                            'reason' => 'メール形式が正しくありません。例: example@domain.com'
+                        ];
+                    }
+                }
+
+                if (!empty($invalidEmails)) {
+                    $messages = [];
+                    foreach ($invalidEmails as $err) {
+                        $messages[] = "{$err['email']} → {$err['reason']}";
+                    }
+
+                    $this->Flash->error(
+                        __('メールアドレスのエラーがあります。複数メールの場合は ; または , で区切ってください。') . "<br>" . implode("<br>", $messages)
+                    );
+                    $this->set(compact('customer'));
+                    return;
+                }
+            }
+            // ===== End Email Validation =====
+
+            // Patch and save
             $customer = $this->Customers->patchEntity($customer, $data);
+
             if ($this->Customers->save($customer)) {
                 $this->Flash->success(__('顧客情報の更新が完了しました。'));
                 return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
             }
+
             $errorMsg = $this->formatEntityErrors($customer);
             $this->Flash->error(__('顧客情報の更新に失敗しました。 {0}', $errorMsg));
         }
@@ -562,7 +599,6 @@ private function buildCustomerQuery(array $searchData)
 
     $this->set(compact('customer'));
 }
-
     /**
      * Delete method (logical delete)
      *

@@ -67,7 +67,8 @@ $this->assign('title', '顧客詳細情報更新');
                 <?= $this->Form->control('email', [
                     'label' => false,
                     'class' => 'form-control',
-                    'type' => 'email'
+                    'type' => 'textarea',
+                    'rows' => 4,
                 ]) ?>
             </div>
             <div class="col-sm-6 form-group">
@@ -135,6 +136,7 @@ $this->assign('title', '顧客詳細情報更新');
         <?= $this->Form->button('更　新', [
             'type' => 'submit',
             'name' => 'add',
+            'value' => '1',
             'class' => 'btn btn-warning btn-xs',
             'style' => 'width:150px;'
         ]) ?>

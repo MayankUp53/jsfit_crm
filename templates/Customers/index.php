@@ -191,7 +191,29 @@ $search = $searchData ?? [];
 
                         <td><?= h($customer->fax ?? '') ?></td>
                         <td><?= h($customer->memo ?? '') ?></td>
-                        <td><?= h($customer->email) ?></td>
+                        <td>
+                            <?php
+                            $rawEmail = (string)($customer->email ?? '');
+                            $emailParts = array_values(array_filter(array_map('trim', preg_split('/\s*[,;\r\n]+\s*/', $rawEmail))));
+                            $emailCount = count($emailParts);
+                            $emailFull = implode('; ', $emailParts);
+                            $emailDisplay = $emailFull;
+
+                            if ($emailCount > 2) {
+                                $emailDisplay = implode('; ', array_slice($emailParts, 0, 2)) . ' ...';
+                            }
+                            ?>
+                            <?php if ($emailCount > 2): ?>
+                                <span class="email-tooltip"
+                                      title="<?= h($emailFull) ?>"
+                                      data-toggle="tooltip"
+                                      data-bs-toggle="tooltip">
+                                    <?= h($emailDisplay) ?>
+                                </span>
+                            <?php else: ?>
+                                <?= h($emailDisplay) ?>
+                            <?php endif; ?>
+                        </td>
                         <td><?= $customer->created ? h($customer->created->format('Y-m-d H:i')) : '' ?></td>
                         <td><?= $customer->updated ? h($customer->updated->format('Y-m-d H:i')) : '' ?></td>
                         <td>
@@ -228,14 +250,21 @@ $search = $searchData ?? [];
         color: #ffffff;
         background-color: #149c82;
     }
+    .tooltip .tooltip-inner,
+    .bs-tooltip-top .tooltip-inner,
+    .bs-tooltip-bottom .tooltip-inner,
+    .bs-tooltip-left .tooltip-inner,
+    .bs-tooltip-right .tooltip-inner {
+        box-shadow: 0 4px 12px rgba(201, 200, 200, 0.05);
+    }
 </style>
 
 <!-- Popup Modal -->
 <div id="callModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-    background: rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:9999;">
+    background: rgba(185, 184, 184, 0.5); justify-content:center; align-items:center; z-index:9999;">
 
     <div style="background:white; padding:30px 25px; border-radius:12px; width:350px; 
-        box-shadow:0 8px 25px rgba(0,0,0,0.3); text-align:center; font-family:Arial, sans-serif; max-height:90vh; overflow:auto;">
+        box-shadow:0 8px 25px rgba(158, 157, 157, 0.3); text-align:center; font-family:Arial, sans-serif; max-height:90vh; overflow:auto;">
 
         <h2 style="margin-top:0; font-size:20px; color:#333; margin-bottom:20px;">通話する</h2>
 
@@ -346,5 +375,44 @@ $search = $searchData ?? [];
                 modal.style.display = 'none';
             }
         });
+
+        // Initialize tooltips if Bootstrap is available; otherwise native title will work
+        document.querySelectorAll('.email-tooltip').forEach(el => {
+            if (window.bootstrap && bootstrap.Tooltip) {
+                new bootstrap.Tooltip(el);
+            } else if (window.jQuery && typeof window.jQuery(el).tooltip === 'function') {
+                window.jQuery(el).tooltip();
+            }
+        });
+
+        // Auto-hide tooltips on scroll/navigation/visibility changes
+        const hideAllTooltips = () => {
+            if (window.bootstrap && bootstrap.Tooltip) {
+                document.querySelectorAll('.email-tooltip').forEach(el => {
+                    const instance = bootstrap.Tooltip.getInstance(el);
+                    if (instance) {
+                        instance.hide();
+                    }
+                });
+            } else if (window.jQuery && typeof window.jQuery.fn.tooltip === 'function') {
+                window.jQuery('.email-tooltip').tooltip('hide');
+            }
+        };
+
+        window.addEventListener('scroll', hideAllTooltips, true);
+        window.addEventListener('pagehide', hideAllTooltips);
+        window.addEventListener('pageshow', hideAllTooltips);
+        window.addEventListener('beforeunload', hideAllTooltips);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                hideAllTooltips();
+            }
+        });
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target && target.closest('a, button, form')) {
+                hideAllTooltips();
+            }
+        }, true);
     });
 </script>

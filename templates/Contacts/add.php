@@ -10,6 +10,34 @@ $currentUser = $this->request->getAttribute('identity');
             changeYear: true,
             dateFormat: 'yy-mm-dd'
         });
+        if (window.bootstrap && bootstrap.Tooltip) {
+            document.querySelectorAll('.email-tooltip').forEach(el => new bootstrap.Tooltip(el));
+        } else if ($.fn.tooltip) {
+            $('.email-tooltip').tooltip();
+        }
+
+        const hideAllTooltips = () => {
+            if (window.bootstrap && bootstrap.Tooltip) {
+                document.querySelectorAll('.email-tooltip').forEach(el => {
+                    const instance = bootstrap.Tooltip.getInstance(el);
+                    if (instance) {
+                        instance.hide();
+                    }
+                });
+            } else if (window.jQuery && typeof window.jQuery.fn.tooltip === 'function') {
+                window.jQuery('.email-tooltip').tooltip('hide');
+            }
+        };
+
+        window.addEventListener('scroll', hideAllTooltips, true);
+        window.addEventListener('pagehide', hideAllTooltips);
+        window.addEventListener('pageshow', hideAllTooltips);
+        window.addEventListener('beforeunload', hideAllTooltips);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                hideAllTooltips();
+            }
+        });
     });
 </script>
 
@@ -40,7 +68,29 @@ $currentUser = $this->request->getAttribute('identity');
         </tr>
         <tr>
             <th>メールアドレス</th>
-            <td><?= h($customer->email) ?></td>
+            <td>
+                <?php
+                $rawEmail = (string)($customer->email ?? '');
+                $emailParts = array_values(array_filter(array_map('trim', preg_split('/\s*[,;\r\n]+\s*/', $rawEmail))));
+                $emailCount = count($emailParts);
+                $emailFull = implode('; ', $emailParts);
+                $emailDisplay = $emailFull;
+
+                if ($emailCount > 3) {
+                    $emailDisplay = implode('; ', array_slice($emailParts, 0, 3)) . ' ...';
+                }
+                ?>
+                <?php if ($emailCount > 3): ?>
+                    <span class="email-tooltip"
+                          title="<?= h($emailFull) ?>"
+                          data-toggle="tooltip"
+                          data-bs-toggle="tooltip">
+                        <?= h($emailDisplay) ?>
+                    </span>
+                <?php else: ?>
+                    <?= h($emailDisplay) ?>
+                <?php endif; ?>
+            </td>
             <th>登録日</th>
             <td><?= h($customer->created?->format('Y-m-d')) ?></td>
         </tr>
