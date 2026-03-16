@@ -31,17 +31,7 @@ class ImportsController extends AppController
      */
     public function template()
     {
-        $headers = [
-            '得意先CD',
-            '会社・支店名',
-            '氏名',
-            '番号種別',
-            'Tel',
-            'Fax',
-            'メールアドレス',
-            '登録日',
-            'メモ'
-        ];
+        $headers = $this->getCsvTemplate();
 
         $filename = 'import_template_customers.csv';
         $this->response = $this->response
@@ -54,6 +44,8 @@ class ImportsController extends AppController
 
         return $this->response;
     }
+
+
 
 
     /**
@@ -77,9 +69,15 @@ class ImportsController extends AppController
             $this->Flash->error(__('ファイルを読み込めませんでした。'));
             return $this->redirect(['action' => 'index']);
         }
+      $header = fgetcsv($handle);
+    $template = $this->getCsvTemplate();
 
-        // Skip header row
-        fgetcsv($handle);
+    // Check header matches template exactly
+    if ($header !== $template) {
+        fclose($handle);
+        $this->Flash->error(__('CSVのヘッダーが正しくありません。列の順番や名称を確認してください。'));
+        return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+    }
 
         $imported = 0;
         $failed = 0;
@@ -96,14 +94,14 @@ class ImportsController extends AppController
                 $v = preg_replace('/^\xEF\xBB\xBF/', '', $v); // remove BOM
                 return mb_convert_encoding($v, 'UTF-8', 'UTF-8, SJIS-win, CP932, SJIS, EUC-JP');
             }, $row);
-
+             // Pad row to ensure it has 8 columns, filling only for last columns with empty strings
+              $row = array_pad($row, 8, '');
             // Check column count
             if (count($row) < 8) {
                 $failed++;
                 $errorMessages['column_count'] = 'CSVのカラム数が不足している行があります。';
                 continue;
             }
-
             [
                 $clientCd,
                 $companyName,
@@ -115,11 +113,11 @@ class ImportsController extends AppController
                 $memo,
             ] = $row;
 
-                if (empty($clientCd)) {
-        $failed++;
-        $errorMessages['client_cd_missing'] = 'client_cdが空の行があります。';
-        continue; 
-    }
+            if (empty($clientCd)) {
+                $failed++;
+                $errorMessages['client_cd_missing'] = 'client_cdが空の行があります。';
+                continue;
+            }
 
             $entity = $this->Customers->find()
                 ->where(['client_cd' => $clientCd])
@@ -205,4 +203,19 @@ class ImportsController extends AppController
         }
         return preg_replace('/[^0-9]/', '', $phone);
     }
+    function getCsvTemplate() {
+    return [
+        '得意先CD',
+        '会社・支店名',
+        '氏名',
+        '番号種別',
+        'Tel',
+        'Fax',
+        'メールアドレス',
+        '登録日',
+        'メモ'
+    ];
+}
+
+    
 }

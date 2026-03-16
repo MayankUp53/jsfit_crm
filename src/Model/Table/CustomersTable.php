@@ -75,8 +75,9 @@ class CustomersTable extends Table
             ->allowEmptyString('phone');
 
         $validator
-            ->email('email')
-            ->allowEmptyString('email');
+    ->scalar('email')
+    ->maxLength('email', 1000)
+    ->allowEmptyString('email'); // keep this
 
         $validator
             ->scalar('fax')
