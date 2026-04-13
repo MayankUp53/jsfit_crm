@@ -53,6 +53,7 @@ class ImportsController extends AppController
      */
 
 public function import()
+
 {
     if (!$this->request->is('post')) {
         return $this->redirect(['action' => 'index']);
