@@ -302,72 +302,72 @@ class ContactsController extends AppController
 
 
 
-public function add(?string $customer_id = null)
-{
-    // 1️⃣ Validate customer exists
-    if (empty($customer_id) || !$this->Customers->exists(['id' => $customer_id])) {
-        $this->Flash->error(__('顧客を選択してから対応履歴を登録してください。'));
-        return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
-    }
-
-    $contact = $this->Contacts->newEmptyEntity();
-    $customer = $this->Customers->get($customer_id);
-    $currentUser = $this->getCurrentUser();
-
-    // 2️⃣ Handle Cancel FIRST
-    if ($this->request->is('post') && $this->request->getData('back')) {
-        // ⚡ Immediately redirect, skip everything else
-        return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
-    }
-
-    // 3️⃣ Handle normal submit (登録)
-    if ($this->request->is('post')) {
-
-        $data = $this->request->getData('Contact') ?: $this->request->getData();
-
-        // Force crt_object_id from session
-        $sessionCrt = (string)($this->request->getSession()->read('crtObjectId') ?? '');
-        if ($sessionCrt !== '') {
-            $data['crt_object_id'] = $sessionCrt;
+    public function add(?string $customer_id = null)
+    {
+        // 1️⃣ Validate customer exists
+        if (empty($customer_id) || !$this->Customers->exists(['id' => $customer_id])) {
+            $this->Flash->error(__('顧客を選択してから対応履歴を登録してください。'));
+            return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
         }
 
-        $now = date('Y-m-d H:i:s');
+        $contact = $this->Contacts->newEmptyEntity();
+        $customer = $this->Customers->get($customer_id);
+        $currentUser = $this->getCurrentUser();
 
-        $data['customer_id']      = $customer_id;
-        $data['created']          = $now;
-        $data['updated']          = $now;
-        $data['created_user_id']  = $currentUser ? $currentUser->id : 0;
-        $data['updated_user_id']  = $currentUser ? $currentUser->id : 0;
-
-        // 🔴 Only now patchEntity → validation runs
-        $contact = $this->Contacts->patchEntity($contact, $data);
-
-        if ($this->Contacts->save($contact)) {
-            $this->Flash->success(__('対応履歴情報の登録が完了しました。'));
-            return $this->redirect(['action' => 'view', $contact->id]);
+        // 2️⃣ Handle Cancel FIRST
+        if ($this->request->is('post') && $this->request->getData('back')) {
+            // ⚡ Immediately redirect, skip everything else
+            return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
         }
 
-        $this->Flash->error(__('対応履歴情報の登録に失敗しました。'));
+        // 3️⃣ Handle normal submit (登録)
+        if ($this->request->is('post')) {
+
+            $data = $this->request->getData('Contact') ?: $this->request->getData();
+
+            // Force crt_object_id from session
+            $sessionCrt = (string)($this->request->getSession()->read('crtObjectId') ?? '');
+            if ($sessionCrt !== '') {
+                $data['crt_object_id'] = $sessionCrt;
+            }
+
+            $now = date('Y-m-d H:i:s');
+
+            $data['customer_id']      = $customer_id;
+            $data['created']          = $now;
+            $data['updated']          = $now;
+            $data['created_user_id']  = $currentUser ? $currentUser->id : 0;
+            $data['updated_user_id']  = $currentUser ? $currentUser->id : 0;
+
+            // 🔴 Only now patchEntity → validation runs
+            $contact = $this->Contacts->patchEntity($contact, $data);
+
+            if ($this->Contacts->save($contact)) {
+                $this->Flash->success(__('対応履歴情報の登録が完了しました。'));
+                return $this->redirect(['action' => 'view', $contact->id]);
+            }
+
+            $this->Flash->error(__('対応履歴情報の登録に失敗しました。'));
+        }
+
+        // 4️⃣ Fetch contacts
+        $contacts = $this->Contacts->find()
+            ->where(['Contacts.customer_id' => $customer_id, 'Contacts.deleted IS' => null])
+            ->contain(['Customers'])
+            ->orderBy(['Contacts.created' => 'DESC'])
+            ->all();
+
+        foreach ($contacts as $contactItem) {
+            $user = $this->Users->find()
+                ->select(['user_name'])
+                ->where(['id' => $contactItem->updated_user_id])
+                ->first();
+            $contactItem->op_incharge = $user ? $user->user_name : '-';
+        }
+
+        $this->set(compact('contact', 'contacts', 'customer'));
+        $this->setListValue();
     }
-
-    // 4️⃣ Fetch contacts
-    $contacts = $this->Contacts->find()
-        ->where(['Contacts.customer_id' => $customer_id, 'Contacts.deleted IS' => null])
-        ->contain(['Customers'])
-        ->orderBy(['Contacts.created' => 'DESC'])
-        ->all();
-
-    foreach ($contacts as $contactItem) {
-        $user = $this->Users->find()
-            ->select(['user_name'])
-            ->where(['id' => $contactItem->updated_user_id])
-            ->first();
-        $contactItem->op_incharge = $user ? $user->user_name : '-';
-    }
-
-    $this->set(compact('contact', 'contacts', 'customer'));
-    $this->setListValue();
-}
 
 
     public function view(?string $id = null)
@@ -410,14 +410,14 @@ public function add(?string $customer_id = null)
                 }
                 $this->Flash->error(__('更新に失敗しました。'));
             }
-    
-              if (!empty($data['back'])) {
+
+            if (!empty($data['back'])) {
 
                 return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
             }
 
-             
-            
+
+
             if (!empty($data['add'])) {
 
                 return $this->redirect(['action' => 'add', $contact->customer_id]);

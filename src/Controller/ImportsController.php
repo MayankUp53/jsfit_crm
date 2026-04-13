@@ -52,7 +52,7 @@ class ImportsController extends AppController
      * Basic CSV import for customers.
      */
 
-   public function import()
+public function import()
 {
     if (!$this->request->is('post')) {
         return $this->redirect(['action' => 'index']);
@@ -70,9 +70,20 @@ class ImportsController extends AppController
         return $this->redirect(['action' => 'index']);
     }
 
+    // ✅ Read header
     $header = fgetcsv($handle);
     $template = $this->getCsvTemplate();
 
+    // ✅ FIX: Remove BOM from first column
+    if (isset($header[0])) {
+        $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0]);
+    }
+
+    // ✅ FIX: Trim spaces
+    $header = array_map('trim', $header);
+    $template = array_map('trim', $template);
+
+    // ✅ Compare header
     if ($header !== $template) {
         fclose($handle);
         $this->Flash->error(__('CSVのヘッダーが正しくありません。列の順番や名称を確認してください。'));
@@ -94,9 +105,15 @@ class ImportsController extends AppController
         $row = array_map(function ($v) {
             if ($v === null) return null;
             $v = (string)$v;
+
+            // Remove BOM if present
             $v = preg_replace('/^\xEF\xBB\xBF/', '', $v);
+
+            // Convert encoding
             return mb_convert_encoding($v, 'UTF-8', 'UTF-8, SJIS-win, CP932, SJIS, EUC-JP');
         }, $row);
+
+        $row = array_map('trim', $row); // ✅ extra safety
 
         $row = array_pad($row, 8, '');
 
@@ -145,8 +162,6 @@ class ImportsController extends AppController
                 'memo' => $memo,
                 'updated' => $now,
                 'updated_user_id' => $userId,
-
-                // Reactivate if deleted
                 'deleted' => null,
                 'deleted_user_id' => null,
             ];
