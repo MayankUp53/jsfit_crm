@@ -135,15 +135,19 @@ private function buildCustomerQuery(array $searchData)
     }
 
 if (!empty($searchData['phone'])) {
-
-   $phone = str_replace(['-', ' '], '', trim($searchData['phone']));
-
-$query->where([
-    'OR' => [
-        'REPLACE(REPLACE(Customers.phone, "-", ""), " ", "") LIKE' => "%$phone%",
-        'REPLACE(REPLACE(Customers.tel, "-", ""), " ", "") LIKE'   => "%$phone%",
-    ]
+   $this->redirect([
+    'action' => 'ameyo',
+    $searchData['phone']
 ]);
+
+    // $phone = str_replace(['-', ' '], '', trim($searchData['phone']));
+
+    // $expr = "REPLACE(REPLACE(Customers.phone, '-', ''), ' ', '') LIKE :phone OR 
+    //          REPLACE(REPLACE(Customers.tel, '-', ''), ' ', '') LIKE :phone";
+
+    // $query->where([$expr])
+    //       ->bind(':phone', "%$phone%", 'string');
+
 }
 
     if (!empty($searchData['email'])) {
@@ -367,7 +371,7 @@ $query->where([
     ) {
         $session = $this->request->getSession();
 
-        // Clear session
+       // Clear session
         $session->delete('campaign');
         $session->delete('sessionId');
         $session->delete('queueId');
@@ -395,20 +399,21 @@ $query->where([
             $this->Flash->success(__('新規顧客（非通知の電話番号）の自動登録を行いました。:' . $id));
             return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
         }
+ $phone = str_replace(['-', ' ', '+'], '', trim($phone));
 
-        // Check if phone number exists
-   $phone = str_replace(['-', ' ', '+'], '', trim($phone));
+$expr = "
+    REPLACE(REPLACE(REPLACE(Customers.tel_only, '-', ''), ' ', ''), '+', '') LIKE :phone OR
+    REPLACE(REPLACE(REPLACE(Customers.phone_only, '-', ''), ' ', ''), '+', '') LIKE :phone OR
+    REPLACE(REPLACE(REPLACE(Customers.tel, '-', ''), ' ', ''), '+', '') LIKE :phone OR
+    REPLACE(REPLACE(REPLACE(Customers.phone, '-', ''), ' ', ''), '+', '') LIKE :phone
+";
 
 $results = $this->Customers->find()
     ->where([
         'Customers.deleted IS' => null,
-        'OR' => [
-            'REPLACE(REPLACE(REPLACE(Customers.tel_only, "-", ""), " ", ""), "+", "")' => $phone,
-            'REPLACE(REPLACE(REPLACE(Customers.phone_only, "-", ""), " ", ""), "+", "")' => $phone,
-            'REPLACE(REPLACE(REPLACE(Customers.tel, "-", ""), " ", ""), "+", "")' => $phone,
-            'REPLACE(REPLACE(REPLACE(Customers.phone, "-", ""), " ", ""), "+", "")' => $phone,
-        ],
+        $expr
     ])
+    ->bind(':phone', "%$phone%", 'string')
     ->toArray();
 
         // If phone doesn't exist, auto-add
@@ -433,16 +438,14 @@ $results = $this->Customers->find()
 
         // If multiple results, show search results
         if (count($results) > 1) {
-            $query = $this->Customers->find()
-                ->where([
-                    'Customers.deleted IS' => null,
-                    'OR' => [
-                        'Customers.tel_only LIKE' => "%{$phone}%",
-                        'Customers.phone_only LIKE' => "%{$phone}%",
-                        'Customers.tel LIKE' => "%{$phone}%",
-                        'Customers.phone LIKE' => "%{$phone}%",
-                    ],
-                ]);
+
+
+ $query = $this->Customers->find()
+    ->where([
+        'Customers.deleted IS' => null,
+        $expr
+    ])
+    ->bind(':phone', "%$phone%", 'string');
 
             $this->paginate = ['limit' => 50];
             $customers = $this->paginate($query);
