@@ -133,12 +133,14 @@ class ContactsController extends AppController
         }
 
         if (!empty($searchData['phone'])) {
-            $query->where([
-                'OR' => [
-                    'Customers.phone LIKE' => '%' . trim($searchData['phone']) . '%',
-                    'Customers.tel LIKE'   => '%' . trim($searchData['phone']) . '%',
-                ]
-            ]);
+         $phone = str_replace(['-', ' '], '', trim($searchData['phone']));
+
+$query->where([
+    'OR' => [
+        'REPLACE(REPLACE(Customers.phone, "-", ""), " ", "") LIKE' => "%$phone%",
+        'REPLACE(REPLACE(Customers.tel, "-", ""), " ", "") LIKE'   => "%$phone%",
+    ]
+]);
         }
 
         if (!empty($searchData['email'])) {

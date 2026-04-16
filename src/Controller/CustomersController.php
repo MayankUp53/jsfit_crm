@@ -134,14 +134,17 @@ private function buildCustomerQuery(array $searchData)
         $query->where(['Customers.name LIKE' => '%' . trim($searchData['name']) . '%']);
     }
 
-    if (!empty($searchData['phone'])) {
-        $query->where([
-            'OR' => [
-                'Customers.phone LIKE' => '%' . trim($searchData['phone']) . '%',
-                'Customers.tel LIKE'   => '%' . trim($searchData['phone']) . '%',
-            ],
-        ]);
-    }
+if (!empty($searchData['phone'])) {
+
+   $phone = str_replace(['-', ' '], '', trim($searchData['phone']));
+
+$query->where([
+    'OR' => [
+        'REPLACE(REPLACE(Customers.phone, "-", ""), " ", "") LIKE' => "%$phone%",
+        'REPLACE(REPLACE(Customers.tel, "-", ""), " ", "") LIKE'   => "%$phone%",
+    ]
+]);
+}
 
     if (!empty($searchData['email'])) {
         $query->where(['LOWER(Customers.email) LIKE' => '%' . strtolower(trim($searchData['email'])) . '%']);
@@ -394,17 +397,19 @@ private function buildCustomerQuery(array $searchData)
         }
 
         // Check if phone number exists
-        $results = $this->Customers->find()
-            ->where([
-                'Customers.deleted IS' => null,
-                'OR' => [
-                    'Customers.tel_only' => $phone,
-                    'Customers.phone_only' => $phone,
-                    'Customers.tel' => $phone,
-                    'Customers.phone' => $phone,
-                ],
-            ])
-            ->toArray();
+   $phone = str_replace(['-', ' ', '+'], '', trim($phone));
+
+$results = $this->Customers->find()
+    ->where([
+        'Customers.deleted IS' => null,
+        'OR' => [
+            'REPLACE(REPLACE(REPLACE(Customers.tel_only, "-", ""), " ", ""), "+", "")' => $phone,
+            'REPLACE(REPLACE(REPLACE(Customers.phone_only, "-", ""), " ", ""), "+", "")' => $phone,
+            'REPLACE(REPLACE(REPLACE(Customers.tel, "-", ""), " ", ""), "+", "")' => $phone,
+            'REPLACE(REPLACE(REPLACE(Customers.phone, "-", ""), " ", ""), "+", "")' => $phone,
+        ],
+    ])
+    ->toArray();
 
         // If phone doesn't exist, auto-add
         if (count($results) == 0) {
