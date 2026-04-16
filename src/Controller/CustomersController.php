@@ -135,18 +135,15 @@ private function buildCustomerQuery(array $searchData)
     }
 
 if (!empty($searchData['phone'])) {
-   $this->redirect([
-    'action' => 'ameyo',
-    $searchData['phone']
-]);
 
-    // $phone = str_replace(['-', ' '], '', trim($searchData['phone']));
 
-    // $expr = "REPLACE(REPLACE(Customers.phone, '-', ''), ' ', '') LIKE :phone OR 
-    //          REPLACE(REPLACE(Customers.tel, '-', ''), ' ', '') LIKE :phone";
+    $phone = str_replace(['-', ' '], '', trim($searchData['phone']));
 
-    // $query->where([$expr])
-    //       ->bind(':phone', "%$phone%", 'string');
+    $expr = "REPLACE(REPLACE(Customers.phone, '-', ''), ' ', '') LIKE :phone OR 
+             REPLACE(REPLACE(Customers.tel, '-', ''), ' ', '') LIKE :phone";
+
+    $query->where([$expr])
+          ->bind(':phone', "%$phone%", 'string');
 
 }
 
