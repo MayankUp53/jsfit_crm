@@ -134,9 +134,8 @@ public function import()
     // =====================
     foreach ($rows as $row) {
 
-        $row = array_map('trim', $row);
-        $row = array_pad($row, 8, '');
-
+    $row = array_map(function ($v) { return trim($v ?? ''); }, $row);
+     $row = array_pad($row, 8, '');
         [
             $clientCd,
             $companyName,
