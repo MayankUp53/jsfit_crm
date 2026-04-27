@@ -31,7 +31,7 @@ class MtPhonelistsController extends AppController
 {
     $mtPhonelists = $this->MtPhonelists->find()
         ->where(['deleted IS' => null])
-        ->order(['disp_cd' => 'ASC'])
+        ->orderBy(['disp_cd' => 'ASC'])
         ->toArray();
 
     $this->set(compact('mtPhonelists'));
