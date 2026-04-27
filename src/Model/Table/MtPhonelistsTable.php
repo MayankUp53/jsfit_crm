@@ -9,8 +9,6 @@ use Cake\Validation\Validator;
 
 /**
  * MtPhonelistsTable
- *
- * Phone book master.
  */
 class MtPhonelistsTable extends Table
 {
@@ -34,37 +32,46 @@ class MtPhonelistsTable extends Table
 
     public function validationDefault(Validator $validator): Validator
     {
-        $validator
-            ->integer('disp_cd')
-            ->notEmptyString('disp_cd', '表示順は必須です。');
-
+        // item_name
         $validator
             ->scalar('item_name')
             ->maxLength('item_name', 200)
             ->notEmptyString('item_name', '名称は必須です。');
 
+        // phone (NO RESTRICTION - only required)
         $validator
             ->scalar('phone')
-            ->maxLength('phone', 200)
             ->notEmptyString('phone', '電話番号は必須です。');
 
+        // item_memo
         $validator
+            ->scalar('item_memo')
             ->allowEmptyString('item_memo');
 
+        // active_flg
         $validator
             ->integer('active_flg')
             ->notEmptyString('active_flg', '有効無効を選択してください。');
 
-            
+        // customer_cd (if used in import)
+        $validator
+            ->scalar('customer_cd')
+            ->allowEmptyString('customer_cd');
+
+        // disp_cd (if used in import)
+        $validator
+            ->integer('disp_cd')
+            ->allowEmptyString('disp_cd');
 
         return $validator;
     }
 
     public function buildRules(RulesChecker $rules): RulesChecker
     {
+        // Unique phone only
         $rules->add(
-            $rules->isUnique(['disp_cd']),
-            ['errorField' => 'disp_cd', 'message' => '表示順が重複しています。']
+            $rules->isUnique(['phone']),
+            ['errorField' => 'phone', 'message' => '電話番号が重複しています。']
         );
 
         return $rules;
