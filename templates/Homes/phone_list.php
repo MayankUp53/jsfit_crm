@@ -8,15 +8,12 @@
 <head>
     <meta charset="utf-8">
 
-    <!-- Use CDN to avoid 404 from missing webroot assets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap.min.css">
-
-    <!-- Optional: if you still want your app's style.css and it exists -->
-    <?php // echo $this->Html->css('style'); ?>
 </head>
 
 <body>
+
 <div class="panel panel-primary">
     <div class="panel-heading">
         <h3 class="panel-title">電話帳一覧</h3>
@@ -31,6 +28,7 @@
             <th class="actions">操作</th>
         </tr>
         </thead>
+
         <tbody>
         <?php foreach ($mtPhonelists as $row): ?>
             <tr>
@@ -43,7 +41,6 @@
         </tbody>
     </table>
 
-    <br><br>
 </div>
 
 <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
@@ -51,33 +48,52 @@
 <script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap.min.js"></script>
 
 <script>
-    $(function () {
-        var table = $('#dt').DataTable({
-            dom: '<"pull-left"f><"pull-right"l>ti<"pull-left"p>',
-            order: [[0, "asc"]],
-            language: { url: "//cdn.datatables.net/plug-ins/3cfcc339e89/i18n/Japanese.json" },
-            columnDefs: [{
-                targets: -1,
-                data: null,
-                orderable: false,
-                searchable: false,
-                defaultContent: '<button type="button" class="btn btn-xs btn-info sel_btn">選択</button>'
-            }]
-        });
+$(function () {
 
-        $('#dt tbody').on('click', 'button.sel_btn', function () {
-            var data = table.row($(this).parents('tr')).data();
-            var phone = (data && data[2]) ? String(data[2]).trim() : '';
+    // ✅ get target field (tel OR sms_tel)
+    var urlParams = new URLSearchParams(window.location.search);
+    var targetField = urlParams.get('target') || 'tel';
 
-            if (window.opener && !window.opener.closed) {
-                // CakePHP 5 Form->control('tel') default id is usually "tel"
-                var input = window.opener.document.getElementById('tel');
-                if (!input) input = window.opener.document.getElementById('HomeTel'); // legacy fallback
-                if (input) input.value = phone;
-            }
-            window.close();
-        });
+    var table = $('#dt').DataTable({
+        dom: '<"pull-left"f><"pull-right"l>ti<"pull-left"p>',
+        order: [[0, "asc"]],
+        language: {
+            url: "//cdn.datatables.net/plug-ins/3cfcc339e89/i18n/Japanese.json"
+        },
+        columnDefs: [{
+            targets: -1,
+            data: null,
+            orderable: false,
+            searchable: false,
+            defaultContent: '<button type="button" class="btn btn-xs btn-info sel_btn">選択</button>'
+        }]
     });
+
+    $('#dt tbody').on('click', 'button.sel_btn', function () {
+
+        var data = table.row($(this).parents('tr')).data();
+        var phone = (data && data[2]) ? String(data[2]).trim() : '';
+
+        if (window.opener && !window.opener.closed) {
+
+            var input = window.opener.document.getElementById(targetField);
+
+            if (input) {
+                input.value = phone;
+
+                // 🔥 important for frameworks
+                input.dispatchEvent(new Event('input'));
+                input.dispatchEvent(new Event('change'));
+            } else {
+                console.log("Field not found:", targetField);
+            }
+        }
+
+        window.close();
+    });
+
+});
 </script>
+
 </body>
 </html>

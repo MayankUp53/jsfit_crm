@@ -23,6 +23,7 @@ class HomesController extends AppController
     protected $MtCids;
     protected $MtPhonelists;
     protected $Users;
+    protected $MtSendSmsCids;
     public function initialize(): void
     {
         parent::initialize();
@@ -36,6 +37,7 @@ class HomesController extends AppController
         $this->MtPhonelists = $this->fetchTable('MtPhonelists');
         $this->MtCids = $this->fetchTable('MtCids');
         $this->Users = $this->fetchTable('Users');
+        $this->MtSendSmsCids = $this->fetchTable('MtSendSmsCids');
     }
 
     public function beforeFilter(EventInterface $event): ?ResponseInterface
@@ -152,6 +154,121 @@ class HomesController extends AppController
         $this->viewBuilder()->disableAutoLayout();
         $this->setListValue();
     }
+
+
+public function sendSmsApi()
+{
+    if (!$this->request->is('post')) {
+        return $this->redirect(['action' => 'index']);
+    }
+
+    // =========================
+    // SESSION DATA
+    // =========================
+    $session = $this->request->getSession();
+
+    $core = $this->CoreSettings->find()
+        ->where(['deleted IS' => null])
+        ->first();
+
+    $campaignId = $session->read('campaign');
+    $sessionId  = $session->read('sessionId');
+
+    // =========================
+    // FORM DATA
+    // =========================
+    $smsCid  = $this->request->getData('sms_cid');
+    $smsTel  = $this->request->getData('sms_tel');
+    $smsText = $this->request->getData('sms_text') ?? ''; // ✅ FIXED
+
+    //    debug("this is the sms text: " . $smsText . " and this is the sms cid: " . $smsCid . " and this is the sms tel: " . $smsTel); 
+    //    die();// Log the raw input for debugging
+
+        
+    // clean phone number (remove non-numeric)
+    $smsTel = preg_replace('/[^0-9]/', '', (string)$smsTel);
+
+    // =========================
+    // VALIDATION
+    // =========================
+     //if (empty($smsCid) || empty($smsTel) || empty($smsText) || empty($campaignId) || empty($sessionId)) {
+    if (empty($smsCid) || empty($smsTel) || empty($smsText)) {
+        $this->Flash->error(__('必須情報が不足しています。'));
+        return $this->redirect(['action' => 'index']);
+    }
+    // =========================
+    // API URL
+    // =========================
+    $url = $core?->sendSMS_api_url;
+
+    if (!$url) {
+        $this->Flash->error(__('SMS API URLが設定されていません。'));
+        return $this->redirect(['action' => 'index']);
+    }
+
+    // =========================
+    // BUILD QUERY PARAMS
+    // =========================
+    $query = http_build_query([
+        'srcPhone'       => $smsTel,
+        'sendSmsNumber'  => $smsCid,
+        'smsText'        => $smsText,
+    ], '', '&', PHP_QUERY_RFC3986);
+
+    $finalUrl = rtrim($url, '?&') . '?' . $query;
+
+    Log::debug('SMS API URL: ' . $finalUrl);
+
+    // =========================
+    // HTTP CALL
+    // =========================
+    $client = new Client();
+
+    try {
+        $response = $client->get($finalUrl);
+        $body = (string)$response->getBody();
+        $json = json_decode($body, true);
+
+    } catch (\Throwable $e) {
+        Log::error('SMS API ERROR: ' . $e->getMessage());
+
+        $this->Flash->error(__('SMS送信APIの呼び出しに失敗しました。'));
+        return $this->redirect(['action' => 'index']);
+    }
+
+    // =========================
+    // RESPONSE CHECK
+    // =========================
+    $isSuccess =
+        is_array($json)
+        && isset($json['smsmessage']['status'])
+        && in_array($json['smsmessage']['status'], ['success', 'pending']);
+
+    if (!$isSuccess) {
+
+        Log::error('SMS FAIL RESPONSE: ' . $body);
+
+        $message = is_array($json)
+            ? ($json['reason'] ?? 'SMS送信に失敗しました。')
+            : 'SMS送信に失敗しました。';
+
+        if (stripos($message, 'not allowed') !== false) {
+            $message = 'SMS送信が許可されていません。';
+        } elseif (stripos($message, 'invalid') !== false) {
+            $message = '送信先番号が無効です。';
+        }
+
+        $this->Flash->error($message);
+        return $this->redirect(['action' => 'index']);
+    }
+
+    // =========================
+    // SUCCESS
+    // =========================
+    $this->Flash->success(__('SMS送信が完了しました。'));
+    return $this->redirect(['action' => 'index']);
+}
+
 
     public function manualDialApi()
     {
@@ -293,6 +410,16 @@ $tel = str_replace('-', '', $tel); // removes all dashes
             ])
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
+
+             $smsCidOpt = $this->MtSendSmsCids
+            ->find('list', keyField: 'cid', valueField: 'item_name')
+            ->where([
+                'deleted IS' => null,
+              //  'campaign_id IS' => $session->read('campaign'),
+                    'campaign_id IS' => 1,
+            ])
+            ->orderBy(['disp_cd' => 'ASC'])
+            ->toArray();     
           
               
 
@@ -301,7 +428,7 @@ $tel = str_replace('-', '', $tel); // removes all dashes
             'callbackStatusOpt' => $callbackStatusOpt,
             'opeOpt' => $operators,
             'cidOpt' => $cidOpt,
-
+            'smsCidOpt' => $smsCidOpt,
         ]);
     }
 }

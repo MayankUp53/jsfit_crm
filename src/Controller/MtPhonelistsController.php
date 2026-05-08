@@ -48,8 +48,15 @@ class MtPhonelistsController extends AppController
         $now = date('Y-m-d H:i:s');
         $userId = $this->getCurrentUser()?->id ?? 0;
 
-        // ❌ removed automatic disp_cd generation
-        // $data['disp_cd'] = auto removed -> now user input only
+        // ✅ auto generate disp_cd if not provided
+        if (empty($data['disp_cd'])) {
+            $latest = $this->MtPhonelists->find()
+                ->select(['disp_cd'])
+                ->order(['disp_cd' => 'DESC'])
+                ->first();
+
+            $data['disp_cd'] = $latest ? ($latest->disp_cd + 1) : 1;
+        }
 
         $data['created'] = $now;
         $data['created_user_id'] = $userId;
