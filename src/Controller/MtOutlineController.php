@@ -128,9 +128,9 @@ public function add()
         $entry->deleted_user_id = $this->getCurrentUser()?->id ?? 0;
 
         if ($this->MtOutline->save($entry)) {
-            $this->Flash->success(__('Overview deleted successfully.'));
+            $this->Flash->success(__('概要の削除が完了しました。'));
         } else {
-            $this->Flash->error(__('Failed to delete overview.'));
+            $this->Flash->error(__('概要の削除に失敗しました。'));
         }
         return $this->redirect(['action' => 'index']);
     }

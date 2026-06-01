@@ -44,6 +44,15 @@ class MtSendSmsCidsController extends AppController
             $now = date('Y-m-d H:i:s');
             $userId = $this->getCurrentUser()?->id ?? 0;
 
+            if (empty($data['disp_cd'])) {
+                $latest = $this->MtSendSmsCids->find()
+                    ->select(['disp_cd'])
+                    ->orderBy(['disp_cd' => 'DESC'])
+                    ->first();
+
+                $data['disp_cd'] = $latest ? ((int)$latest->disp_cd + 1) : 1;
+            }
+
             $data['created'] = $now;
             $data['created_user_id'] = $userId;
             $data['updated'] = $now;

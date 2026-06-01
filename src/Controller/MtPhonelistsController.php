@@ -48,14 +48,14 @@ class MtPhonelistsController extends AppController
         $now = date('Y-m-d H:i:s');
         $userId = $this->getCurrentUser()?->id ?? 0;
 
-        // ✅ auto generate disp_cd if not provided
-        if (empty($data['disp_cd'])) {
-            $latest = $this->MtPhonelists->find()
-                ->select(['disp_cd'])
-                ->order(['disp_cd' => 'DESC'])
-                ->first();
+        if (!isset($data['disp_cd']) || trim((string)$data['disp_cd']) === '') {
+            $maxDisp = $this->MtPhonelists->find()
+                ->select(['max_disp' => 'MAX(disp_cd)'])
+                ->where(['deleted IS' => null])
+                ->first()
+                ->max_disp ?? 0;
 
-            $data['disp_cd'] = $latest ? ($latest->disp_cd + 1) : 1;
+            $data['disp_cd'] = (int)$maxDisp + 1;
         }
 
         $data['created'] = $now;
@@ -90,6 +90,10 @@ class MtPhonelistsController extends AppController
     if ($this->request->is(['patch', 'post', 'put'])) {
 
         $data = $this->request->getData();
+        if (!isset($data['disp_cd']) || trim((string)$data['disp_cd']) === '') {
+            $data['disp_cd'] = $entry->disp_cd;
+        }
+
         $data['updated'] = date('Y-m-d H:i:s');
         $data['updated_user_id'] = $this->getCurrentUser()?->id ?? 0;
 
@@ -143,7 +147,7 @@ class MtPhonelistsController extends AppController
             Log::debug('AJAX payload: ' . json_encode($data));
 
             if (empty($data['orderData'])) {
-                throw new \Exception('No orderData received');
+                throw new \Exception('表示順データを受信できませんでした。');
             }
 
             $mtPhonelistsTable = $this->getTableLocator()->get('MtPhonelists');
@@ -170,18 +174,18 @@ class MtPhonelistsController extends AppController
                     $errors[$e->id] = $e->getErrors();
                 }
                 Log::error('SaveMany failed: ' . json_encode($errors));
-                throw new \Exception('SaveMany failed, check logs');
+                throw new \Exception('表示順の保存に失敗しました。ログを確認してください。');
             }
 
             // Success response
-            $this->set(['message' => 'Order updated successfully']);
+            $this->set(['message' => '表示順を更新しました。']);
             $this->viewBuilder()->setOption('serialize', ['message']);
         } catch (\Exception $e) {
             Log::error('updateOrder failed: ' . $e->getMessage());
 
             $this->response = $this->response->withStatus(500);
             $this->set([
-                'message' => 'Error saving order',
+                'message' => '表示順の保存に失敗しました。',
                 'error' => $e->getMessage()
             ]);
             $this->viewBuilder()->setOption('serialize', ['message', 'error']);

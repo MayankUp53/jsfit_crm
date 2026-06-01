@@ -24,6 +24,7 @@ class CustomersController extends AppController
     protected $Users;
     protected $MtStatuses;
     protected $MtCids;
+    protected $SmsHistories;
     /**
      * Initialization hook method.
      *
@@ -39,6 +40,7 @@ class CustomersController extends AppController
         $this->Users = $this->fetchTable('Users');
         $this->MtStatuses = $this->fetchTable('MtStatuses');
         $this->MtCids = $this->fetchTable('MtCids');
+        $this->SmsHistories = $this->fetchTable('SmsHistories');
     }
 
     /**
@@ -476,7 +478,15 @@ $results = $this->Customers->find()
             ->orderBy(['Contacts.updated' => 'DESC'])
             ->toArray();
 
-        $this->set(compact('customer', 'contacts'));
+        $smsHistories = $this->SmsHistories->find()
+            ->where([
+                'SmsHistories.customer_id' => $id,
+                'SmsHistories.deleted IS' => null,
+            ])
+            ->orderBy(['SmsHistories.created' => 'DESC'])
+            ->all();
+
+        $this->set(compact('customer', 'contacts', 'smsHistories'));
         $this->setListValue();
     }
 

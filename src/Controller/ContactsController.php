@@ -22,6 +22,7 @@ class ContactsController extends AppController
     protected $CoreSettings;
     protected $MtQueues;
     protected $MtOutline;
+    protected $SmsHistories;
 
     public function initialize(): void
     {
@@ -35,6 +36,7 @@ class ContactsController extends AppController
         $this->CoreSettings = $this->fetchTable('CoreSettings');
         $this->MtQueues = $this->fetchTable('MtQueues');
         $this->MtOutline = $this->fetchTable('MtOutline');
+        $this->SmsHistories = $this->fetchTable('SmsHistories');
     }
 
     public function clearSession()
@@ -368,7 +370,9 @@ class ContactsController extends AppController
             $contactItem->op_incharge = $user ? $user->user_name : '-';
         }
 
-        $this->set(compact('contact', 'contacts', 'customer'));
+        $smsHistories = $this->getCustomerSmsHistories((int)$customer_id);
+
+        $this->set(compact('contact', 'contacts', 'customer', 'smsHistories'));
         $this->setListValue();
     }
 
@@ -468,7 +472,9 @@ class ContactsController extends AppController
         $contact->op_incharge = $mainUser ? $mainUser->user_name : '-';
 
         // 8️⃣ Pass variables to view
-        $this->set(compact('contact', 'customer', 'contacts'));
+        $smsHistories = $this->getCustomerSmsHistories((int)$contact->customer_id);
+
+        $this->set(compact('contact', 'customer', 'contacts', 'smsHistories'));
         $this->setListValue(); // for select options
     }
 
@@ -705,5 +711,16 @@ class ContactsController extends AppController
     protected function callDncApi(int $customerId, mixed $status): array
     {
         return ['result' => 0, 'message' => ''];
+    }
+
+    protected function getCustomerSmsHistories(int $customerId)
+    {
+        return $this->SmsHistories->find()
+            ->where([
+                'SmsHistories.customer_id' => $customerId,
+                'SmsHistories.deleted IS' => null,
+            ])
+            ->orderBy(['SmsHistories.created' => 'DESC'])
+            ->all();
     }
 }
