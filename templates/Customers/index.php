@@ -83,14 +83,14 @@ $search = $searchData ?? [];
                     'label' => false,
                     'value' => $search['created_from'] ?? '',
                     'class' => 'form-control datepicker',
-                    'placeholder' => 'From'
+                    'placeholder' => '開始日'
                 ]) ?>
                 <span style="margin: 0 5px;">~</span>
                 <?= $this->Form->control('Search.created_to', [
                     'label' => false,
                     'value' => $search['created_to'] ?? '',
                     'class' => 'form-control datepicker',
-                    'placeholder' => 'To'
+                    'placeholder' => '終了日'
                 ]) ?>
             </div>
         </td>
@@ -102,14 +102,14 @@ $search = $searchData ?? [];
                     'label' => false,
                     'value' => $search['updated_from'] ?? '',
                     'class' => 'form-control datepicker',
-                    'placeholder' => 'From'
+                    'placeholder' => '開始日'
                 ]) ?>
                 <span style="margin: 0 5px;">~</span>
                 <?= $this->Form->control('Search.updated_to', [
                     'label' => false,
                     'value' => $search['updated_to'] ?? '',
                     'class' => 'form-control datepicker',
-                    'placeholder' => 'To'
+                    'placeholder' => '終了日'
                 ]) ?>
             </div>
         </td>

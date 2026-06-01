@@ -218,6 +218,7 @@ $currentUser = $this->request->getAttribute('identity');
                 </tr>
             </thead>
             <tbody>
+                <?php if (!empty($contacts) && count($contacts) > 0): ?>
                 <?php foreach ($contacts as $row): ?>
                     <tr ondblclick="window.location='<?= $this->Url->build([
                                                             'controller' => 'Contacts',
@@ -245,7 +246,14 @@ $currentUser = $this->request->getAttribute('identity');
 
                     </tr>
                 <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="12">対応履歴はありません。</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
+
+<?= $this->element('sms_history_panel', ['smsHistories' => $smsHistories ?? []]) ?>

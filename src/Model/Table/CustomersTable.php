@@ -44,6 +44,10 @@ class CustomersTable extends Table
         'foreignKey' => 'customer_id', 
         'dependent' => true,           
     ]);
+        $this->hasMany('SmsHistories', [
+            'foreignKey' => 'customer_id',
+            'dependent' => true,
+        ]);
 
         // Keep legacy created/updated columns in sync.
         $this->addBehavior('Timestamp', [

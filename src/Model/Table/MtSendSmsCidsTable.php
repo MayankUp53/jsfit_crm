@@ -37,7 +37,7 @@ class MtSendSmsCidsTable extends Table
     {
         $validator
             ->integer('disp_cd')
-            ->notEmptyString('disp_cd', '表示順は必須です。');
+            ->allowEmptyString('disp_cd');
 
         $validator
             ->integer('campaign_id')
@@ -71,12 +71,6 @@ class MtSendSmsCidsTable extends Table
 
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        // Unique per campaign + display order
-        $rules->add(
-            $rules->isUnique(['campaign_id', 'disp_cd']),
-            ['errorField' => 'disp_cd', 'message' => '表示順が重複しています。']
-        );
-
         return $rules;
     }
 }

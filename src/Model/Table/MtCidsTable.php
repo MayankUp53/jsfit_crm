@@ -37,7 +37,7 @@ class MtCidsTable extends Table
     {
         $validator
             ->integer('disp_cd')
-            ->notEmptyString('disp_cd', '表示順は必須です。');
+            ->allowEmptyString('disp_cd');
 
         $validator
             ->integer('campaign_id')
@@ -65,12 +65,6 @@ class MtCidsTable extends Table
 
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        // Ensure display code remains unique per campaign.
-        $rules->add(
-            $rules->isUnique(['campaign_id', 'disp_cd']),
-            ['errorField' => 'disp_cd', 'message' => '表示順が重複しています。']
-        );
-
         return $rules;
     }
 }

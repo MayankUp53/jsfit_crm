@@ -18,7 +18,7 @@
             </tr>
 
             <tr>
-                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">DNC Default LeadID</td>
+                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">DNCデフォルトLeadID</td>
                 <td><?= $this->Form->control('dnc_lead_id', ['label' => false, 'class' => 'form-control']) ?></td>
 
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">DNC API URL</td>
@@ -34,7 +34,7 @@
             </tr>
 
             <tr>
-                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">Manual Dial API URL</td>
+                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">手動発信API URL</td>
                 <td><?= $this->Form->control('dial_api_url', ['label' => false, 'class' => 'form-control']) ?></td>
 
                 <!-- ✅ NEW ROW ADDED -->

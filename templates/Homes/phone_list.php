@@ -41,6 +41,10 @@
         </tbody>
     </table>
 
+    <div id="multiActions" style="display:none; padding:10px; text-align:right;">
+        <button type="button" class="btn btn-sm btn-info" id="addSelectedPhones">選択した番号を追加</button>
+    </div>
+
 </div>
 
 <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
@@ -53,6 +57,11 @@ $(function () {
     // ✅ get target field (tel OR sms_tel)
     var urlParams = new URLSearchParams(window.location.search);
     var targetField = urlParams.get('target') || 'tel';
+    var multiMode = urlParams.get('multi') === '1';
+
+    if (multiMode) {
+        $('#multiActions').show();
+    }
 
     var table = $('#dt').DataTable({
         dom: '<"pull-left"f><"pull-right"l>ti<"pull-left"p>',
@@ -65,7 +74,7 @@ $(function () {
             data: null,
             orderable: false,
             searchable: false,
-            defaultContent: '<button type="button" class="btn btn-xs btn-info sel_btn">選択</button>'
+            defaultContent: multiMode ? '<input type="checkbox" class="phone_check">' : '<button type="button" class="btn btn-xs btn-info sel_btn">選択</button>'
         }]
     });
 
@@ -82,6 +91,43 @@ $(function () {
                 input.value = phone;
 
                 // 🔥 important for frameworks
+                input.dispatchEvent(new Event('input'));
+                input.dispatchEvent(new Event('change'));
+            } else {
+                console.log("Field not found:", targetField);
+            }
+        }
+
+        window.close();
+    });
+
+    $('#addSelectedPhones').on('click', function () {
+        var phones = [];
+
+        table.$('input.phone_check:checked').each(function () {
+            var data = table.row($(this).parents('tr')).data();
+            var phone = (data && data[2]) ? String(data[2]).trim() : '';
+
+            if (phone) {
+                phones.push(phone);
+            }
+        });
+
+        if (phones.length === 0) {
+            alert('電話番号を選択してください');
+            return;
+        }
+
+        if (window.opener && !window.opener.closed) {
+            var input = window.opener.document.getElementById(targetField);
+
+            if (input) {
+                var existing = input.value ? input.value.split(/[\s,;]+/).filter(Boolean) : [];
+                var merged = existing.concat(phones).filter(function (phone, index, list) {
+                    return list.indexOf(phone) === index;
+                });
+
+                input.value = merged.join("\n");
                 input.dispatchEvent(new Event('input'));
                 input.dispatchEvent(new Event('change'));
             } else {

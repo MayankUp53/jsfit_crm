@@ -51,7 +51,7 @@
     <button type="button"
             class="btn-default btn-xs"
             style="width:150px; height:30px; cursor:pointer; margin-left:10px;"
-            onclick="history.back();">
+            onclick="location.href='<?= $this->Url->build('/settings') ?>';">
         戻る
     </button>
 </div>

@@ -13,7 +13,7 @@
         <h3 class="panel-title">AmeyoJ ダッシュボード</h3>
     </div>
 
-<?php if (!empty($cidOpt)): ?>
+<?php if (!empty($cidOpt) || !empty($smsCidOpt)): ?>
 
 <!-- ===================================================== -->
 <!-- JAVASCRIPT VALIDATION + PHONE BOOK HANDLER -->
@@ -35,15 +35,19 @@ function validateManualDial() {
 }
 
 function validateSms() {
-    const smsCid = document.getElementById('sms_cid')?.value;
+    const smsCidField = document.getElementById('sms_cid');
+    const smsCid = smsCidField?.value;
     const smsTel = document.getElementById('sms_tel')?.value;
     const smsText = document.getElementById('sms_text')?.value;
+    const recipients = smsTel
+        ? smsTel.split(/[\s,;]+/).map(function (tel) { return tel.trim(); }).filter(Boolean)
+        : [];
 
-    if (!smsCid) {
+    if (smsCidField && smsCidField.tagName === 'SELECT' && !smsCid) {
         alert('SMS通知番号を選択してください');
         return false;
     }
-    if (!smsTel) {
+    if (recipients.length === 0) {
         alert('SMS送信先電話番号を入力してください');
         return false;
     }
@@ -52,13 +56,58 @@ function validateSms() {
         return false;
     }
 
-    return confirm('SMS送信しますか？');
+    return confirm(recipients.length + '件の送信先にSMS送信しますか？');
 }
+
+function resetSmsModalFields() {
+    const smsCid = document.getElementById('sms_cid');
+    const smsTel = document.getElementById('sms_tel');
+    const smsText = document.getElementById('sms_text');
+
+    if (smsCid && smsCid.tagName === 'SELECT') {
+        smsCid.value = '';
+    }
+    if (smsTel) {
+        smsTel.value = '';
+    }
+    if (smsText) {
+        smsText.value = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.jQuery) {
+        jQuery('#sendSmsModal').on('show.bs.modal hidden.bs.modal', resetSmsModalFields);
+    }
+
+    const sendSmsModal = document.getElementById('sendSmsModal');
+    if (sendSmsModal) {
+        sendSmsModal.querySelectorAll('[data-dismiss="modal"]').forEach(function (button) {
+            button.addEventListener('click', resetSmsModalFields);
+        });
+    }
+});
 </script>
+
+<style>
+.send-sms-fields td {
+    display: block;
+    width: 100% !important;
+    padding: 0 0 12px 0 !important;
+}
+.send-sms-fields label {
+    display: block;
+    margin-bottom: 4px;
+}
+.send-sms-fields .form-control {
+    width: 100%;
+}
+</style>
 
 <!-- ===================================================== -->
 <!-- MANUAL DIAL FORM -->
 <!-- ===================================================== -->
+<?php if (!empty($cidOpt)): ?>
 <?= $this->Form->create(null, [
     'url' => ['controller' => 'Homes', 'action' => 'manualDialApi'],
     'class' => 'form-inline',
@@ -101,26 +150,71 @@ function validateSms() {
                 'class' => 'btn btn-info btn-xs',
             ]) ?>
         </td>
+
+        <?php if (!empty($smsCidOpt)): ?>
+        <td style="padding-left:6px;">
+            <button type="button"
+                class="btn btn-warning btn-xs"
+                data-toggle="modal"
+                data-target="#sendSmsModal">
+                SMS送信
+            </button>
+        </td>
+        <?php endif; ?>
     </tr>
 </table>
 
 <?= $this->Form->end() ?>
+<?php elseif (!empty($smsCidOpt)): ?>
+<table class="table" style="width:auto; margin-bottom:10px;">
+    <tr>
+        <td style="padding-left:6px;">
+            <button type="button"
+                class="btn btn-warning btn-xs"
+                data-toggle="modal"
+                data-target="#sendSmsModal">
+                SMS送信
+            </button>
+        </td>
+    </tr>
+</table>
+<?php endif; ?>
 
-<hr style="margin:12px 0; border-top:1px solid #d9d9d9;">
 <!-- ===================================================== -->
-<!-- SMS FORM -->
+<!-- SMS MODAL -->
 <!-- ===================================================== -->
 <?php if (!empty($smsCidOpt)): ?>
 
 <?= $this->Form->create(null, [
     'url' => ['controller' => 'Homes', 'action' => 'sendSmsApi'],
-    'class' => 'form-inline',
     'onsubmit' => 'return validateSms();'
 ]) ?>
 
-<table style="width:auto; margin:10px 10px 10px 8px; border-collapse:collapse;">
+<div class="modal fade" id="sendSmsModal" tabindex="-1" role="dialog" aria-labelledby="sendSmsModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:#20b2aa;color:#fff;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="sendSmsModalLabel">SMS送信</h4>
+            </div>
+            <div class="modal-body">
+
+<table class="send-sms-fields" style="width:100%; margin:0; border-collapse:collapse;">
     <tr>
         <td style="width:180px;">
+            <label for="sms_cid">SMS通知番号</label>
+            <?php if (count($smsCidOpt) === 1): ?>
+                <?php $onlySmsCid = array_key_first($smsCidOpt); ?>
+                <?= $this->Form->hidden('sms_cid', [
+                    'id' => 'sms_cid',
+                    'value' => $onlySmsCid,
+                ]) ?>
+                <div class="form-control" style="height:auto;min-height:34px;background-color:#f5f5f5;">
+                    <?= h($smsCidOpt[$onlySmsCid]) ?>
+                </div>
+            <?php else: ?>
             <?= $this->Form->control('sms_cid', [
                 'label' => false,
                 'id' => 'sms_cid',
@@ -129,27 +223,32 @@ function validateSms() {
                 'empty' => '--- SMS通知番号 ---',
                 'class' => 'form-control',
             ]) ?>
+            <?php endif; ?>
         </td>
 
         <td style="width:180px;padding-left:10px;">
+            <label for="sms_tel">SMS送信先番号</label>
             <?= $this->Form->control('sms_tel', [
                 'label' => false,
                 'id' => 'sms_tel',
-                'type' => 'text',
-                'placeholder' => 'SMS送信先TEL',
+                'type' => 'textarea',
+                'rows' => 3,
+                'placeholder' => '1行に1番号、またはカンマ区切りで入力',
                 'class' => 'form-control',
+                'style' => 'resize:vertical;',
             ]) ?>
         </td>
 
         <td style="padding-left:6px;">
             <button type="button"
                 class="btn btn-warning btn-xs"
-                onclick="window.open('<?= $this->Url->build(['action' => 'phoneList', '?' => ['target' => 'sms_tel']]) ?>','','width=500,height=700');">
+                onclick="window.open('<?= $this->Url->build(['action' => 'phoneList', '?' => ['target' => 'sms_tel', 'multi' => 1]]) ?>','','width=650,height=700');">
                 電話帳
             </button>
         </td>
 
      <td style="width: 120px; padding-left:6px;">
+    <label for="sms_text">メッセージ</label>
     <?= $this->Form->control('sms_text', [
         'label' => false,
         'id' => 'sms_text',
@@ -161,12 +260,24 @@ function validateSms() {
     ]) ?>
 </td>
         <td style="padding-left:6px;">
+            <button type="button"
+                class="btn btn-warning btn-xs"
+                onclick="window.open('<?= $this->Url->build(['action' => 'smsTextList', '?' => ['target' => 'sms_text']]) ?>','','width=750,height=700');">
+                SMS文面
+            </button>
+        </td>
+        <td style="padding-left:6px;">
             <?= $this->Form->submit('SMS送信', [
-                'class' => 'btn btn-danger btn-xs',
+                'class' => 'btn btn-danger',
             ]) ?>
         </td>
     </tr>
 </table>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 <?= $this->Form->end() ?>
 

@@ -14,6 +14,7 @@ $action = $this->request->getParam('action');
 $home_active = ($controller == 'Homes') ? 'active' : null;
 $customers_active = ($controller == 'Customers') ? 'active' : null;
 $contacts_active = ($controller == 'Contacts') ? 'active' : null;
+$sms_histories_active = ($controller == 'SmsHistories') ? 'active' : null;
 $settings_active = ($controller == 'Settings') ? 'active' : null;
 $users_active = ($controller == 'Users') ? 'active' : null;
 ?>
@@ -57,7 +58,7 @@ $users_active = ($controller == 'Users') ? 'active' : null;
                     <div class="container-fluid">
                         <div class="navbar-header">
                             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2" style="border-color:#20b2aa;">
-                                <span class="sr-only">Toggle navigation</span>
+                                <span class="sr-only">ナビゲーション切替</span>
                                 <span class="icon-bar" style="background-color:#ffffff;"></span>
                                 <span class="icon-bar" style="background-color:#ffffff;"></span>
                                 <span class="icon-bar" style="background-color:#ffffff;"></span>
@@ -67,8 +68,8 @@ $users_active = ($controller == 'Users') ? 'active' : null;
                         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
                             <ul class="nav navbar-nav">
                                 <li class="<?= $home_active ?>">
-                                    <a href="<?= $this->Url->build('/homes') ?>" style="color:#ffffff !important;">Home
-                                        <span class="sr-only">(current)</span>
+                                    <a href="<?= $this->Url->build('/homes') ?>" style="color:#ffffff !important;">ホーム
+                                        <span class="sr-only">（現在）</span>
                                     </a>
                                 </li>
                                 <li class="<?= $customers_active ?>">
@@ -76,6 +77,9 @@ $users_active = ($controller == 'Users') ? 'active' : null;
                                 </li>
                                 <li class="<?= $contacts_active ?>">
                                     <a href="<?= $this->Url->build('/contacts') ?>" style="color:#ffffff !important;">対応履歴検索<span class="sr-only">(current)</span></a>
+                                </li>
+                                <li class="<?= $sms_histories_active ?>">
+                                    <a href="<?= $this->Url->build('/sms-histories') ?>" style="color:#ffffff !important;">SMS履歴検索<span class="sr-only">(current)</span></a>
                                 </li>
                                 <?php if ($currentUser && $currentUser->auth != 0): ?>
                                     <li class="<?= $settings_active ?>">
@@ -117,7 +121,7 @@ $users_active = ($controller == 'Users') ? 'active' : null;
             <div class="modal-content">
                 <div class="modal-header">
                     <!-- Bootstrap 3 close button -->
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
                         <span aria-hidden="true">&times;</span>
                     </button>
                     <h5 class="modal-title" id="voiceLogModalLabel">録音再生</h5>

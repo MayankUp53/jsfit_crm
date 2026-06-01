@@ -90,6 +90,33 @@ $base = [
         </table>
     </div>
 <?php endif; ?>
+<?php if (empty($contacts)): ?>
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">å¯¾å¿œå±¥æ­´</h3>
+        </div>
+        <table class="table table-striped table-hover" style="font-size:12px;">
+            <thead>
+                <tr>
+                    <th>å±¥æ­´ID</th>
+                    <th>ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹</th>
+                    <th>é›»è©±ç•ªå·</th>
+                    <th>æ¦‚è¦</th>
+                    <th>ç™»éŒ²æ—¥</th>
+                    <th>æ›´æ–°æ—¥</th>
+                    <th>æ“ä½œ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7">対応履歴はありません。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+<?php endif; ?>
+
+<?= $this->element('sms_history_panel', ['smsHistories' => $smsHistories ?? []]) ?>
 
 <style>
     .detail-label {

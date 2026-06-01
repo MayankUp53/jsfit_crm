@@ -30,11 +30,11 @@ $audioUrl = $url . urlencode(json_encode(['crtObjectId' => $crtObjectId, 'target
 <body>
   <audio controls>
     <source src="<?= h($audioUrl) ?>" type="audio/mpeg">
-    Your browser does not support the audio element.
+    お使いのブラウザは音声再生に対応していません。
   </audio>
 
   <div class="actions">
-    <a class="btn" href="<?= h($audioUrl) ?>" target="_blank" rel="noopener">Download</a>
+    <a class="btn" href="<?= h($audioUrl) ?>" target="_blank" rel="noopener">ダウンロード</a>
   </div>
 </body>
 </html>
