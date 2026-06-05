@@ -46,14 +46,82 @@ class SmsHistoriesController extends AppController
         $query = $this->SmsHistories->find()
             ->contain(['Customers'])
             ->where(['SmsHistories.deleted IS' => null])
-            ->orderBy(['SmsHistories.created' => 'DESC']);
+            ->orderBy([
+                'SmsHistories.created' => 'DESC',
+                'SmsHistories.updated' => 'DESC',
+                'SmsHistories.id' => 'DESC',
+            ]);
 
         $this->applySearchFilters($query, $searchData);
+
+        if ($this->handleCsvDownload($query)) {
+            return;
+        }
 
         $this->paginate = ['limit' => 50];
         $smsHistories = $this->paginate($query);
 
         $this->set(compact('smsHistories', 'searchData'));
+    }
+
+    private function handleCsvDownload($query): bool
+    {
+        if (!$this->request->is('post') || !$this->request->getData('download')) {
+            return false;
+        }
+
+        $smsStatusOpt = [
+            'success' => '成功',
+            'failed' => '失敗',
+        ];
+        $exportData = [];
+
+        foreach ($query->all() as $smsHistory) {
+            $exportData[] = [
+                'id' => $smsHistory->id,
+                'client_cd' => $smsHistory->customer->client_cd ?? '',
+                'company_name' => $smsHistory->customer->company_name ?? '',
+                'customer_name' => $smsHistory->customer->name ?? '',
+                'type_of_number' => $smsHistory->customer->type_of_number ?? '',
+                'customer_tel' => $smsHistory->customer->tel ?? '',
+                'customer_fax' => $smsHistory->customer->fax ?? '',
+                'customer_email' => $smsHistory->customer->email ?? '',
+                'phone' => $smsHistory->phone,
+                'send_sms_number' => $smsHistory->send_sms_number,
+                'sms_text' => $smsHistory->sms_text,
+                'status' => $smsStatusOpt[$smsHistory->status] ?? $smsHistory->status,
+                'created' => $smsHistory->created ? $smsHistory->created->format('Y-m-d H:i:s') : '',
+                'updated' => $smsHistory->updated ? $smsHistory->updated->format('Y-m-d H:i:s') : '',
+            ];
+        }
+
+        $this->csv($exportData);
+        return true;
+    }
+
+    public function csv(array $results = []): void
+    {
+        $filename = rawurlencode('SMS送信履歴_' . date('Y-m-d H:i:s') . '.csv');
+        $columns = [
+            'id' => 'SMS履歴ID',
+            'client_cd' => '得意先CD',
+            'company_name' => '会社・支店名',
+            'customer_name' => '氏名',
+            'type_of_number' => '番号種別',
+            'customer_tel' => 'TEL',
+            'customer_fax' => 'FAX',
+            'customer_email' => 'メール',
+            'phone' => 'SMS送信先',
+            'send_sms_number' => '送信元',
+            'sms_text' => 'メッセージ',
+            'status' => 'ステータス',
+            'created' => '送信日',
+            'updated' => '更新日',
+        ];
+
+        $this->set(compact('filename', 'columns', 'results'));
+        $this->viewBuilder()->setLayout('ajax');
+        $this->render('download');
     }
 
     public function view(?string $id = null)
@@ -71,7 +139,11 @@ class SmsHistoriesController extends AppController
                 'SmsHistories.customer_id' => $smsHistory->customer_id,
                 'SmsHistories.deleted IS' => null,
             ])
-            ->orderBy(['SmsHistories.created' => 'DESC'])
+            ->orderBy([
+                'SmsHistories.created' => 'DESC',
+                'SmsHistories.updated' => 'DESC',
+                'SmsHistories.id' => 'DESC',
+            ])
             ->all();
 
         $this->set(compact('smsHistory', 'customerSmsHistories'));

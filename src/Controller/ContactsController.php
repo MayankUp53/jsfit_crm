@@ -110,7 +110,11 @@ class ContactsController extends AppController
         return $this->Contacts->find()
             ->contain(['Customers'])
             ->where(['Contacts.deleted IS' => null])
-            ->orderBy(['Contacts.created' => 'DESC']);
+            ->orderBy([
+                'Contacts.created' => 'DESC',
+                'Contacts.updated' => 'DESC',
+                'Contacts.id' => 'DESC',
+            ]);
     }
 
     private function applySearchFilters($query, array $searchData): void
@@ -359,7 +363,11 @@ class ContactsController extends AppController
         $contacts = $this->Contacts->find()
             ->where(['Contacts.customer_id' => $customer_id, 'Contacts.deleted IS' => null])
             ->contain(['Customers'])
-            ->orderBy(['Contacts.created' => 'DESC'])
+            ->orderBy([
+                'Contacts.created' => 'DESC',
+                'Contacts.updated' => 'DESC',
+                'Contacts.id' => 'DESC',
+            ])
             ->all();
 
         foreach ($contacts as $contactItem) {
@@ -451,7 +459,11 @@ class ContactsController extends AppController
 
         $contacts = $this->Contacts->find()
             ->where(['Contacts.customer_id' => $contact->customer_id, 'Contacts.deleted IS' => null])
-            ->orderBy(['Contacts.updated' => 'DESC'])
+            ->orderBy([
+                'Contacts.created' => 'DESC',
+                'Contacts.updated' => 'DESC',
+                'Contacts.id' => 'DESC',
+            ])
             ->contain(['Customers'])
             ->all();
 
@@ -720,7 +732,11 @@ class ContactsController extends AppController
                 'SmsHistories.customer_id' => $customerId,
                 'SmsHistories.deleted IS' => null,
             ])
-            ->orderBy(['SmsHistories.created' => 'DESC'])
+            ->orderBy([
+                'SmsHistories.created' => 'DESC',
+                'SmsHistories.updated' => 'DESC',
+                'SmsHistories.id' => 'DESC',
+            ])
             ->all();
     }
 }

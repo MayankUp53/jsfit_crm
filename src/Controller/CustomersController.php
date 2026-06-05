@@ -193,7 +193,11 @@ if (!empty($searchData['phone'])) {
         $query->where(['Customers.updated <=' => $endUpdated]);
     }
 
-    return $query->orderBy(['Customers.client_cd' => 'DESC']);
+    return $query->orderBy([
+        'Customers.created' => 'DESC',
+        'Customers.updated' => 'DESC',
+        'Customers.id' => 'DESC',
+    ]);
 }
 
 
@@ -475,7 +479,11 @@ $results = $this->Customers->find()
                 'Contacts.customer_id' => $id,
                 'Contacts.deleted IS' => null,
             ])
-            ->orderBy(['Contacts.updated' => 'DESC'])
+            ->orderBy([
+                'Contacts.created' => 'DESC',
+                'Contacts.updated' => 'DESC',
+                'Contacts.id' => 'DESC',
+            ])
             ->toArray();
 
         $smsHistories = $this->SmsHistories->find()
@@ -483,7 +491,11 @@ $results = $this->Customers->find()
                 'SmsHistories.customer_id' => $id,
                 'SmsHistories.deleted IS' => null,
             ])
-            ->orderBy(['SmsHistories.created' => 'DESC'])
+            ->orderBy([
+                'SmsHistories.created' => 'DESC',
+                'SmsHistories.updated' => 'DESC',
+                'SmsHistories.id' => 'DESC',
+            ])
             ->all();
 
         $this->set(compact('customer', 'contacts', 'smsHistories'));

@@ -132,6 +132,9 @@ $formatSmsText = static function ($text): array {
     <div class="text-center btn_margin" style="width:95%;margin-bottom:5px;margin-top:5px;">
         <?= $this->Form->button('検　索', ['name' => 'searching', 'value' => '1', 'type' => 'submit', 'class' => 'btn-success btn-xs', 'style' => 'width:150px;height:30px;cursor:pointer']) ?>
         <?= $this->Form->button('クリア', ['name' => 'clear', 'value' => '1', 'type' => 'submit', 'class' => 'btn-success btn-xs', 'style' => 'width:150px;height:30px;cursor:pointer']) ?>
+        <?php if ($userAuth !== null && $userAuth != 0): ?>
+            <?= $this->Form->button('検索結果を出力', ['name' => 'download', 'value' => '1', 'type' => 'submit', 'class' => 'btn-success btn-xs', 'style' => 'width:150px;height:30px;cursor:pointer']) ?>
+        <?php endif; ?>
     </div>
     <?= $this->Form->end() ?>
 </div>
