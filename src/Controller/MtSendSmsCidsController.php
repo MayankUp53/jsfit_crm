@@ -152,10 +152,7 @@ class MtSendSmsCidsController extends AppController
             '1' => '有効'
         ];
 
-        $opeOpt = $this->Users->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'user_name'
-            ])
+        $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
             ->where(['deleted IS' => null])
             ->orderBy(['id' => 'ASC'])
             ->toArray();
