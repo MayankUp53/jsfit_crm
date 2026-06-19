@@ -31,7 +31,7 @@ function validateManualDial() {
         alert('発信先電話番号を入力してください');
         return false;
     }
-    return confirm('発信しますか？');
+    return true;
 }
 
 function validateSms() {
