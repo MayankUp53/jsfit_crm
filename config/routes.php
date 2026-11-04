@@ -60,8 +60,6 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/mt-queues', ['controller' => 'MtQueues', 'action' => 'index']);
         $builder->connect('/mt-statuses', ['controller' => 'MtStatuses', 'action' => 'index']);
         $builder->connect('/mt-products', ['controller' => 'MtProducts', 'action' => 'index']);
-        $builder->connect('/mt-sms-texts', ['controller' => 'MtSmsTexts', 'action' => 'index']);
-        $builder->connect('/sms-histories', ['controller' => 'SmsHistories', 'action' => 'index']);
         $builder->connect('/callbacks', ['controller' => 'Callbacks', 'action' => 'index']);
         $builder->connect('/imports', ['controller' => 'Imports', 'action' => 'index']);
         $builder->connect('/settings', ['controller' => 'Settings', 'action' => 'index']);

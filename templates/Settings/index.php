@@ -83,26 +83,6 @@ function formSubmit() {
         <td width="50%"><button onclick="location.href='<?= $this->Url->build('/mt-cids') ?>';" class="btn-info btn-xs" style="width:150px;height:30px;cursor:pointer">一覧</button></td>
     </tr>
 
-      <tr>
-        <th style="vertical-align:middle">&nbsp;SMS発信者番号リスト</th>
-        <td width="50%">
-            <button onclick="location.href='<?= $this->Url->build('/mt-send-sms-cids') ?>';"
-                    class="btn-info btn-xs"
-                    style="width:150px;height:30px;cursor:pointer">
-                一覧
-            </button>
-        </td>
-    </tr>
-    <tr>
-        <th style="vertical-align:middle">&nbsp;SMS文面リスト</th>
-        <td width="50%">
-            <button onclick="location.href='<?= $this->Url->build('/mt-sms-texts') ?>';"
-                    class="btn-info btn-xs"
-                    style="width:150px;height:30px;cursor:pointer">
-                一覧
-            </button>
-        </td>
-    </tr>
 <tr>
     <th style="vertical-align:middle">&nbsp;概要リスト</th>
     <td width="50%">

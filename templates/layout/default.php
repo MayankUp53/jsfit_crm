@@ -14,7 +14,6 @@ $action = $this->request->getParam('action');
 $home_active = ($controller == 'Homes') ? 'active' : null;
 $customers_active = ($controller == 'Customers') ? 'active' : null;
 $contacts_active = ($controller == 'Contacts') ? 'active' : null;
-$sms_histories_active = ($controller == 'SmsHistories') ? 'active' : null;
 $settings_active = ($controller == 'Settings') ? 'active' : null;
 $users_active = ($controller == 'Users') ? 'active' : null;
 ?>
@@ -77,9 +76,6 @@ $users_active = ($controller == 'Users') ? 'active' : null;
                                 </li>
                                 <li class="<?= $contacts_active ?>">
                                     <a href="<?= $this->Url->build('/contacts') ?>" style="color:#ffffff !important;">対応履歴検索<span class="sr-only">(current)</span></a>
-                                </li>
-                                <li class="<?= $sms_histories_active ?>">
-                                    <a href="<?= $this->Url->build('/sms-histories') ?>" style="color:#ffffff !important;">SMS履歴検索<span class="sr-only">(current)</span></a>
                                 </li>
                                 <?php if ($currentUser && $currentUser->auth != 0): ?>
                                     <li class="<?= $settings_active ?>">

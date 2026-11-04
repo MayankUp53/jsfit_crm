@@ -54,7 +54,6 @@
 <script>
 $(function () {
 
-    // ✅ get target field (tel OR sms_tel)
     var urlParams = new URLSearchParams(window.location.search);
     var targetField = urlParams.get('target') || 'tel';
     var multiMode = urlParams.get('multi') === '1';

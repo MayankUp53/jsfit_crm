@@ -173,8 +173,6 @@ $currentUser = $this->request->getAttribute('identity');
     </div>
 </div>
 
-<?= $this->element('sms_history_panel', ['smsHistories' => $smsHistories ?? []]) ?>
-
  <!-- ================= Main Contact Detail ================= -->
 <div class="panel panel-primary">
     <div class="panel-heading">

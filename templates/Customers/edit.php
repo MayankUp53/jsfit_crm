@@ -60,6 +60,41 @@ $this->assign('title', '顧客詳細情報更新');
             </div>
         </div>
 
+        <div class="row">
+            <div class="col-sm-6 form-group"><label>得意先支店CD</label><?= $this->Form->control('client_branch_code', ['label' => false, 'class' => 'form-control']) ?></div>
+            <div class="col-sm-6 form-group"><label>得意先支店名</label><?= $this->Form->control('client_branch_name', ['label' => false, 'class' => 'form-control']) ?></div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-4 form-group"><label>郵便番号</label><?= $this->Form->control('zip_cd', ['label' => false, 'class' => 'form-control']) ?></div>
+            <div class="col-sm-4 form-group"><label>住所2</label><?= $this->Form->control('addr2', ['label' => false, 'class' => 'form-control']) ?></div>
+            <div class="col-sm-4 form-group"><label>住所3</label><?= $this->Form->control('addr3', ['label' => false, 'class' => 'form-control']) ?></div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12 form-group"><label>住所1</label><?= $this->Form->control('addr1', ['label' => false, 'class' => 'form-control']) ?></div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-6 form-group"><label>サブ電話番号1</label><?= $this->Form->control('tel2', ['label' => false, 'class' => 'form-control']) ?></div>
+            <div class="col-sm-6 form-group"><label>サブ電話番号2</label><?= $this->Form->control('tel3', ['label' => false, 'class' => 'form-control']) ?></div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-6 form-group"><label>所属名</label><?= $this->Form->control('section_name', ['label' => false, 'class' => 'form-control']) ?></div>
+            <div class="col-sm-6 form-group"><label>営業担当者名</label><?= $this->Form->control('sales_person', ['label' => false, 'class' => 'form-control']) ?></div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-6 form-group"><label>顧客担当者1</label><?= $this->Form->control('incharge1_name', ['label' => false, 'class' => 'form-control']) ?></div>
+            <div class="col-sm-6 form-group"><label>顧客担当者1電話</label><?= $this->Form->control('incharge1_phone', ['label' => false, 'class' => 'form-control']) ?></div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-6 form-group"><label>顧客担当者2</label><?= $this->Form->control('incharge2_name', ['label' => false, 'class' => 'form-control']) ?></div>
+            <div class="col-sm-6 form-group"><label>顧客担当者2電話</label><?= $this->Form->control('incharge2_phone', ['label' => false, 'class' => 'form-control']) ?></div>
+        </div>
+
         <!-- Row 4 -->
         <div class="row">
             <div class="col-sm-6 form-group">

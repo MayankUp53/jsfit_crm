@@ -116,8 +116,6 @@ $base = [
     </div>
 <?php endif; ?>
 
-<?= $this->element('sms_history_panel', ['smsHistories' => $smsHistories ?? []]) ?>
-
 <style>
     .detail-label {
         vertical-align: middle;

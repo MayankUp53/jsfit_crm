@@ -36,13 +36,8 @@
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">手動発信API URL</td>
                 <td><?= $this->Form->control('dial_api_url', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
 
-                <!-- ✅ NEW ROW ADDED -->
-                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">SMS API URL</td>
-                <td><?= $this->Form->control('sendSMS_api_url', [
-                    'label' => false,
-                    'div' => false,
-                    'class' => 'form-control'
-                ]) ?></td>
+                <td></td>
+                <td></td>
             </tr>
 
             <tr>

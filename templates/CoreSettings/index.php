@@ -51,12 +51,6 @@ $id = $row?->id;
             <td><?= h($row->dial_api_url ?? '') ?>&nbsp;</td>
         </tr>
 
-        <!-- ✅ NEW ROW ADDED -->
-        <tr>
-            <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">SMS API URL</td>
-            <td><?= h($row->sendSMS_api_url ?? '') ?>&nbsp;</td>
-        </tr>
-
         <tr>
             <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">コールバック通知時間（分）</td>
             <td><?= h($row->callback_notice_time ?? '') ?>&nbsp;</td>

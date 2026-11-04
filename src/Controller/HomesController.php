@@ -23,10 +23,7 @@ class HomesController extends AppController
     protected $MtCids;
     protected $MtPhonelists;
     protected $Users;
-    protected $MtSendSmsCids;
-    protected $MtSmsTexts;
     protected $Customers;
-    protected $SmsHistories;
     public function initialize(): void
     {
         parent::initialize();
@@ -40,10 +37,7 @@ class HomesController extends AppController
         $this->MtPhonelists = $this->fetchTable('MtPhonelists');
         $this->MtCids = $this->fetchTable('MtCids');
         $this->Users = $this->fetchTable('Users');
-        $this->MtSendSmsCids = $this->fetchTable('MtSendSmsCids');
-        $this->MtSmsTexts = $this->fetchTable('MtSmsTexts');
         $this->Customers = $this->fetchTable('Customers');
-        $this->SmsHistories = $this->fetchTable('SmsHistories');
     }
 
     public function beforeFilter(EventInterface $event): ?ResponseInterface
@@ -146,21 +140,6 @@ class HomesController extends AppController
      //   $this->setListValue();
     }
 
-    public function smsTextList()
-    {
-        $mtSmsTexts = $this->MtSmsTexts
-            ->find()
-            ->where([
-                'deleted IS' => null,
-                'active_flg' => 1,
-            ])
-            ->orderBy(['disp_cd' => 'ASC'])
-            ->all();
-
-        $this->set(compact('mtSmsTexts'));
-        $this->viewBuilder()->disableAutoLayout();
-    }
-
     public function storeList()
     {
         $mtPhonelists = $this->MtPhonelists
@@ -175,209 +154,6 @@ class HomesController extends AppController
         $this->viewBuilder()->disableAutoLayout();
         $this->setListValue();
     }
-
-
-public function sendSmsApi()
-{
-    if (!$this->request->is('post')) {
-        return $this->redirect(['action' => 'index']);
-    }
-
-    $core = $this->CoreSettings->find()
-        ->where(['deleted IS' => null])
-        ->first();
-
-    $smsCid = $this->request->getData('sms_cid');
-    $smsTel = (string)$this->request->getData('sms_tel');
-    $smsText = trim((string)($this->request->getData('sms_text') ?? ''));
-
-    $smsNumbers = preg_split('/[\s,;]+/', $smsTel, -1, PREG_SPLIT_NO_EMPTY);
-    $smsNumbers = array_map(
-        static fn($tel) => preg_replace('/[^0-9]/', '', (string)$tel),
-        $smsNumbers ?: []
-    );
-    $smsNumbers = array_values(array_unique(array_filter($smsNumbers)));
-
-    if (empty($smsCid) || empty($smsNumbers) || $smsText === '') {
-        $this->Flash->error(__('必須情報が不足しています。'));
-        return $this->redirect(['action' => 'index']);
-    }
-
-    $url = $core?->sendSMS_api_url;
-    if (!$url) {
-        $this->Flash->error(__('SMS API URLが設定されていません。'));
-        return $this->redirect(['action' => 'index']);
-    }
-
-    $client = new Client();
-    $successCount = 0;
-    $failedNumbers = [];
-    $failureMessages = [];
-
-    foreach ($smsNumbers as $smsNumber) {
-        $customerId = $this->findOrCreateSmsCustomer($smsNumber);
-
-        $query = http_build_query([
-            'srcPhone'       => $smsNumber,
-            'sendSmsNumber'  => $smsCid,
-            'smsText'        => $smsText,
-        ], '', '&', PHP_QUERY_RFC3986);
-
-        $finalUrl = rtrim($url, '?&') . '?' . $query;
-        Log::debug('SMS API URL: ' . $finalUrl);
-
-        try {
-            $response = $client->get($finalUrl);
-            $statusCode = $response->getStatusCode();
-            $body = (string)$response->getBody();
-            $json = json_decode($body, true);
-        } catch (\Throwable $e) {
-            Log::error('SMS APIエラー (' . $smsNumber . '): ' . $e->getMessage());
-            $this->saveSmsHistory($customerId, $smsNumber, (string)$smsCid, $smsText, 'failed');
-            $failedNumbers[] = $smsNumber;
-            $failureMessages[] = $smsNumber . ': SMS APIから応答がありませんでした。';
-            continue;
-        }
-
-        $isSuccess = $this->isSmsApiSuccess($statusCode, $json, $body);
-        $apiMessage = $this->getSmsApiMessage($json, $body);
-
-        if ($isSuccess) {
-            $this->saveSmsHistory($customerId, $smsNumber, (string)$smsCid, $smsText, 'success');
-            $successCount++;
-        } else {
-            Log::error('SMS送信失敗レスポンス (' . $smsNumber . ') HTTP ' . $statusCode . ': ' . $apiMessage . ' | ' . $body);
-            $this->saveSmsHistory($customerId, $smsNumber, (string)$smsCid, $smsText, 'failed');
-            $failedNumbers[] = $smsNumber;
-            $failureMessages[] = $smsNumber . ': ' . $apiMessage;
-        }
-    }
-
-    if ($successCount > 0) {
-        $this->Flash->success(__('SMS送信が完了しました。成功: {0}件', $successCount));
-    }
-    if (!empty($failedNumbers)) {
-        $this->Flash->error(__('SMS送信に失敗しました。失敗: {0}件 ({1})', count($failedNumbers), implode(' / ', $failureMessages)));
-    }
-
-    return $this->redirect(['action' => 'index']);
-}
-
-    protected function isSmsApiSuccess(int $statusCode, mixed $json, string $body): bool
-    {
-        if (!is_array($json)) {
-            return false;
-        }
-
-        $apiStatus = strtolower((string)($json['status'] ?? ''));
-        if ($apiStatus !== '') {
-            return $apiStatus === 'success';
-        }
-
-        $apiHttpStatus = (int)($json['http_status'] ?? $statusCode);
-        return $apiHttpStatus >= 200 && $apiHttpStatus < 300;
-    }
-
-    protected function getSmsApiMessage(mixed $json, string $body): string
-    {
-        if (is_array($json)) {
-            $message = trim((string)($json['message'] ?? ''));
-            if ($message !== '') {
-                return $message;
-            }
-
-            $httpStatus = (int)($json['http_status'] ?? 0);
-            if ($httpStatus >= 400 && $httpStatus < 500) {
-                return 'SMS APIのリクエストエラーです。';
-            }
-            if ($httpStatus >= 500) {
-                return 'SMS APIのサーバエラーです。';
-            }
-            if ($httpStatus === 0) {
-                return 'SMS APIから応答がありませんでした。';
-            }
-        }
-
-        return trim($body) !== '' ? trim($body) : 'SMS送信に失敗しました。';
-    }
-    protected function findOrCreateSmsCustomer(string $phone): int
-    {
-        $cleanPhone = preg_replace('/[^0-9]/', '', $phone) ?? '';
-
-        $expr = "
-            REPLACE(REPLACE(REPLACE(Customers.tel_only, '-', ''), ' ', ''), '+', '') = :phone OR
-            REPLACE(REPLACE(REPLACE(Customers.phone_only, '-', ''), ' ', ''), '+', '') = :phone OR
-            REPLACE(REPLACE(REPLACE(Customers.tel, '-', ''), ' ', ''), '+', '') = :phone OR
-            REPLACE(REPLACE(REPLACE(Customers.phone, '-', ''), ' ', ''), '+', '') = :phone
-        ";
-
-        $customer = $this->Customers->find()
-            ->where([
-                'Customers.deleted IS' => null,
-                $expr,
-            ])
-            ->bind(':phone', $cleanPhone, 'string')
-            ->first();
-
-        if ($customer) {
-            return (int)$customer->id;
-        }
-
-        $now = date('Y-m-d H:i:s');
-        $userId = $this->getCurrentUser()?->id ?? 0;
-        $a = explode('.', (string)microtime(true));
-        $dispNo = date('ymdHis') . substr($a[1] ?? '000', 0, 3);
-
-        $customer = $this->Customers->newEmptyEntity();
-        $customer = $this->Customers->patchEntity($customer, [
-            'disp_no' => $dispNo,
-            'client_cd' => 'sms_' . bin2hex(random_bytes(8)),
-            'tel' => $cleanPhone,
-            'tel_only' => $cleanPhone,
-            'zip_cd' => '',
-            'addr1' => '',
-            'created' => $now,
-            'created_user_id' => $userId,
-            'updated' => $now,
-            'updated_user_id' => $userId,
-        ]);
-
-        if ($this->Customers->save($customer)) {
-            return (int)$customer->id;
-        }
-
-        Log::error('SMS送信用の顧客自動登録に失敗しました: ' . json_encode($customer->getErrors()));
-        return 0;
-    }
-
-    protected function saveSmsHistory(int $customerId, string $phone, string $sendSmsNumber, string $smsText, string $status): void
-    {
-        if ($customerId <= 0) {
-            Log::error('顧客IDが空のためSMS履歴登録をスキップしました。電話番号: ' . $phone);
-            return;
-        }
-
-        $now = date('Y-m-d H:i:s');
-        $userId = $this->getCurrentUser()?->id ?? 0;
-
-        $history = $this->SmsHistories->newEmptyEntity();
-        $history = $this->SmsHistories->patchEntity($history, [
-            'customer_id' => $customerId,
-            'phone' => $phone,
-            'send_sms_number' => $sendSmsNumber,
-            'sms_text' => $smsText,
-            'status' => $status,
-            'created' => $now,
-            'created_user_id' => $userId,
-            'updated' => $now,
-            'updated_user_id' => $userId,
-        ]);
-
-        if (!$this->SmsHistories->save($history)) {
-            Log::error('SMS履歴の保存に失敗しました: ' . json_encode($history->getErrors()));
-        }
-    }
-
 public function manualDialApi()
     {
         if (!$this->request->is('post')) {
@@ -519,28 +295,11 @@ $tel = str_replace('-', '', $tel); // removes all dashes
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
 
-        $smsCidQuery = $this->MtSendSmsCids
-            ->find('list', keyField: 'cid', valueField: 'item_name')
-            ->where(['deleted IS' => null]);
-
-        if ($session->read('campaign')) {
-            $smsCidQuery->where(['campaign_id' => $session->read('campaign')]);
-        }
-
-        $smsCidOpt = $smsCidQuery
-            ->orderBy(['disp_cd' => 'ASC'])
-            ->toArray();
-          
-              
-
         $this->set([
             'activeOpt' => $activeOpt,
             'callbackStatusOpt' => $callbackStatusOpt,
             'opeOpt' => $operators,
             'cidOpt' => $cidOpt,
-            'smsCidOpt' => $smsCidOpt,
         ]);
     }
 }
-
-

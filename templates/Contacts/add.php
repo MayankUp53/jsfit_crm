@@ -255,5 +255,3 @@ $currentUser = $this->request->getAttribute('identity');
         </table>
     </div>
 </div>
-
-<?= $this->element('sms_history_panel', ['smsHistories' => $smsHistories ?? []]) ?>
