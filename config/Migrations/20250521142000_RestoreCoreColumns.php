@@ -74,7 +74,9 @@ class RestoreCoreColumns extends AbstractMigration
             $table->update();
         }
 
-        $this->execute("DELETE FROM custom_fields WHERE name IN ('cf_type_of_number','cf_cf_type_of_number','cf_fax')");
+        if ($this->hasTable('custom_fields')) {
+            $this->execute("DELETE FROM custom_fields WHERE name IN ('cf_type_of_number','cf_cf_type_of_number','cf_fax')");
+        }
     }
 
     protected function restoreContacts(): void

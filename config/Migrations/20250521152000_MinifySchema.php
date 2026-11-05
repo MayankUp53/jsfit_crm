@@ -81,7 +81,7 @@ class MinifySchema extends AbstractMigration
 
         // Remove custom field definitions for dropped legacy columns
         $names = array_map(fn($col) => "'" . $col . "'", $dropColumns);
-        if ($names) {
+        if ($names && $this->hasTable('custom_fields')) {
             $this->execute('DELETE FROM custom_fields WHERE name IN (' . implode(',', $names) . ')');
         }
     }
@@ -116,7 +116,7 @@ class MinifySchema extends AbstractMigration
             $table->update();
         }
 
-        if ($dropColumns) {
+        if ($dropColumns && $this->hasTable('custom_fields')) {
             $names = array_map(fn($col) => "'" . $col . "'", $dropColumns);
             $this->execute('DELETE FROM custom_fields WHERE name IN (' . implode(',', $names) . ')');
         }
