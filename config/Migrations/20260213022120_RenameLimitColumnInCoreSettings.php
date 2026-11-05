@@ -7,9 +7,9 @@ class RenameLimitColumnInCoreSettings extends AbstractMigration
 {
     public function change(): void
     {
-        // Rename column `limit` to `limit_value` in `core_settings` table
         $table = $this->table('core_settings');
-        $table->renameColumn('limit', 'limit_value')
-              ->update();
+        if ($table->hasColumn('limit') && !$table->hasColumn('limit_value')) {
+            $table->renameColumn('limit', 'limit_value')->update();
+        }
     }
 }

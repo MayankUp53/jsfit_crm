@@ -4,17 +4,11 @@ use Migrations\AbstractMigration;
 
 class AddSendSmsApiUrlToCoreSettings extends AbstractMigration
 {
-    public function change()
+    public function change(): void
     {
         $table = $this->table('core_settings');
-
-        $table->addColumn('sendSMS_api_url', 'string', [
-            'limit' => 255,
-            'null' => true,
-            'default' => null,
-            'after' => 'id'
-        ]);
-
-        $table->update();
+        if ($table->hasColumn('sendSMS_api_url')) {
+            $table->removeColumn('sendSMS_api_url')->update();
+        }
     }
 }
