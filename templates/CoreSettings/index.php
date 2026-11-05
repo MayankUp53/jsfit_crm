@@ -22,7 +22,7 @@ $id = $row?->id;
         </tr>
 
         <tr>
-            <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">DNCデフォルトLeadID</td>
+            <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">DNC Default LeadID</td>
             <td><?= h($row->dnc_lead_id ?? '') ?>&nbsp;</td>
         </tr>
 
@@ -47,7 +47,7 @@ $id = $row?->id;
         </tr>
 
         <tr>
-            <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">手動発信API URL</td>
+            <td style="vertical-align:middle;color:#ffffff;" bgcolor="#20b2aa">Manual Dial API URL</td>
             <td><?= h($row->dial_api_url ?? '') ?>&nbsp;</td>
         </tr>
 

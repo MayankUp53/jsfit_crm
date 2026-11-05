@@ -1,6 +1,6 @@
 <div class="panel panel-info filterable">
     <div class="panel-heading">
-        <h3 class="panel-title">高度な設定登録</h3>
+        <h3 class="panel-title">高度な設定 新規登録</h3>
     </div>
 
     <?= $this->Form->create($setting, ['url' => ['action' => 'add']]) ?>
@@ -17,7 +17,7 @@
             </tr>
 
             <tr>
-                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">DNCデフォルトLeadID</td>
+                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">DNC Default LeadID</td>
                 <td><?= $this->Form->control('dnc_lead_id', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
 
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">DNC API URL</td>
@@ -33,7 +33,7 @@
             </tr>
 
             <tr>
-                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">手動発信API URL</td>
+                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">Manual Dial API URL</td>
                 <td><?= $this->Form->control('dial_api_url', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
 
                 <td></td>
@@ -42,22 +42,10 @@
 
             <tr>
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">コール履歴表示件数</td>
-                <td><?= $this->Form->control('limit', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
+                <td><?= $this->Form->control('limit_value', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
 
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">コールバック通知時間（分）</td>
                 <td><?= $this->Form->control('callback_notice_time', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
-            </tr>
-
-            <tr>
-                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">Ameyoパラメータ取得確認アラート</td>
-                <td><?= $this->Form->control('ameyo_alert_enabled', [
-                    'label' => false,
-                    'div' => false,
-                    'type' => 'select',
-                    'options' => $activeOpt ?? [],
-                    'empty' => '-----',
-                    'class' => 'form-control'
-                ]) ?></td>
             </tr>
 
             <tr>
