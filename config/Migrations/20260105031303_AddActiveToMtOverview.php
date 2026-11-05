@@ -7,12 +7,16 @@ class AddActiveToMtOverview extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('mt_overview');
-        $table->addColumn('active', 'integer', [
-            'default' => null, // no default
-            'null' => true,
-            'after' => 'item_name', // optional
-        ])
-        ->update();
+        $tableName = $this->hasTable('mt_overview') ? 'mt_overview' : ($this->hasTable('mt_outline') ? 'mt_outline' : null);
+        if ($tableName !== null) {
+            $table = $this->table($tableName);
+            if (!$table->hasColumn('active')) {
+                $table->addColumn('active', 'integer', [
+                    'default' => null,
+                    'null' => true,
+                    'after' => 'item_name',
+                ])->update();
+            }
+        }
     }
 }

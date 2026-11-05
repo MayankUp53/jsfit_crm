@@ -7,9 +7,8 @@ class RenameMtOverviewToMtOutline extends AbstractMigration
 {
     public function change(): void
     {
-        // Rename table
-        $this->table('mt_overview')
-             ->rename('mt_outline')
-             ->update();
+        if ($this->hasTable('mt_overview') && !$this->hasTable('mt_outline')) {
+            $this->table('mt_overview')->rename('mt_outline')->update();
+        }
     }
 }
