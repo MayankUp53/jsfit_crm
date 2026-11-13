@@ -53,7 +53,6 @@
                     'type' => 'text',
                     'class' => 'form-control',
                     'style' => 'width:100%',
-                    'value' => ''
                 ]) ?></td>
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#4169E1">*パスワード</td>
                 <td><?= $this->Form->control('password', [
@@ -81,6 +80,7 @@
     <div style="width:95%;margin-bottom:5px;margin-top:5px;" align="center" class="btn_margin">
         <button type="button" style="width:150px;height:25px;cursor:pointer;" onclick="location.href='<?= $this->Url->build(['controller' => 'Users', 'action' => 'index']) ?>';" class="btn-default btn-xs">キャンセル</button>
         <?= $this->Form->postLink('削　除', ['action' => 'delete', $user->id], [
+            'block' => 'userDeleteForm',
             'confirm' => __('削除します。よろしいですか？'),
             'class' => 'btn-danger btn-xs',
             'style' => 'width:150px;cursor:pointer',
@@ -95,5 +95,6 @@
         ]) ?>
     </div>
     <?= $this->Form->end() ?>
+    <?= $this->fetch('userDeleteForm') ?>
 </div>
 

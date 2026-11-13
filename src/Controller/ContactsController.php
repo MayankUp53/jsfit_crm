@@ -21,6 +21,7 @@ class ContactsController extends AppController
     protected $Callbacks;
     protected $CoreSettings;
     protected $MtQueues;
+    protected $MtPhonelists;
     protected $MtOutline;
 
     public function initialize(): void
@@ -34,6 +35,7 @@ class ContactsController extends AppController
         $this->Callbacks = $this->fetchTable('Callbacks');
         $this->CoreSettings = $this->fetchTable('CoreSettings');
         $this->MtQueues = $this->fetchTable('MtQueues');
+        $this->MtPhonelists = $this->fetchTable('MtPhonelists');
         $this->MtOutline = $this->fetchTable('MtOutline');
     }
 
@@ -109,9 +111,8 @@ class ContactsController extends AppController
             ->contain(['Customers'])
             ->where(['Contacts.deleted IS' => null])
             ->orderBy([
-                'Contacts.created' => 'DESC',
                 'Contacts.updated' => 'DESC',
-                'Contacts.id' => 'DESC',
+                'Contacts.created' => 'ASC',
             ]);
     }
 
@@ -136,16 +137,38 @@ class ContactsController extends AppController
             ]);
         }
 
-       if (!empty($searchData['phone'])) {
-
-    $phone = str_replace(['-', ' '], '', trim($searchData['phone']));
-
-    $expr = "REPLACE(REPLACE(Customers.phone, '-', ''), ' ', '') LIKE :phone OR 
-             REPLACE(REPLACE(Customers.tel, '-', ''), ' ', '') LIKE :phone";
-
-    $query->where([$expr])
-          ->bind(':phone', "%$phone%", 'string');
-}
+        $phone = $searchData['tel'] ?? $searchData['phone'] ?? '';
+        if (!empty($phone)) {
+            $phone = str_replace(['-', ' ', '－'], '', trim((string)$phone));
+            $expr = "REPLACE(REPLACE(REPLACE(Customers.tel, '-', ''), ' ', ''), '－', '') LIKE :phone OR
+                     REPLACE(REPLACE(REPLACE(Customers.tel2, '-', ''), ' ', ''), '－', '') LIKE :phone OR
+                     REPLACE(REPLACE(REPLACE(Customers.tel_only, '-', ''), ' ', ''), '－', '') LIKE :phone";
+            $query->where([$expr])->bind(':phone', "%{$phone}%", 'string');
+        }
+        if (!empty($searchData['client_name'])) {
+            $query->where(['Customers.client_name LIKE' => '%' . trim((string)$searchData['client_name']) . '%']);
+        }
+        if (!empty($searchData['client_branch_name'])) {
+            $query->where(['Customers.client_branch_name LIKE' => '%' . trim((string)$searchData['client_branch_name']) . '%']);
+        }
+        if (!empty($searchData['addr'])) {
+            $query->where([
+                'OR' => [
+                    'Customers.addr1 LIKE' => '%' . trim((string)$searchData['addr']) . '%',
+                    'Customers.addr2 LIKE' => '%' . trim((string)$searchData['addr']) . '%',
+                    'Customers.addr3 LIKE' => '%' . trim((string)$searchData['addr']) . '%',
+                    'Customers.zip_cd LIKE' => '%' . trim((string)$searchData['addr']) . '%',
+                ],
+            ]);
+        }
+        if (!empty($searchData['detail'])) {
+            $query->where([
+                'OR' => [
+                    'Contacts.detail LIKE' => '%' . trim((string)$searchData['detail']) . '%',
+                    'Contacts.remark LIKE' => '%' . trim((string)$searchData['detail']) . '%',
+                ],
+            ]);
+        }
         
 
         if (!empty($searchData['email'])) {
@@ -160,14 +183,12 @@ class ContactsController extends AppController
             ]);
         }
 
-        if (!empty($searchData['op_incharge'])) {
-
-            $userIds = is_array($searchData['op_incharge'])
-                ? array_map('intval', $searchData['op_incharge'])
-                : [(int)$searchData['op_incharge']];
-
-
-            $query->where(['Contacts.updated_user_id IN' => $userIds]);
+        $opUsers = $searchData['created_user_id'] ?? $searchData['op_incharge'] ?? [];
+        if (!empty($opUsers)) {
+            $userIds = is_array($opUsers)
+                ? array_map('intval', $opUsers)
+                : [(int)$opUsers];
+            $query->where(['Contacts.created_user_id IN' => array_filter($userIds)]);
         }
 
 
@@ -176,20 +197,17 @@ class ContactsController extends AppController
         // Contact filters
         // =========================
 
-        // Summary (multi-select)
+        // Summary (legacy text match)
         if (!empty($searchData['summary'])) {
-            $query->where(['Contacts.summary IN' => $searchData['summary']]);
+            $query->where(['Contacts.summary LIKE' => '%' . trim((string)$searchData['summary']) . '%']);
         }
 
         // Status (multi-select)
         if (!empty($searchData['status'])) {
-            $query->where(['Contacts.status IN' => $searchData['status']]);
+            $statuses = is_array($searchData['status']) ? $searchData['status'] : [$searchData['status']];
+            $query->where(['Contacts.status IN' => array_values(array_filter($statuses))]);
         }
 
-
-        if (!empty($searchData['created_user_id'])) {
-            $query->where(['Contacts.created_user_id' => $searchData['created_user_id']]);
-        }
 
         if (!empty($searchData['created_from'])) {
             $query->where([
@@ -246,21 +264,47 @@ class ContactsController extends AppController
                 ->select(['user_name'])
                 ->where(['id' => $contact->updated_user_id])
                 ->first();
+            $createdUser = $this->Users->find()
+                ->select(['user_name'])
+                ->where(['id' => $contact->created_user_id])
+                ->first();
+            $updatedUser = $user;
+            $status = $this->MtStatuses->find()
+                ->select(['item_name'])
+                ->where(['id' => $contact->status])
+                ->first();
+            $customer = $contact->customer;
 
             $exportData[] = [
                 'id'          => $contact->id,
-                'client_cd'   => $contact->customer->client_cd ?? '',
-                'company_name' => $contact->customer->company_name ?? '',
-                'customer_name' => $contact->customer->name ?? '',
-                'customer_email' => $contact->customer->email ?? '',
-                'customer_tel' => $contact->customer->tel ?? '',
-                'customer_fax' => $contact->customer->fax ?? '',
+                'client_cd'   => $customer->client_cd ?? $customer->client_code ?? '',
+                'client_branch_code' => $customer->client_branch_code ?? '',
+                'company_name' => $customer->client_name ?? $customer->company_name ?? '',
+                'client_branch_name' => $customer->client_branch_name ?? $customer->company_branch_name ?? '',
+                'customer_name' => $customer->name ?? '',
+                'customer_email' => $customer->email ?? '',
+                'customer_tel' => $customer->tel ?? '',
+                'tel2' => $customer->tel2 ?? '',
+                'customer_fax' => $customer->fax ?? '',
                 'remark'      => $contact->remark,
+                'detail'      => $contact->detail ?? $contact->remark ?? '',
                 'summary'     => $contact->summary,
-                'status'      => $contact->status,
+                'queue_name'  => $contact->queue_name ?? '',
+                'status'      => $status?->item_name ?? $contact->status,
+                'addr1'       => $customer->addr1 ?? '',
+                'addr2'       => $customer->addr2 ?? '',
+                'section_name' => $customer->section_name ?? '',
+                'sales_person' => $customer->sales_person ?? '',
+                'deadline'    => $customer->deadline ?? '',
                 'created'      => $contact->created ? $contact->created->format('Y-m-d H:i:s') : '',
                 'updated'      => $contact->updated ? $contact->updated->format('Y-m-d H:i:s') : '',
                 'op_incharge' => $user ? $user->user_name : '-',
+                'created_user' => $createdUser ? $createdUser->user_name : '-',
+                'updated_user' => $updatedUser ? $updatedUser->user_name : '-',
+                'created_date' => $contact->created ? $contact->created->format('Y-m-d') : '',
+                'created_time' => $contact->created ? $contact->created->format('H:i:s') : '',
+                'updated_date' => $contact->updated ? $contact->updated->format('Y-m-d') : '',
+                'updated_time' => $contact->updated ? $contact->updated->format('H:i:s') : '',
             ];
         }
 
@@ -273,7 +317,7 @@ class ContactsController extends AppController
         foreach ($contacts as $contact) {
             $user = $this->Users->find()
                 ->select(['user_name'])
-                ->where(['id' => $contact->updated_user_id])
+                ->where(['id' => $contact->created_user_id ?: $contact->updated_user_id])
                 ->first();
 
             $contact->op_incharge = $user ? $user->user_name : '-';
@@ -284,22 +328,7 @@ class ContactsController extends AppController
     {
         $filename = rawurlencode('対応履歴情報_' . date('Y-m-d H:i:s') . '.csv');
 
-        // Use column mapping for CSV headers
-        $columns = [
-            'id' => '履歴ID',
-            'client_cd' => '得意先CD',
-            'company_name' => '会社・支店名',
-            'customer_name' => '顧客氏名',
-            'customer_tel' => '顧客電話',
-            'customer_email' => '顧客メール',
-            'customer_fax' => 'FAX',
-            'summary' => '概要',
-            'status' => 'ステータス',
-            'remark' => '対応内容',
-            'op_incharge' => '担当OP',
-            'created' => '登録日',
-            'updated' => '更新日',
-        ];
+        $columns = $this->contactExportColumns();
 
         $this->set(compact('filename', 'columns', 'results'));
         $this->viewBuilder()->setLayout('ajax');
@@ -320,6 +349,10 @@ class ContactsController extends AppController
         $contact = $this->Contacts->newEmptyEntity();
         $customer = $this->Customers->get($customer_id);
         $currentUser = $this->getCurrentUser();
+        $sessionQueueName = (string)($this->request->getSession()->read('queueName') ?? '');
+        if ($sessionQueueName !== '') {
+            $contact->queue_name = $sessionQueueName;
+        }
 
         // 2️⃣ Handle Cancel FIRST
         if ($this->request->is('post') && $this->request->getData('back')) {
@@ -337,6 +370,9 @@ class ContactsController extends AppController
             if ($sessionCrt !== '') {
                 $data['crt_object_id'] = $sessionCrt;
             }
+            if ($sessionQueueName !== '' && empty($data['queue_name'])) {
+                $data['queue_name'] = $sessionQueueName;
+            }
 
             $now = date('Y-m-d H:i:s');
 
@@ -345,11 +381,15 @@ class ContactsController extends AppController
             $data['updated']          = $now;
             $data['created_user_id']  = $currentUser ? $currentUser->id : 0;
             $data['updated_user_id']  = $currentUser ? $currentUser->id : 0;
+            if (!array_key_exists('detail', $data) && !empty($data['remark'])) {
+                $data['detail'] = $data['remark'];
+            }
 
             // 🔴 Only now patchEntity → validation runs
             $contact = $this->Contacts->patchEntity($contact, $data);
 
             if ($this->Contacts->save($contact)) {
+                $this->request->getSession()->delete('queueName');
                 $this->Flash->success(__('対応履歴情報の登録が完了しました。'));
                 return $this->redirect(['action' => 'view', $contact->id]);
             }
@@ -362,7 +402,6 @@ class ContactsController extends AppController
             ->where(['Contacts.customer_id' => $customer_id, 'Contacts.deleted IS' => null])
             ->contain(['Customers'])
             ->orderBy([
-                'Contacts.created' => 'DESC',
                 'Contacts.updated' => 'DESC',
                 'Contacts.id' => 'DESC',
             ])
@@ -404,13 +443,15 @@ class ContactsController extends AppController
         $currentUserId = $this->request->getAttribute('identity')->id;
 
 
-        if ($this->request->is('put', 'post')) {
+        if ($this->request->is(['patch', 'put', 'post'])) {
 
 
             $data = $this->request->getData();
 
-
             if (!empty($data['update'])) {
+                if (!array_key_exists('detail', $data) && !empty($data['remark'])) {
+                    $data['detail'] = $data['remark'];
+                }
 
                 $contact = $this->Contacts->patchEntity($contact, $data);
                 $contact->updated_user_id = $currentUserId;
@@ -450,13 +491,16 @@ class ContactsController extends AppController
         }
 
 
-        $customer = $contact->customer;
+        $this->setContactDetailView($contact);
+    }
 
+    protected function setContactDetailView(\App\Model\Entity\Contact $contact): void
+    {
+        $customer = $contact->customer;
 
         $contacts = $this->Contacts->find()
             ->where(['Contacts.customer_id' => $contact->customer_id, 'Contacts.deleted IS' => null])
             ->orderBy([
-                'Contacts.created' => 'DESC',
                 'Contacts.updated' => 'DESC',
                 'Contacts.id' => 'DESC',
             ])
@@ -490,7 +534,7 @@ class ContactsController extends AppController
     {
         // Handle delete button
         if ($this->request->is('post') && $this->request->getData('delete')) {
-            return $this->redirect(['action' => 'delete', $id]);
+            return $this->delete($id);
         }
 
         // Handle back button
@@ -527,9 +571,9 @@ class ContactsController extends AppController
             $contact = $this->Contacts->patchEntity($contact, $data);
 
             if ($this->Contacts->save($contact)) {
-                // Optional callback handling
+                // Create a new reservation, matching the legacy contact edit flow.
                 if (!empty($data['phone']) && !empty($data['callback_datetime'])) {
-                    $this->callbackEdit($contact->customer_id, (int)$contact->id, $data);
+                    $this->callbackAdd((int)$contact->customer_id, $data);
                 }
 
                 // Optional DNC API call
@@ -541,6 +585,8 @@ class ContactsController extends AppController
 
             $errorMsg = $this->formatEntityErrors($contact);
             $this->Flash->error(__('対応履歴情報の更新に失敗しました。もう一度操作してください。 {0}', $errorMsg));
+            $this->setContactDetailView($contact);
+            return $this->render('view');
         }
 
         $this->set(compact('contact', 'customer'));
@@ -567,7 +613,7 @@ class ContactsController extends AppController
             $this->Flash->error(__('削除に失敗しました。'));
         }
 
-        return $this->redirect(['action' => 'index']);
+        return $this->redirect(['action' => 'add', $contact->customer_id]);
     }
 
     protected function setListValue(): void
@@ -587,7 +633,8 @@ class ContactsController extends AppController
             ->toArray();
 
         $statusOpt = $this->MtStatuses
-            ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null, 'active' => 1])
+            ->find('list', keyField: 'id', valueField: 'item_name')
+            ->where(['deleted IS' => null, 'active' => 1])
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
 
@@ -598,8 +645,11 @@ class ContactsController extends AppController
 
         $callbackStatusOpt = ['0' => '未', '1' => '完了', '2' => '中止', '3' => '破棄', '4' => '登録誤り', '99' => 'その他'];
 
-        $queueOpt = $this->MtQueues->find('list', keyField: 'id', valueField: 'item_name')
-            ->where(['MtQueues.active_flg' => 1]) // keep this if active_flg still exists in MtQueues
+        $queueOpt = $this->MtQueues->find('list', keyField: 'item_name', valueField: 'item_name')
+            ->where([
+                'MtQueues.deleted IS' => null,
+                'MtQueues.active_flg' => 1,
+            ])
             ->orderBy(['MtQueues.disp_cd' => 'ASC'])
             ->toArray();
 
@@ -614,11 +664,16 @@ class ContactsController extends AppController
             'customer_email' => '',
             'customer_id' => '',
             'contact_id' => '',
+            'client_name' => '',
+            'client_branch_name' => '',
+            'addr' => '',
+            'detail' => '',
             'status' => '',
             'queue_name' => '',
             'created_user_id' => '',
             'is_done' => '',
             'phone' => '',
+            'tel' => '',
             'summary' => '',
             'remark' => '',
             'created_from' => '',
@@ -631,16 +686,29 @@ class ContactsController extends AppController
     protected function contactExportColumns(): array
     {
         return [
-            'id' => '履歴ID',
             'client_cd' => '得意先CD',
-            'company_name' => '会社・支店名',
-            'customer_name' => '顧客氏名',
-            'customer_tel' => '顧客電話',
+            'client_branch_code' => '得意先支店CD',
+            'id' => '履歴番号',
             'summary' => '概要',
+            'queue_name' => 'キュー名',
+            'detail' => '対応内容',
+            'remark' => 'メモ',
             'status' => 'ステータス',
-            'remark' => '対応内容',
-            'op_incharge' => '担当OP',
-            'created' => '登録日',
+            'company_name' => '得意先名',
+            'client_branch_name' => '得意先支店名',
+            'customer_tel' => 'TEL',
+            'tel2' => 'サブ電話番号1',
+            'addr1' => '施主住所１',
+            'addr2' => '施主住所２',
+            'section_name' => '所属名',
+            'sales_person' => '営業担当者名',
+            'deadline' => '締日',
+            'created_user' => '登録者',
+            'created_date' => '登録日',
+            'created_time' => '登録時間',
+            'updated_user' => '更新者',
+            'updated_date' => '更新日',
+            'updated_time' => '更新時間',
         ];
     }
 

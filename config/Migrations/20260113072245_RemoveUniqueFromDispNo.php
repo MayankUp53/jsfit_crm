@@ -9,6 +9,8 @@ class RemoveUniqueFromDispNo extends AbstractMigration
     {
         // Drop the UNIQUE index on disp_no
         $table = $this->table('customers');
-        $table->removeIndex(['disp_no'])->update();
+        if ($table->hasIndex(['disp_no'])) {
+            $table->removeIndex(['disp_no'])->update();
+        }
     }
 }

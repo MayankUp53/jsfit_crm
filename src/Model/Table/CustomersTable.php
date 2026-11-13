@@ -123,6 +123,22 @@ class CustomersTable extends Table
         return $validator;
     }
 
+    public function validationCustomerForm(Validator $validator): Validator
+    {
+        $this->validationDefault($validator);
+        // A customer code can be shared by separate branches in the original app.
+        $validator->remove('client_cd', 'unique');
+        $validator
+            ->requirePresence('client_code', 'create')
+            ->notEmptyString('client_code', '得意先CD は必須です。入力してください。')
+            ->maxLength('client_code', 6);
+        $validator
+            ->requirePresence('tel', 'create')
+            ->notEmptyString('tel', 'TEL は必須です。入力してください。');
+
+        return $validator;
+    }
+
     /**
      * Returns a rules checker object that will be used for validating
      * application integrity.

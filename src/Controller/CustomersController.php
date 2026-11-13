@@ -124,97 +124,104 @@ class CustomersController extends AppController
     // ====================
     //  Build query with filters
     // ====================
-private function buildCustomerQuery(array $searchData)
-{
-    $query = $this->Customers->find()
-        ->where(['Customers.deleted IS' => null]);
-
-    // Filters
-    if (!empty($searchData['name'])) {
-        $query->where(['Customers.name LIKE' => '%' . trim($searchData['name']) . '%']);
-    }
-
-if (!empty($searchData['phone'])) {
-
-
-    $phone = str_replace(['-', ' '], '', trim($searchData['phone']));
-
-    $expr = "REPLACE(REPLACE(Customers.phone, '-', ''), ' ', '') LIKE :phone OR 
-             REPLACE(REPLACE(Customers.tel, '-', ''), ' ', '') LIKE :phone";
-
-    $query->where([$expr])
-          ->bind(':phone', "%$phone%", 'string');
-
-}
-
-    if (!empty($searchData['email'])) {
-        $query->where(['LOWER(Customers.email) LIKE' => '%' . strtolower(trim($searchData['email'])) . '%']);
-    }
-
-    if (!empty($searchData['fax'])) {
-        $query->where(['Customers.fax LIKE' => '%' . trim($searchData['fax']) . '%']);
-    }
-
-    if (!empty($searchData['client_cd']) && is_numeric($searchData['client_cd'])) {
-        $query->where(['Customers.client_cd' => (int)$searchData['client_cd']]);
-    }
-
-    if (!empty($searchData['company_name'])) {
-        $query->where(['Customers.company_name LIKE' => '%' . trim($searchData['company_name']) . '%']);
-    }
-
-    if (!empty($searchData['type_of_number'])) {
-        $query->where(['Customers.type_of_number IN' => $searchData['type_of_number']]);
-    }
-
-    // Created date range
-    if (!empty($searchData['created_from'])) {
-        $query->where(['Customers.created >=' => $searchData['created_from']]);
-    }
-    if (!empty($searchData['created_to'])) {
-        $end = $searchData['created_to'];
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-            $end .= ' 23:59:59';
+    private function buildCustomerQuery(array $searchData)
+    {
+        $query = $this->Customers->find()->where(['Customers.deleted IS' => null]);
+        foreach ([
+            'client_code', 'client_branch_code', 'client_name', 'client_branch_name',
+            'section_name', 'sales_person', 'incharge1_name', 'incharge1_phone',
+            'incharge2_name', 'incharge2_phone',
+        ] as $field) {
+            $value = trim((string)($searchData[$field] ?? ''));
+            if ($value !== '') {
+                $query->where(
+                    ['Customers.' . $field . ' LIKE' => '%' . $value . '%'],
+                    ['Customers.' . $field => 'string']
+                );
+            }
         }
-        $query->where(['Customers.created <=' => $end]);
-    }
-
-    // Updated date range
-    if (!empty($searchData['updated_from'])) {
-        $query->where(['Customers.updated >=' => $searchData['updated_from']]);
-    }
-    if (!empty($searchData['updated_to'])) {
-        $endUpdated = $searchData['updated_to'];
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $endUpdated)) {
-            $endUpdated .= ' 23:59:59';
+        $tel = trim((string)($searchData['tel_only'] ?? ''));
+        if ($tel !== '') {
+            $query->where(['OR' => ['Customers.tel' => $tel, 'Customers.tel2' => $tel]]);
         }
-        $query->where(['Customers.updated <=' => $endUpdated]);
+        $address = trim((string)($searchData['addr1'] ?? ''));
+        if ($address !== '') {
+            $query->where(['OR' => [
+                'Customers.addr1 LIKE' => '%' . $address . '%',
+                'Customers.addr2 LIKE' => '%' . $address . '%',
+                'Customers.addr3 LIKE' => '%' . $address . '%',
+            ]]);
+        }
+        if (!empty($searchData['created_from'])) {
+            $query->where(['Customers.created >=' => $searchData['created_from']]);
+        }
+        if (!empty($searchData['created_to'])) {
+            $end = $searchData['created_to'];
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+                $end .= ' 23:59:59';
+            }
+            $query->where(['Customers.created <=' => $end]);
+        }
+        return $query->orderBy(['Customers.created' => 'DESC', 'Customers.id' => 'DESC']);
     }
-
-    return $query->orderBy([
-        'Customers.created' => 'DESC',
-        'Customers.updated' => 'DESC',
-        'Customers.id' => 'DESC',
-    ]);
-}
-
-
 
     // ====================
     //  Handle CSV download
     // ====================
-    private function handleCustomerCsv($query): ?\Cake\Http\Response
+    private function handleCustomerCsv($query): bool
     {
         if (!$this->request->is('post') || !$this->request->getData('download')) {
-            return null;
+            return false;
         }
 
         $results = $query->all();
         if (method_exists($this, 'csv')) {
-            return $this->csv($results->toArray());
+            $exportRows = [];
+            foreach ($results as $customer) {
+                $createdUser = $this->Users->find()
+                    ->select(['user_name'])
+                    ->where(['id' => $customer->created_user_id])
+                    ->first();
+                $updatedUser = $this->Users->find()
+                    ->select(['user_name'])
+                    ->where(['id' => $customer->updated_user_id])
+                    ->first();
+                $exportRows[] = [
+                    'client_cd' => $customer->client_code ?? $customer->client_cd ?? '',
+                    'client_branch_code' => $customer->client_branch_code ?? '',
+                    'client_name' => $customer->client_name ?? $customer->company_name ?? $customer->name ?? '',
+                    'client_branch_name' => $customer->client_branch_name ?? $customer->company_branch_name ?? '',
+                    'tel' => $customer->tel ?? '',
+                    'tel2' => $customer->tel2 ?? '',
+                    'addr1' => $customer->addr1 ?? '',
+                    'addr2' => $customer->addr2 ?? '',
+                    'addr3' => $customer->addr3 ?? '',
+                    'section_name' => $customer->section_name ?? '',
+                    'sales_person' => $customer->sales_person ?? '',
+                    'deadline' => $customer->deadline ?? '',
+                    'incharge1_name' => $customer->incharge1_name ?? '',
+                    'incharge1_phone' => $customer->incharge1_phone ?? '',
+                    'incharge2_name' => $customer->incharge2_name ?? '',
+                    'incharge2_phone' => $customer->incharge2_phone ?? '',
+                    'incharge3_name' => $customer->incharge3_name ?? '',
+                    'incharge3_phone' => $customer->incharge3_phone ?? '',
+                    'incharge4_name' => $customer->incharge4_name ?? '',
+                    'incharge4_phone' => $customer->incharge4_phone ?? '',
+                    'notes1' => $customer->notes1 ?? '',
+                    'notes2' => $customer->notes2 ?? '',
+                    'notes3' => $customer->notes3 ?? '',
+                    'notes4' => $customer->notes4 ?? '',
+                    'created_user' => $createdUser?->user_name ?? '',
+                    'created' => $customer->created?->format('Y-m-d H:i:s') ?? '',
+                    'updated_user' => $updatedUser?->user_name ?? '',
+                    'updated' => $customer->updated?->format('Y-m-d H:i:s') ?? '',
+                ];
+            }
+            $this->csv($exportRows);
+            return true;
         }
 
-        return null;
+        return false;
     }
 
     /**
@@ -257,6 +264,7 @@ if (!empty($searchData['phone'])) {
                     'Customers.phone_only' => $phone,
                     'Customers.tel' => $phone,
                     'Customers.phone' => $phone,
+                    'Customers.tel2' => $phone,
                 ],
             ])
             ->toArray();
@@ -274,6 +282,7 @@ if (!empty($searchData['phone'])) {
                         'Customers.phone_only' => $phone,
                         'Customers.tel' => $phone,
                         'Customers.phone' => $phone,
+                        'Customers.tel2' => $phone,
                     ],
                 ])
                 ->toArray();
@@ -295,6 +304,7 @@ if (!empty($searchData['phone'])) {
                         'Customers.phone_only LIKE' => "%{$phone}%",
                         'Customers.tel LIKE' => "%{$phone}%",
                         'Customers.phone LIKE' => "%{$phone}%",
+                        'Customers.tel2 LIKE' => "%{$phone}%",
                     ],
                 ]);
 
@@ -397,16 +407,28 @@ if (!empty($searchData['phone'])) {
         // Handle unknown/anonymous phone numbers
         if ($phone == 'unknown' || $phone == 'anonymous') {
             $id = $this->autoAdd($phone);
+            if ($id <= 0) {
+                $this->Flash->error(__('顧客の自動登録に失敗しました。もう一度操作してください。'));
+                return $this->redirect(['action' => 'index']);
+            }
             $this->Flash->success(__('新規顧客（非通知の電話番号）の自動登録を行いました。:' . $id));
             return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
         }
- $phone = str_replace(['-', ' ', '+'], '', trim($phone));
+        $phone = str_replace(['-', ' ', '+'], '', trim((string)$phone));
+        if ($phone === '') {
+            return $this->redirect(['action' => 'index']);
+        }
 
 $expr = "
     REPLACE(REPLACE(REPLACE(Customers.tel_only, '-', ''), ' ', ''), '+', '') LIKE :phone OR
     REPLACE(REPLACE(REPLACE(Customers.phone_only, '-', ''), ' ', ''), '+', '') LIKE :phone OR
     REPLACE(REPLACE(REPLACE(Customers.tel, '-', ''), ' ', ''), '+', '') LIKE :phone OR
-    REPLACE(REPLACE(REPLACE(Customers.phone, '-', ''), ' ', ''), '+', '') LIKE :phone
+    REPLACE(REPLACE(REPLACE(Customers.phone, '-', ''), ' ', ''), '+', '') LIKE :phone OR
+    REPLACE(REPLACE(REPLACE(Customers.tel2, '-', ''), ' ', ''), '+', '') LIKE :phone OR
+    REPLACE(REPLACE(REPLACE(Customers.incharge1_phone, '-', ''), ' ', ''), '+', '') LIKE :phone OR
+    REPLACE(REPLACE(REPLACE(Customers.incharge2_phone, '-', ''), ' ', ''), '+', '') LIKE :phone OR
+    REPLACE(REPLACE(REPLACE(Customers.incharge3_phone, '-', ''), ' ', ''), '+', '') LIKE :phone OR
+    REPLACE(REPLACE(REPLACE(Customers.incharge4_phone, '-', ''), ' ', ''), '+', '') LIKE :phone
 ";
 
 $results = $this->Customers->find()
@@ -414,18 +436,18 @@ $results = $this->Customers->find()
         'Customers.deleted IS' => null,
         $expr
     ])
-    ->bind(':phone', "%$phone%", 'string')
+    ->bind(':phone', "%$phone", 'string')
     ->toArray();
 
         // If phone doesn't exist, auto-add
         if (count($results) == 0) {
             $id = $this->autoAdd($phone);
+            if ($id <= 0) {
+                $this->Flash->error(__('顧客の自動登録に失敗しました。もう一度操作してください。'));
+                return $this->redirect(['action' => 'index']);
+            }
             $this->Flash->success(__('新規顧客（未登録の電話番号）の自動登録を行いました。:' . $id));
             return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $id]);
-        }
-
-        if (empty($phone)) {
-            return $this->redirect(['action' => 'index']);
         }
 
         $this->setListValue();
@@ -446,7 +468,7 @@ $results = $this->Customers->find()
         'Customers.deleted IS' => null,
         $expr
     ])
-    ->bind(':phone', "%$phone%", 'string');
+    ->bind(':phone', "%$phone", 'string');
 
             $this->paginate = ['limit' => 50];
             $customers = $this->paginate($query);
@@ -500,7 +522,7 @@ $results = $this->Customers->find()
                 return $this->redirect(['action' => 'index']);
             }
 
-            $data = $this->request->getData();
+            $data = $this->customerFormData();
             $now = date('Y-m-d H:i:s');
             $currentUser = $this->getCurrentUser();
 
@@ -511,7 +533,7 @@ $results = $this->Customers->find()
             $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
 
 
-            $customer = $this->Customers->patchEntity($customer, $data);
+            $customer = $this->Customers->patchEntity($customer, $data, ['validate' => 'customerForm']);
 
             if ($this->Customers->save($customer)) {
                 $this->Flash->success(__('顧客情報の登録が完了しました。'));
@@ -534,121 +556,86 @@ $results = $this->Customers->find()
      * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
-public function edit(?string $id = null)
-{
-    // Fetch customer
-    $customer = $this->Customers->find()
-        ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
-        ->firstOrFail();
+    public function edit(?string $id = null)
+    {
+        $customer = $this->Customers->find()
+            ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
+            ->firstOrFail();
 
-    if ($this->request->is(['post', 'patch', 'put'])) {
-
-        // CANCEL button
-        if ($this->request->getData('back')) {
-            return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
-        }
-
-        // DELETE button
-        if ($this->request->getData('delete')) {
-            return $this->redirect(['action' => 'delete', $customer->id]);
-        }
-
-        // UPDATE button
-        if ($this->request->getData('add')) {
-
-            $data = $this->request->getData();
-            $now = date('Y-m-d H:i:s');
-            $currentUser = $this->getCurrentUser();
-
-            $data['updated'] = $now;
-            $data['updated_user_id'] = $currentUser ? $currentUser->id : 0;
-
-            // ===== Custom Email Validation =====
-            if (!empty($data['email'])) {
-
-                // Split emails by ; or ,
-                $emails = preg_split('/[;,]+/', $data['email']);
-                $invalidEmails = [];
-
-                foreach ($emails as $email) {
-                    $email = trim($email);
-
-                    // Only validate non-empty emails
-                    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                        $invalidEmails[] = [
-                            'email' => $email,
-                            'reason' => 'メール形式が正しくありません。例: example@domain.com'
-                        ];
-                    }
-                }
-
-                if (!empty($invalidEmails)) {
-                    $messages = [];
-                    foreach ($invalidEmails as $err) {
-                        $messages[] = "{$err['email']} → {$err['reason']}";
-                    }
-
-                    $this->Flash->error(
-                        __('メールアドレスのエラーがあります。複数メールの場合は ; または , で区切ってください。') . "<br>" . implode("<br>", $messages)
-                    );
-                    $this->set(compact('customer'));
-                    return;
-                }
+        if ($this->request->is(['post', 'patch', 'put'])) {
+            if ($this->request->getData('back')) {
+                return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $customer->id]);
             }
-            // ===== End Email Validation =====
+            if ($this->request->getData('delete')) {
+                return $this->delete((string)$customer->id);
+            }
 
-            // Patch and save
-            $customer = $this->Customers->patchEntity($customer, $data);
-
+            $data = $this->customerFormData();
+            $data['updated'] = date('Y-m-d H:i:s');
+            $data['updated_user_id'] = $this->getCurrentUser()?->id ?? 0;
+            $customer = $this->Customers->patchEntity($customer, $data, ['validate' => 'customerForm']);
             if ($this->Customers->save($customer)) {
                 $this->Flash->success(__('顧客情報の更新が完了しました。'));
-                return $this->redirect(['controller' => 'Customers', 'action' => 'index']);
+                return $this->redirect(['controller' => 'Contacts', 'action' => 'add', $customer->id]);
             }
-
-            $errorMsg = $this->formatEntityErrors($customer);
-            $this->Flash->error(__('顧客情報の更新に失敗しました。 {0}', $errorMsg));
+            $this->Flash->error(__('顧客情報の更新に失敗しました。 {0}', $this->formatEntityErrors($customer)));
         }
+
+        $this->set(compact('customer'));
+        $this->setListValue();
     }
 
-    $this->set(compact('customer'));
-}
-    /**
-     * Delete method (logical delete)
-     *
-     * @param string|null $id Customer id.
-     * @return \Cake\Http\Response|null|void Redirects to index.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
     public function delete(?string $id = null)
     {
-
-        $this->request->allowMethod(['post', 'delete', 'get']);
+        $this->request->allowMethod(['post', 'patch', 'put', 'delete']);
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser || (string)$currentUser->auth === '0') {
+            throw new \Cake\Http\Exception\ForbiddenException('顧客情報を削除する権限がありません。');
+        }
         $customer = $this->Customers->find()
-            ->where(['Customers.id' => $id])
+            ->where(['Customers.id' => $id, 'Customers.deleted IS' => null])
             ->firstOrFail();
 
         $now = date('Y-m-d H:i:s');
-        $currentUser = $this->getCurrentUser();
-
-        $customer->deleted = $now;
-        $customer->deleted_user_id = $currentUser ? $currentUser->id : 0;
-
-        if ($this->Customers->save($customer, ['fields' => ['deleted', 'deleted_user_id']])) {
-            // Delete related contacts (logical delete)
+        $affected = 0;
+        $saved = $this->Customers->getConnection()->transactional(function () use ($customer, $currentUser, $now, &$affected) {
+            $customer->deleted = $now;
+            $customer->deleted_user_id = $currentUser->id;
+            if (!$this->Customers->save($customer)) {
+                return false;
+            }
             $affected = $this->Contacts->updateAll(
-                [
-                    'deleted' => $now,
-                    'deleted_user_id' => $currentUser ? $currentUser->id : 0,
-                ],
-                ['customer_id' => $id]
+                ['deleted' => $now, 'deleted_user_id' => $currentUser->id],
+                ['customer_id' => $customer->id]
             );
+            return true;
+        });
 
-            $this->Flash->success(__('顧客情報と' . $affected . '件の対応履歴の削除が完了しました。'));
+        if ($saved) {
+            $this->Flash->success(__('顧客情報と{0}件の対応履歴の削除が完了しました。', $affected));
         } else {
             $this->Flash->error(__('顧客情報の削除に失敗しました。もう一度操作してください。'));
         }
-
         return $this->redirect(['action' => 'index']);
+    }
+
+    private function customerFormData(): array
+    {
+        $fields = [
+            'client_code', 'client_branch_code', 'client_name', 'client_branch_name',
+            'addr1', 'addr2', 'addr3', 'tel', 'fax', 'tel2', 'section_name', 'sales_person', 'deadline',
+            'incharge1_name', 'incharge1_phone', 'incharge2_name', 'incharge2_phone',
+            'incharge3_name', 'incharge3_phone', 'incharge4_name', 'incharge4_phone',
+            'notes1', 'notes2', 'notes3', 'notes4',
+        ];
+        $data = array_intersect_key($this->request->getData(), array_flip($fields));
+        if (array_key_exists('client_code', $data)) {
+            $data['client_cd'] = (string)$data['client_code'];
+        }
+        if (array_key_exists('tel', $data)) {
+            $data['tel_only'] = preg_replace('/[- －]+/u', '', (string)$data['tel']);
+        }
+        return $data;
     }
 
     protected function setListValue(): void
@@ -698,6 +685,18 @@ public function edit(?string $id = null)
             'name'      => '',
             'type_of_number' => '',
             'tel'       => '',
+            'tel_only' => '',
+            'client_name' => '',
+            'client_branch_name' => '',
+            'addr1' => '',
+            'client_code' => '',
+            'client_branch_code' => '',
+            'section_name' => '',
+            'sales_person' => '',
+            'incharge1_name' => '',
+            'incharge1_phone' => '',
+            'incharge2_name' => '',
+            'incharge2_phone' => '',
             'email'     => '',
             'fax'       => '',
             'created'   => '',
@@ -709,13 +708,32 @@ public function edit(?string $id = null)
     {
         return [
             'client_cd' => '得意先CD',
-            'company_name' => '会社・支店名',
-            'name'      => '氏名',
-            'type_of_number' => '番号種別',
-            'tel'       => '携帯番号',
-            'email'     => 'メール',
-            'fax'       => 'FAX',
+            'client_branch_code' => '得意先支店CD',
+            'client_name' => '得意先名',
+            'client_branch_name' => '得意先支店名',
+            'tel' => 'TEL',
+            'tel2' => 'サブ電話番号1',
+            'addr1' => '住所1',
+            'addr2' => '住所2',
+            'addr3' => '住所3',
+            'section_name' => '所属名',
+            'sales_person' => '営業担当者名',
+            'deadline' => '締日',
+            'incharge1_name' => '顧客の担当者1',
+            'incharge1_phone' => '顧客の担当者1電話',
+            'incharge2_name' => '顧客の担当者2',
+            'incharge2_phone' => '顧客の担当者2電話',
+            'incharge3_name' => '顧客の担当者3',
+            'incharge3_phone' => '顧客の担当者3電話',
+            'incharge4_name' => '顧客の担当者4',
+            'incharge4_phone' => '顧客の担当者4電話',
+            'notes1' => '備考1',
+            'notes2' => '備考2',
+            'notes3' => '備考3',
+            'notes4' => '備考4',
+            'created_user' => '登録者',
             'created'   => '登録日',
+            'updated_user' => '更新者',
             'updated'   => '更新日',
         ];
     }

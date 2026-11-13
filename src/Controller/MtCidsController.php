@@ -36,6 +36,7 @@ class MtCidsController extends AppController
         $entry = $this->MtCids->newEmptyEntity();
         if ($this->request->is('post')) {
             $data = $this->request->getData();
+            $data['active_flg'] = 1;
             $now = date('Y-m-d H:i:s');
             $userId = $this->getCurrentUser()?->id ?? 0;
 
@@ -72,6 +73,7 @@ class MtCidsController extends AppController
             ->firstOrFail();
         if ($this->request->is(['patch', 'post', 'put'])) {
             $data = $this->request->getData();
+            unset($data['active_flg']);
             $data['updated'] = date('Y-m-d H:i:s');
             $data['updated_user_id'] = $this->getCurrentUser()?->id ?? 0;
 
@@ -126,12 +128,11 @@ class MtCidsController extends AppController
     protected function setListValue(): void
     {
         $warning = $this->CallbackNotification->getNumOfWarning();
-        $activeOpt = ['0' => '無効', '1' => '有効'];
         $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
             ->where(['deleted IS' => null])
             ->orderBy(['id' => 'ASC'])
             ->toArray();
 
-        $this->set(compact('warning', 'activeOpt', 'opeOpt'));
+        $this->set(compact('warning', 'opeOpt'));
     }
 }

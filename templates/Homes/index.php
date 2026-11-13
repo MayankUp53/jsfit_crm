@@ -138,8 +138,11 @@ function validateManualDial() {
             <td><?= h(isset($row['call_originate_time']) ? substr($row['call_originate_time'],0,16) : '') ?></td>
             <td><?= h($row['talk_time'] ?? '') ?></td>
             <td>
-                <?php if (!empty($row['call_id'])): ?>
-                    <a href="#">再生</a>
+                <?php if (!empty($row['call_id']) && !empty($row['crt_object_id'])): ?>
+                    <button type="button" class="btn btn-xs btn-default"
+                        onclick="openPlayWindow(<?= json_encode((string)$row['call_id']) ?>, <?= json_encode((string)$row['crt_object_id']) ?>);">
+                        再生
+                    </button>
                 <?php endif; ?>
             </td>
         </tr>
@@ -159,6 +162,12 @@ function validateManualDial() {
 <!-- ===================================================== -->
 <?php $this->start('script'); ?>
 <script>
+function openPlayWindow(callId, crtObjectId) {
+    var url = <?= json_encode((string)$this->Url->build(['controller' => 'Homes', 'action' => 'play'])) ?> +
+        '/' + encodeURIComponent(callId) + '/' + encodeURIComponent(crtObjectId);
+    window.open(url, 'play', 'width=450,height=180');
+}
+
 jQuery(function($){
     $('#callsTable').DataTable({
         pageLength: 25,

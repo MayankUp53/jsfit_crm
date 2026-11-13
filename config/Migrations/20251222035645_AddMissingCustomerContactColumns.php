@@ -58,7 +58,6 @@ class AddMissingCustomerContactColumns extends AbstractMigration
                     'limit' => 200,
                     'null' => true,
                     'default' => null,
-                    'after' => 'detail',
                     'comment' => '連絡電話番号',
                 ]);
                 $modified = true;
@@ -68,7 +67,6 @@ class AddMissingCustomerContactColumns extends AbstractMigration
                     'limit' => 4,
                     'null' => true,
                     'default' => 0,
-                    'after' => 'callback_datetime',
                     'comment' => '再コール完了フラグ',
                 ]);
                 $modified = true;

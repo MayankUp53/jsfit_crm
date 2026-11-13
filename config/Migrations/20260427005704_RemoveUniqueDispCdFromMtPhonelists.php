@@ -7,9 +7,12 @@ class RemoveUniqueDispCdFromMtPhonelists extends AbstractMigration
 {
     public function change()
     {
+        if (!$this->hasTable('mt_phonelists')) {
+            return;
+        }
         $table = $this->table('mt_phonelists');
-
-        // remove unique index
-        $table->removeIndex(['disp_cd'])->update();
+        if ($table->hasIndex(['disp_cd'])) {
+            $table->removeIndex(['disp_cd'])->update();
+        }
     }
 }

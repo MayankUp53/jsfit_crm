@@ -1,257 +1,153 @@
 <?php
 $this->assign('title', '対応履歴登録');
-$currentUser = $this->request->getAttribute('identity');
+$customerRows = [
+    ['得意先CD', 'client_code', '得意先支店CD', 'client_branch_code'],
+    ['得意先名', 'client_name', '得意先支店名', 'client_branch_name'],
+    ['TEL', 'tel', 'FAX', 'fax'],
+    ['顧客の担当者1電話', 'incharge1_phone', '顧客の担当者2電話）', 'incharge2_phone'],
+    ['顧客の担当者3電話', 'incharge3_phone', '顧客の担当者4電話）', 'incharge4_phone'],
+    ['住所１', 'addr1', '住所２', 'addr2'],
+    ['所属名', 'section_name', '営業担当者名', 'sales_person'],
+    ['締日', 'deadline', '備考１', 'notes1'],
+    ['備考2', 'notes2', '備考3', 'notes3'],
+    ['備考4', 'notes4', '', null],
+];
 ?>
-
-<script>
-    $(function() {
-        $(".datepicker").datepicker({
-            changeMonth: true,
-            changeYear: true,
-            dateFormat: 'yy-mm-dd'
-        });
-        if (window.bootstrap && bootstrap.Tooltip) {
-            document.querySelectorAll('.email-tooltip').forEach(el => new bootstrap.Tooltip(el));
-        } else if ($.fn.tooltip) {
-            $('.email-tooltip').tooltip();
-        }
-
-        const hideAllTooltips = () => {
-            if (window.bootstrap && bootstrap.Tooltip) {
-                document.querySelectorAll('.email-tooltip').forEach(el => {
-                    const instance = bootstrap.Tooltip.getInstance(el);
-                    if (instance) {
-                        instance.hide();
-                    }
-                });
-            } else if (window.jQuery && typeof window.jQuery.fn.tooltip === 'function') {
-                window.jQuery('.email-tooltip').tooltip('hide');
-            }
-        };
-
-        window.addEventListener('scroll', hideAllTooltips, true);
-        window.addEventListener('pagehide', hideAllTooltips);
-        window.addEventListener('pageshow', hideAllTooltips);
-        window.addEventListener('beforeunload', hideAllTooltips);
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                hideAllTooltips();
-            }
-        });
-    });
-</script>
-
-<!-- 顧客情報 -->
-<div class="panel panel-info">
-    <div class="panel-heading">
-        <h3 class="panel-title">顧客情報</h3>
-    </div>
-
-    <table class="table table-bordered">
-        <tr>
-            <th width="15%">得意先CD</th>
-            <td><?= h($customer->client_cd) ?></td>
-            <th width="15%">会社・支店名</th>
-            <td><?= h($customer->company_name) ?></td>
-        </tr>
-        <tr>
-            <th>氏名</th>
-            <td><?= h($customer->name) ?></td>
-            <th>番号種別</th>
-            <td><?= h($customer->type_of_number) ?></td>
-        </tr>
-        <tr>
-            <th>TEL</th>
-            <td><?= h($customer->tel) ?></td>
-            <th>FAX</th>
-            <td><?= h($customer->fax) ?></td>
-        </tr>
-        <tr>
-            <th>メールアドレス</th>
-            <td>
-                <?php
-                $rawEmail = (string)($customer->email ?? '');
-                $emailParts = array_values(array_filter(array_map('trim', preg_split('/\s*[,;\r\n]+\s*/', $rawEmail))));
-                $emailCount = count($emailParts);
-                $emailFull = implode('; ', $emailParts);
-                $emailDisplay = $emailFull;
-
-                if ($emailCount > 3) {
-                    $emailDisplay = implode('; ', array_slice($emailParts, 0, 3)) . ' ...';
-                }
-                ?>
-                <?php if ($emailCount > 3): ?>
-                    <span class="email-tooltip"
-                          title="<?= h($emailFull) ?>"
-                          data-toggle="tooltip"
-                          data-bs-toggle="tooltip">
-                        <?= h($emailDisplay) ?>
-                    </span>
-                <?php else: ?>
-                    <?= h($emailDisplay) ?>
-                <?php endif; ?>
-            </td>
-            <th>登録日</th>
-            <td><?= h($customer->created?->format('Y-m-d')) ?></td>
-        </tr>
-        <tr>
-            <th>更新日</th>
-            <td><?= h($customer->updated?->format('Y-m-d')) ?></td>
-            <th>メモ</th>
-            <td><?= h($customer->memo) ?></td>
-        </tr>
-
-    </table>
-
-    <div class="text-right" style="margin-bottom:10px;margin-right:10px;">
-        <a href="<?= $this->Url->build(['controller' => 'Customers', 'action' => 'edit', $customer->id]) ?>"
-            class="btn btn-warning btn-xs">顧客編集</a>
-
-        <!-- <?php if ($currentUser && $currentUser->getOriginalData()->auth != "0"): ?>
-            <?= $this->Form->postLink(
-                        '顧客削除',
-                        ['controller' => 'Customers', 'action' => 'delete', $customer->id],
-                        ['confirm' => '顧客情報を削除します。よろしいですか？', 'class' => 'btn btn-danger btn-xs']
-                    ) ?>
-        <?php endif; ?> -->
-    </div>
-</div>
-
-<!-- 対応履歴登録フォーム -->
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h3 class="panel-title">対応履歴登録</h3>
-    </div>
-
-    <?= $this->Form->create($contact, ['url' => ['action' => 'add', $customer->id], 'id' => 'contactForm']) ?>
-    <?= $this->Form->control('customer_id', ['type' => 'hidden', 'value' => $customer->id]) ?>
-    <?= $this->Form->control('crtObjectId', ['type' => 'hidden', 'value' => $this->request->getSession()->read('crtObjectId')]) ?>
-    <?= $this->Form->control('crt_object_id', [
-        'type' => 'hidden',
-        'value' => $this->request->getSession()->read('crtObjectId')
-    ]) ?>
-
-    <div class="panel-body">
-        <!-- 概要 -->
-        <div class="form-group">
-            <label>概要</label>
-            <?= $this->Form->control('summary', [
-                'label' => false,
-                'type' => 'select',
-                'options' => $overviewOpt ?? [],
-                'empty' => '-----',
-                'class' => 'form-control'
-            ]) ?>
+<div class="contact-add">
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">顧客詳細情報</h3>
+            <span style="float:right;margin-top:-20px">
+                <button type="button" style="width:150px;cursor:pointer;" class="btn btn-warning btn-xs"
+                    onclick="location.href='<?= $this->Url->build(['controller' => 'Customers', 'action' => 'edit', $customer->id]) ?>';">修　正</button>
+            </span>
         </div>
-
-        <!-- ステータス -->
-        <div class="form-group">
-            <label>ステータス</label>
-            <?= $this->Form->control('status', [
-                'label' => false,
-                'type' => 'select',
-                'options' => $statusOpt ?? [],
-                'empty' => '-----',
-                'class' => 'form-control'
-            ]) ?>
-        </div>
-
-        <!-- 対応内容 -->
-        <div class="form-group">
-            <label>対応内容</label>
-            <?= $this->Form->control('remark', [
-                'label' => false,
-                'type' => 'textarea',
-                'rows' => 4,
-                'class' => 'form-control'
-            ]) ?>
-        </div>
-
-        <div style="text-align:center; margin:15px 0;">
-            <!-- Cancel button (submit to controller) -->
-            <?= $this->Form->button('キャンセル', [
-                'type'  => 'submit',
-                'name'  => 'back',
-                'value' => '1',
-                'id'    => 'cancelBtn',
-                'formnovalidate' => true,
-                'class' => 'btn-default btn-xs',
-                'style' => 'width:150px;height:30px;cursor:pointer; margin-right:10px;'
-            ]) ?>
-            <!-- Submit button -->
-            <?= $this->Form->button('登　録', [
-                'type' => 'submit',
-                'name' => 'add',
-                'class' => 'btn-info btn-xs',
-                'style' => 'width:150px;height:30px;cursor:pointer'
-            ]) ?>
-        </div>
-    </div>
-    <?= $this->Form->end() ?>
-</div>
-
-
-
-
-
-<!-- 対応履歴一覧テーブル -->
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h3 class="panel-title">対応履歴一覧</h3>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-striped table-hover" style="font-size:12px">
-            <thead>
-                <tr>
-                    <th>得意先CD</th>
-                    <th>会社・支店名</th>
-                    <th>氏名</th>
-                    <th>番号種別</th>
-                    <th>TEL</th>
-                    <th>概要</th>
-                    <th>ステータス</th>
-                    <th>担当OP</th>
-                    <th>登録日</th>
-                    <th>更新日</th>
-                    <th>録音</th>
-                    <th width="10%">操作</th>
-                </tr>
-            </thead>
+        <table class="table customer-details">
+            <colgroup><col style="width:8%"><col style="width:20%"><col style="width:8%"><col></colgroup>
             <tbody>
-                <?php if (!empty($contacts) && count($contacts) > 0): ?>
-                <?php foreach ($contacts as $row): ?>
-                    <tr ondblclick="window.location='<?= $this->Url->build([
-                                                            'controller' => 'Contacts',
-                                                            'action' => 'view',
-                                                            $row->id ?? ''
-                                                        ]) ?>'">
-                        <td><?= h($row->customer->client_cd ?? '') ?></td>
-                        <td><?= h($row->customer->company_name ?? '') ?></td>
-                        <td><?= h($row->customer->name ?? '') ?></td>
-                        <td><?= h($row->customer->type_of_number ?? '') ?></td>
-                        <td><?= h($row->customer->tel ?? '') ?></td>
-                        <td><?= h($row->summary) ?></td>
-                        <td><?= h($row->status) ?></td>
-                        <td><?= h($row->op_incharge) ?></td>
-                        <td><?= h($row->created ? $row->created->format('Y-m-d H:i') : '') ?></td>
-                        <td><?= h($row->updated ? $row->updated->format('Y-m-d H:i') : '') ?></td>
-                        <td>
-                            <a href="javascript:void(0);" onclick="openVoiceLogModal('<?= h($row->id ?? ($row->call_id ?? '')) ?>','<?= h($row->crt_object_id ?? '') ?>');">再生</a>
-                        </td>
-                        <td>
-                            <?= $this->Form->postLink('削除', ['action' => 'delete', $row->id], [
-                                'confirm' => '削除しますか？',
-                                'class' => 'btn btn-xs btn-danger'
-                            ]) ?> </td>
-
+                <?php foreach ($customerRows as [$leftLabel, $leftField, $rightLabel, $rightField]): ?>
+                    <tr>
+                        <td class="customer-label"><?= h($leftLabel) ?></td>
+                        <td><?= h($customer->{$leftField} ?? '') ?></td>
+                        <?php if ($rightField !== null): ?>
+                            <td class="customer-label"><?= h($rightLabel) ?></td>
+                            <td><?= h($customer->{$rightField} ?? '') ?></td>
+                        <?php else: ?>
+                            <td colspan="2"></td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="12">対応履歴はありません。</td>
-                    </tr>
-                <?php endif; ?>
+                <tr>
+                    <td class="customer-label">登録日</td>
+                    <td><?= h($customer->created?->format('Y-m-d H:i:s') ?? '') ?></td>
+                    <td class="customer-label">登録者</td>
+                    <td><?= h($allUsersOpt[$customer->created_user_id] ?? '') ?></td>
+                </tr>
+                <tr>
+                    <td class="customer-label">更新日</td>
+                    <td><?= h($customer->updated?->format('Y-m-d H:i:s') ?? '') ?></td>
+                    <td class="customer-label">更新者</td>
+                    <td><?= h($allUsersOpt[$customer->updated_user_id] ?? '') ?></td>
+                </tr>
             </tbody>
         </table>
     </div>
+
+    <?= $this->Form->create($contact, ['url' => ['action' => 'add', $customer->id], 'class' => 'form contact-add-form']) ?>
+    <?= $this->Form->control('customer_id', ['type' => 'hidden', 'value' => $customer->id]) ?>
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">対応履歴新規登録</h3>
+        </div>
+        <table class="table contact-entry">
+            <tbody>
+                <tr>
+                    <td class="add-label">概要</td>
+                    <td><?= $this->Form->control('summary', ['label' => false, 'type' => 'text', 'required' => false, 'class' => 'form-control if100']) ?></td>
+                    <td class="add-label">ステータス＊</td>
+                    <td><?= $this->Form->control('status', ['label' => false, 'type' => 'select', 'options' => $statusOpt ?? [], 'empty' => '-----', 'class' => 'form-control if100', 'required' => true]) ?></td>
+                </tr>
+                <tr>
+                    <td class="add-label">店舗への連絡</td>
+                    <td><?= $this->Form->control('queue_name', ['label' => false, 'type' => 'select', 'required' => false, 'options' => $queueOpt ?? [], 'empty' => '-----', 'class' => 'form-control if100']) ?></td>
+                    <td class="add-label"></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="add-label">対応内容</td>
+                    <td><?= $this->Form->control('detail', ['label' => false, 'type' => 'textarea', 'cols' => 20, 'rows' => 5, 'class' => 'form-control if100', 'style' => 'width:100%']) ?></td>
+                    <td class="add-label">メモ</td>
+                    <td><?= $this->Form->control('remark', ['label' => false, 'type' => 'textarea', 'cols' => 20, 'rows' => 5, 'class' => 'form-control if100', 'style' => 'width:100%']) ?></td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="width:95%;margin-bottom:5px;margin-top:5px;" align="center" class="btn_margin">
+            <?= $this->Form->button('登　録', ['name' => 'add', 'value' => '1', 'type' => 'submit', 'style' => 'width:150px;height:30px;cursor:pointer', 'class' => 'btn-info btn-xs AddButton']) ?>
+        </div>
+    </div>
+    <?= $this->Form->end() ?>
+
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">履歴一覧</h3>
+            <span style="float:right;margin-top:-20px">検索結果<?= count($contacts) ?>件</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover contact-history">
+                <thead>
+                    <tr>
+                        <th width="7%">履歴番号</th>
+                        <th width="12%">登録日時</th>
+                        <th width="25%">ステータス</th>
+                        <th width="12%">担当OP</th>
+                        <th>概要</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($contacts as $row): ?>
+                        <tr ondblclick="location.href='<?= $this->Url->build(['action' => 'view', $row->id]) ?>';">
+                            <td><?= h($row->id) ?></td>
+                            <td><?= h($row->created?->format('Y-m-d H:i') ?? '') ?></td>
+                            <td><?= h($statusOpt[$row->status] ?? '') ?></td>
+                            <td><?= h($allUsersOpt[$row->created_user_id] ?? '') ?></td>
+                            <td><?= h(mb_strlen((string)$row->summary) > 30 ? mb_substr((string)$row->summary, 0, 30) . '...' : (string)$row->summary) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+<br><br>
+<style>
+    .contact-add .customer-label,
+    .contact-add .contact-history th {
+        vertical-align: middle;
+        color: #ffffff;
+        background-color: #149c82;
+        font-weight: normal;
+    }
+    .contact-add .add-label {
+        vertical-align: middle;
+        color: #ffffff;
+        background-color: #4169E1;
+    }
+    .contact-add .contact-history td {
+        vertical-align: middle;
+    }
+</style>
+<script>
+    document.querySelector('.contact-add-form').addEventListener('submit', function (event) {
+        if (!event.submitter || event.submitter.name !== 'add') {
+            return;
+        }
+        if (!this.querySelector('[name="status"]').value) {
+            event.preventDefault();
+            alert('ステータスは必須項目です');
+            return;
+        }
+        if (!window.confirm('対応履歴を登録します。よろしいですか？')) {
+            event.preventDefault();
+        }
+    });
+</script>

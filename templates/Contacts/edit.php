@@ -17,11 +17,26 @@ $this->assign('title', '対応履歴更新');
             <label>概要</label>
             <?= $this->Form->control('summary', [
                 'label' => false,
-                'type' => 'select',
-                'options' => $overviewOpt ?? [],
-                'empty' => '-----',
+                'type' => 'text',
                 'class' => 'form-control',
                 'value' => $contact->summary
+            ]) ?>
+            <button type="button" class="btn btn-default btn-xs" style="margin-top:5px;"
+                onclick="window.open('<?= $this->Url->build(['controller' => 'Homes', 'action' => 'storeList']) ?>','','width=500,height=700');">
+                店舗一覧から選択
+            </button>
+        </div>
+
+        <!-- 店舗への連絡 -->
+        <div class="form-group">
+            <label>店舗への連絡</label>
+            <?= $this->Form->control('queue_name', [
+                'label' => false,
+                'type' => 'select',
+                'options' => $queueOpt ?? [],
+                'empty' => '-----',
+                'class' => 'form-control',
+                'value' => $contact->queue_name
             ]) ?>
         </div>
 
@@ -41,6 +56,18 @@ $this->assign('title', '対応履歴更新');
         <!-- 対応内容 -->
         <div class="form-group">
             <label>対応内容</label>
+            <?= $this->Form->control('detail', [
+                'label' => false,
+                'type' => 'textarea',
+                'rows' => 5,
+                'class' => 'form-control',
+                'value' => $contact->detail
+            ]) ?>
+        </div>
+
+        <!-- メモ -->
+        <div class="form-group">
+            <label>メモ</label>
             <?= $this->Form->control('remark', [
                 'label' => false,
                 'type' => 'textarea',
@@ -60,6 +87,7 @@ $this->assign('title', '対応履歴更新');
             'style' => 'width:150px;height:30px;margin-bottom:5px;'
         ]) ?>
         <?= $this->Form->postLink('削　除', ['action' => 'delete', $contact->id], [
+            'block' => 'contactDeleteForm',
             'confirm' => '削除しますか？',
             'class' => 'btn btn-danger btn-xs',
             'style' => 'width:150px;height:30px;margin-bottom:5px;'
@@ -67,4 +95,5 @@ $this->assign('title', '対応履歴更新');
     </div>
 
     <?= $this->Form->end() ?>
+    <?= $this->fetch('contactDeleteForm') ?>
 </div>

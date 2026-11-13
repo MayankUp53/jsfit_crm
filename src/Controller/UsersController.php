@@ -33,19 +33,17 @@ class UsersController extends AppController
      */
     public function index()
     {
-         $users = $this->Users->find()
+        $query = $this->Users->find()
             ->where(['Users.deleted IS' => null])
             ->orderBy(['Users.updated' => 'DESC', 'Users.created' => 'DESC']);
 
-        // $this->paginate = [
-        //     'limit' => 10
-        // ];
+        $this->paginate = ['limit' => 100, 'maxLimit' => 100];
+        $users = $this->paginate($query);
+        $warning = $this->CallbackNotification->getNumOfWarning();
 
-        // $users = $this->paginate($query);
-
-    $this->set(compact('users', ));
-    $this->setListValue();
-}
+        $this->set(compact('users', 'warning'));
+        $this->setListValue();
+    }
 
 
 
@@ -199,6 +197,7 @@ class UsersController extends AppController
     public function logout()
     {
         $this->Authentication->logout();
+        $this->request->getSession()->destroy();
         return $this->redirect(['action' => 'login']);
     }
 

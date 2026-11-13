@@ -23,7 +23,9 @@ fputcsv($out, $header);
 foreach ($results as $customer) {
     $row = [];
     foreach ($columns as $field => $label) {
-        $value = $customer->{$field} ?? '';
+        $value = is_array($customer)
+            ? ($customer[$field] ?? '')
+            : ($customer->{$field} ?? '');
 
         if ($field === 'sex') {
             $value = $sexLabels[$value] ?? $value;

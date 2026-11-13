@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
  * Imports Controller
@@ -33,16 +35,23 @@ class ImportsController extends AppController
     public function template()
     {
         $headers = $this->getCsvTemplate();
-
-        $filename = 'import_template_customers.csv';
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        foreach ($headers as $index => $header) {
+            $sheet->setCellValue([$index + 1, 1], $header);
+        }
+        $sheet->freezePane('A2');
+        foreach (range('A', 'Y') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
         $this->response = $this->response
-            ->withType('csv')
-            ->withDownload($filename);
-
-        $out = fopen('php://output', 'w');
-        fputcsv($out, $headers);
-        fclose($out);
-
+            ->withType('xlsx')
+            ->withDownload('顧客取込雛形.xlsx');
+        $writer = new Xlsx($spreadsheet);
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+        $this->response = $this->response->withStringBody($content);
         return $this->response;
     }
 
@@ -78,8 +87,12 @@ public function import()
         return $this->redirect(['action' => 'index']);
     }
 
-    // 🔥 LOAD FILE
-    $spreadsheet = IOFactory::load($filePath);
+    try {
+        $spreadsheet = IOFactory::load($filePath);
+    } catch (\Throwable $e) {
+        $this->Flash->error(__('取込ファイルを読み込めませんでした。ファイル形式または内容を確認してください。'));
+        return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
+    }
     $sheet = $spreadsheet->getActiveSheet();
 
     // 🔥 IMPORTANT FIX: force NORMAL index array (0,1,2...)
@@ -93,7 +106,9 @@ public function import()
     // =====================
     // HEADER (ROW 0 FIX)
     // =====================
-    $header = array_map('trim', $rows[0]);
+    $header = array_map(static function ($value): string {
+        return trim((string)preg_replace('/^\xEF\xBB\xBF/u', '', $value ?? ''));
+    }, $rows[0]);
     $template = array_map('trim', $this->getCsvTemplate());
 
     // // DEBUG (your same style)
@@ -109,7 +124,9 @@ public function import()
     // =====================
     // VALIDATION (same logic)
     // =====================
-    if ($header !== $template) {
+    $legacyBlankTemplate = count($header) === count($template)
+        && count(array_filter($header, static fn($value) => trim((string)$value) !== '')) === 0;
+    if ($header !== $template && !$legacyBlankTemplate) {
         $this->Flash->error(__('CSVのヘッダーが正しくありません。列の順番や名称を確認してください。'));
         return $this->redirect(['controller' => 'Settings', 'action' => 'index']);
     }
@@ -133,73 +150,109 @@ public function import()
     // LOOP (FIXED SAFE ROW HANDLING ONLY)
     // =====================
     foreach ($rows as $row) {
+        $importedPending = false;
+        $updatedPending = false;
+        $reactivatedPending = false;
 
-    $row = array_map(function ($v) { return trim($v ?? ''); }, $row);
-     $row = array_pad($row, 8, '');
+        $row = array_map(function ($v) { return trim((string)($v ?? '')); }, $row);
+        $row = array_pad($row, 25, '');
         [
-            $clientCd,
-            $companyName,
-            $nameKj,
-            $typeOfNumber,
+            $clientCode,
+            $clientBranchCode,
+            $clientName,
+            $clientBranchName,
+            $addr1,
+            $addr2,
+            $addr3,
             $tel,
             $fax,
-            $email,
-            $memo,
+            $tel2,
+            $incharge1Name,
+            $incharge1Phone,
+            $incharge2Name,
+            $incharge2Phone,
+            $incharge3Name,
+            $incharge3Phone,
+            $incharge4Name,
+            $incharge4Phone,
+            $sectionName,
+            $salesPerson,
+            $deadline,
+            $notes1,
+            $notes2,
+            $notes3,
+            $notes4,
         ] = $row;
 
-        if (empty($clientCd)) {
+        if (count(array_filter($row, static fn($value) => $value !== '')) === 0) {
+            continue;
+        }
+        if (empty($clientCode)) {
             $failed++;
             continue;
         }
 
+        $normalizedTel = $this->cleanPhone($tel) ?? '';
+
         $entity = $this->Customers->find()
-            ->where(['client_cd' => $clientCd])
+            ->where(['OR' => [
+                ['client_cd' => $clientCode],
+                ['client_code' => $clientCode],
+            ]])
             ->first();
 
+        $data = [
+            'client_code' => $clientCode,
+            'client_cd' => $clientCode,
+            'client_branch_code' => $clientBranchCode,
+            'client_name' => $clientName,
+            'client_branch_name' => $clientBranchName,
+            'company_name' => $clientName,
+            'company_branch_name' => $clientBranchName,
+            'name' => $clientName,
+            'addr1' => $addr1,
+            'addr2' => $addr2,
+            'addr3' => $addr3,
+            'tel' => $normalizedTel,
+            'tel_only' => $normalizedTel,
+            'phone' => $normalizedTel,
+            'phone_only' => $normalizedTel,
+            'fax' => $fax,
+            'tel2' => preg_replace('/[^0-9]/', '', $tel2),
+            'incharge1_name' => $incharge1Name,
+            'incharge1_phone' => preg_replace('/[^0-9]/', '', $incharge1Phone),
+            'incharge2_name' => $incharge2Name,
+            'incharge2_phone' => preg_replace('/[^0-9]/', '', $incharge2Phone),
+            'incharge3_name' => $incharge3Name,
+            'incharge3_phone' => preg_replace('/[^0-9]/', '', $incharge3Phone),
+            'incharge4_name' => $incharge4Name,
+            'incharge4_phone' => preg_replace('/[^0-9]/', '', $incharge4Phone),
+            'section_name' => $sectionName,
+            'sales_person' => $salesPerson,
+            'deadline' => $deadline,
+            'notes1' => $notes1,
+            'notes2' => $notes2,
+            'notes3' => $notes3,
+            'notes4' => $notes4,
+            'updated' => $now,
+            'updated_user_id' => $userId,
+        ];
+
         if ($entity) {
-
             if (!empty($entity->deleted)) {
-                $reactivated++;
+                $reactivatedPending = true;
             } else {
-                $updated++;
+                $updatedPending = true;
             }
-
-            $data = [
-                'company_name' => $companyName,
-                'name' => $nameKj,
-                'type_of_number' => $typeOfNumber,
-                'tel' => $tel,
-                'fax' => $fax,
-                'email' => $email,
-                'memo' => $memo,
-                'updated' => $now,
-                'updated_user_id' => $userId,
-                'deleted' => null,
-                'deleted_user_id' => null,
-            ];
+            $data['deleted'] = null;
+            $data['deleted_user_id'] = null;
         } else {
-
             $entity = $this->Customers->newEmptyEntity();
-
-            $data = [
-                'client_cd' => $clientCd,
-                'company_name' => $companyName,
-                'name' => $nameKj,
-                'type_of_number' => $typeOfNumber,
-                'tel' => $tel,
-                'fax' => $fax,
-                'email' => $email,
-                'memo' => $memo,
-                'zip_cd' => '',
-                'addr1' => '',
-                'disp_no' => date('ymdHis') . substr((string)microtime(true), -3),
-                'created' => $now,
-                'created_user_id' => $userId,
-                'updated' => $now,
-                'updated_user_id' => $userId,
-            ];
-
-            $imported++;
+            $data['name'] = $clientName;
+            $data['company_name'] = $clientName;
+            $data['created'] = $now;
+            $data['created_user_id'] = $userId;
+            $importedPending = true;
         }
 
         $entity = $this->Customers->patchEntity($entity, $data);
@@ -212,6 +265,12 @@ public function import()
                     $errorMessages[] = $field . ': ' . $message;
                 }
             }
+        } elseif (!empty($reactivatedPending)) {
+            $reactivated++;
+        } elseif (!empty($updatedPending)) {
+            $updated++;
+        } elseif (!empty($importedPending)) {
+            $imported++;
         }
     }
 
@@ -247,14 +306,30 @@ public function import()
     {
         return [
             '得意先CD',
-            '会社・支店名',
-            '氏名',
-            '番号種別',
-            'Tel',
-            'Fax',
-            'メールアドレス',
-            '登録日',
-            'メモ'
+            '得意先支店CD',
+            '得意先名',
+            '得意先支店名',
+            '住所1',
+            '住所2',
+            '住所3',
+            'TEL',
+            'FAX',
+            'サブ電話番号1',
+            '顧客の担当者1',
+            '顧客の担当者1電話',
+            '顧客の担当者2',
+            '顧客の担当者2電話',
+            '顧客の担当者3',
+            '顧客の担当者3電話',
+            '顧客の担当者4',
+            '顧客の担当者4電話',
+            '所属名',
+            '営業担当者名',
+            '締日',
+            '備考1',
+            '備考2',
+            '備考3',
+            '備考4',
         ];
     }
 }

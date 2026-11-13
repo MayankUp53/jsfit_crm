@@ -56,10 +56,6 @@ class MtCidsTable extends Table
         $validator
             ->allowEmptyString('item_memo');
 
-        $validator
-            ->integer('active_flg')
-            ->notEmptyString('active_flg', '有効無効を選択してください。');
-
         return $validator;
     }
 

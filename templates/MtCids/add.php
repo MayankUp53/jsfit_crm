@@ -25,9 +25,7 @@
             </tr>
             <tr>
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">備考</td>
-                <td><?= $this->Form->control('item_memo', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
-                <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">*有効無効</td>
-                <td><?= $this->Form->control('active_flg', ['label' => false, 'div' => false, 'type' => 'select', 'options' => $activeOpt ?? [], 'empty' => '-----', 'class' => 'form-control']) ?></td>
+                <td colspan="3"><?= $this->Form->control('item_memo', ['label' => false, 'div' => false, 'class' => 'form-control']) ?></td>
             </tr>
         </tbody>
     </table>

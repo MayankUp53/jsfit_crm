@@ -22,6 +22,7 @@ class HomesController extends AppController
     protected $CoreSettings;
     protected $MtCids;
     protected $MtPhonelists;
+    protected $MtQueues;
     protected $Users;
     protected $Customers;
     public function initialize(): void
@@ -35,6 +36,7 @@ class HomesController extends AppController
         $this->CoreSettings = $this->fetchTable('CoreSettings');
         $this->MtCids = $this->fetchTable('MtCids');
         $this->MtPhonelists = $this->fetchTable('MtPhonelists');
+        $this->MtQueues = $this->fetchTable('MtQueues');
         $this->MtCids = $this->fetchTable('MtCids');
         $this->Users = $this->fetchTable('Users');
         $this->Customers = $this->fetchTable('Customers');
@@ -69,7 +71,7 @@ class HomesController extends AppController
         $userId = $this->Authentication->getIdentity()?->getIdentifier();
         $campaignId = $session->read('campaign');
 
-        $dateFrom = date('Y-m-d', strtotime('-2 month'));
+        $dateFrom = date('Y-m-d', strtotime('-1 month'));
         $dateTo = date('Y-m-d');
 
         $response = $this->callCallHistoryApi(
@@ -145,7 +147,9 @@ class HomesController extends AppController
         $mtPhonelists = $this->MtPhonelists
             ->find()
             ->select(['item_name'])
-            ->where(['deleted IS' => null])
+            ->where([
+                'deleted IS' => null,
+            ])
             ->orderBy(['disp_cd' => 'ASC'])
             ->all();
 
@@ -166,16 +170,22 @@ public function manualDialApi()
             ->first();
 
         $cmdreqId = 0;
-        $campaignId = $session->read('campaign');
         $sessionId = $session->read('sessionId');
         $callerId = $this->request->getData('cid');
-        $tel = $this->request->getData('tel');
-$tel = str_replace('-', '', $tel); // removes all dashes
+        $tel = (string)$this->request->getData('tel');
 
-
-
-        if (empty($campaignId) || empty($sessionId) || empty($callerId) || empty($tel)) {
+        if (empty($sessionId) || empty($callerId) || empty($tel)) {
             $this->Flash->error(__('必須の情報が不足しています。再度操作してください。'));
+            return $this->redirect(['action' => 'index']);
+        }
+
+        $caller = $this->MtCids->find()
+            ->select(['campaign_id'])
+            ->where(['cid' => $callerId, 'deleted IS' => null])
+            ->first();
+        $campaignId = $caller?->campaign_id;
+        if (empty($campaignId)) {
+            $this->Flash->error(__('AmeyoJのセッションが正常に取得できませんでした。操作をやり直してください。'));
             return $this->redirect(['action' => 'index']);
         }
 
@@ -239,9 +249,7 @@ $tel = str_replace('-', '', $tel); // removes all dashes
             return [];
         }
 
-        // Legacy implementation always queried all users and campaign_id=1.
         $userId = '';
-        $campaignId = '1';
 
         $params = [
             'ccid' => $ccid,
@@ -285,15 +293,28 @@ $tel = str_replace('-', '', $tel); // removes all dashes
             ->toArray();
 
         $session = $this->request->getSession();
-        $cidOpt = $this->MtCids
+        $campaignId = $session->read('campaign');
+        $cidQuery = $this->MtCids
             ->find('list', keyField: 'cid', valueField: 'item_name')
-            ->where([
-                'deleted IS' => null,
-                'campaign_id IS' => $session->read('campaign'),
-                 // 'campaign_id IS' => 1,
-            ])
+            ->where(['deleted IS' => null]);
+
+        if (!empty($campaignId)) {
+            $cidQuery->where(['campaign_id' => $campaignId]);
+        }
+
+        $cidOpt = $cidQuery
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
+
+        // A normal login may not contain an Ameyo SSO campaign.
+        // Keep the dashboard usable and expose active notification numbers.
+        if (empty($cidOpt)) {
+            $cidOpt = $this->MtCids
+                ->find('list', keyField: 'cid', valueField: 'item_name')
+                ->where(['deleted IS' => null])
+                ->orderBy(['disp_cd' => 'ASC'])
+                ->toArray();
+        }
 
         $this->set([
             'activeOpt' => $activeOpt,

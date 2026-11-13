@@ -29,6 +29,16 @@ $this->assign('title', 'ユーザ一覧');
         </tbody>
     </table>
 
+    <div class="text-center">
+        <ul class="pagination">
+            <li><?= $this->Paginator->first('<<') ?></li>
+            <li><?= $this->Paginator->prev('前へ') ?></li>
+            <li><?= $this->Paginator->numbers(['separator' => '']) ?></li>
+            <li><?= $this->Paginator->next('次へ') ?></li>
+            <li><?= $this->Paginator->last('>>') ?></li>
+        </ul>
+        <p><?= $this->Paginator->counter('{{page}}/{{pages}}ページ 検索結果{{count}}件') ?></p>
+    </div>
 
     <div style="text-align:center;margin-top:15px;">
         <button class="btn btn-info btn-xs" style="width:150px;height:30px;"
@@ -39,27 +49,3 @@ $this->assign('title', 'ユーザ一覧');
 </div>
 
 
-<?php $this->start('script'); ?>
-<script>
-jQuery(document).ready(function($) {
-    var table = $('#usersTable').DataTable({
-        pageLength: 10,
-        lengthChange: false,
-        ordering: true,
-        searching: true,
-        responsive: true,
-        language: {
-            search: "ユーザを検索:",
-            paginate: { previous: "前", next: "次" },
-            info: "_START_ - _END_ / _TOTAL_ 件表示",
-            infoEmpty: "0 件表示",
-            zeroRecords: "該当データがありません"
-        },
-        // Move search box to the left
-        dom: '<"row"<"col-sm-6"f><"col-sm-6"l>>tip' // f=filter, l=length
-    });
-
- 
-});
-</script>
-<?php $this->end(); ?>

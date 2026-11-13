@@ -11,7 +11,6 @@
                 <th>名称</th>
                 <th>CID</th>
                 <th>備考</th>
-                <th>有効無効</th>
                 <th>操作</th>
             </tr>
         </thead>
@@ -24,7 +23,6 @@
                     <td><?= h($row->item_name) ?></td>
                     <td><?= h($row->cid) ?></td>
                     <td><?= h($row->item_memo) ?></td>
-                    <td><?= h($activeOpt[$row->active_flg] ?? '') ?></td>
                     <td>
                         <a class="btn btn-xs btn-success" href="<?= $this->Url->build(['action' => 'edit', $row->id]) ?>">編集</a>
                         <?= $this->Form->postLink('削除', ['action' => 'delete', $row->id], ['confirm' => '削除しますか？', 'class' => 'btn btn-xs btn-danger']) ?>
