@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use Cake\ORM\Query\SelectQuery;
+use Cake\Datasource\EntityInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -69,7 +70,8 @@ class UsersTable extends Table
         $validator
             ->scalar('loginid')
             ->maxLength('loginid', 100)
-            ->allowEmptyString('loginid');
+            ->requirePresence('loginid', 'create', 'ログインIDを入力してください。')
+            ->notEmptyString('loginid', 'ログインIDを入力してください。');
 
         $validator
             ->scalar('password')
@@ -128,6 +130,27 @@ class UsersTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
+        $rules->add(function (EntityInterface $entity, array $options): bool {
+            // Deleted users may share a login ID; active users must not.
+            // Run on every save so restoring a user checks for conflicts too.
+            if ($entity->get('deleted') !== null) {
+                return true;
+            }
+
+            $conditions = [
+                'loginid' => $entity->get('loginid'),
+                'deleted IS' => null,
+            ];
+            if ($entity->get('id') !== null) {
+                $conditions['id !='] = $entity->get('id');
+            }
+
+            return !$this->exists($conditions);
+        }, 'uniqueActiveLoginid', [
+            'errorField' => 'loginid',
+            'message' => 'このログインIDは既に使用されています。別のログインIDを入力してください。',
+        ]);
+
         return $rules;
     }
 
