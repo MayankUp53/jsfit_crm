@@ -38,16 +38,15 @@
             <tr>
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">状態</td>
                 <td colspan="3">
-                    <?= $this->Form->control('active', [
+                    <?= $this->Form->control($activeField, [
                         'label' => false,
                         'div'   => false,
                         'class' => 'form-control',
                         'type'  => 'select',
                         'options' => ['1' => '有効', '0' => '無効'],
                         'empty' => '-- 選択してください --',
-                        'value' => $entry->active 
                     ]) ?>
-                    <?= $this->Form->error('active') ?>
+                    <?= $this->Form->error($activeField) ?>
                 </td>
             </tr>
 

@@ -22,6 +22,8 @@ class MtStatusesController extends AppController
 
 public function index()
 {
+    $activeField = $this->MtStatuses->activeField();
+
     // Fetch statuses
     $mtStatuses = $this->MtStatuses->find()
         ->where(['deleted IS' => null])
@@ -40,7 +42,7 @@ public function index()
         $mtStatuses[$key]['updated_user_name'] = $users[$row['updated_user_id']] ?? '-';
     }
 
-    $this->set(compact('mtStatuses'));
+    $this->set(compact('mtStatuses', 'activeField'));
 }
 
 
@@ -48,6 +50,7 @@ public function index()
 
 public function add()
 {
+    $activeField = $this->MtStatuses->activeField();
     $entry = $this->MtStatuses->newEmptyEntity();
     if ($this->request->is('post')) {
         $data = $this->request->getData();
@@ -60,10 +63,9 @@ public function add()
                 ->max_disp ?? 0;
             $data['disp_cd'] = $maxDisp + 1;
         }
-            // Convert empty string from placeholder to null
-    if (isset($data['active']) && $data['active'] === '') {
-        $data['active'] = null;
-    }
+        if (($data[$activeField] ?? null) === '') {
+            $data[$activeField] = null;
+        }
 
         $now = date('Y-m-d H:i:s');
         $userId = $this->getCurrentUser()?->id ?? 0;
@@ -73,7 +75,6 @@ public function add()
         $data['updated'] = $now;
         $data['updated_user_id'] = $userId;
 
-        // Patch entity with all data including active
         $entry = $this->MtStatuses->patchEntity($entry, $data);
 
         if ($this->MtStatuses->save($entry)) {
@@ -86,7 +87,7 @@ public function add()
         $this->Flash->error(__('ステータスの登録に失敗しました。入力内容を確認してください。 {0}', $errorMsg));
     }
 
-    $this->set(compact('entry'));
+    $this->set(compact('entry', 'activeField'));
     $this->setListValue();
 }
 
@@ -95,6 +96,7 @@ public function add()
 
 public function edit(?string $id = null)
 {
+    $activeField = $this->MtStatuses->activeField();
     // Fetch the entry
     $entry = $this->MtStatuses->find()
         ->where(['MtStatuses.id' => $id, 'deleted IS' => null])
@@ -107,7 +109,7 @@ public function edit(?string $id = null)
         $data = [
             'item_name' => $data['item_name'] ?? $entry->item_name,
             'disp_cd'   => $data['disp_cd'] ?? $entry->disp_cd,
-            'active' => isset($data['active']) ? $data['active'] : 0, // default to 無効 if not set
+            $activeField => $data[$activeField] ?? 0,
             'updated'   => date('Y-m-d H:i:s'),
             'updated_user_id' => $this->getCurrentUser()?->id ?? 0
         ];
@@ -124,7 +126,7 @@ public function edit(?string $id = null)
         $this->Flash->error(__('概要の更新に失敗しました。入力内容を確認してください。 {0}', $errorMsg));
     }
 
-    $this->set(compact('entry'));
+    $this->set(compact('entry', 'activeField'));
     $this->setListValue();
 }
 

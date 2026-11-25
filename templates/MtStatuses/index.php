@@ -20,9 +20,9 @@
                 <td><?= h($row['disp_cd']) ?></td>
                 <td><?= h($row['item_name']) ?></td>
                 <td>
-                    <?= isset($row['active']) 
-                        ? ($row['active'] ? '有効' : '無効') 
-                        : '-' 
+                    <?= isset($row[$activeField])
+                        ? ($row[$activeField] ? '有効' : '無効')
+                        : '-'
                     ?>
                 </td>
                 <td><?= h($row['created_user_name']) ?></td>

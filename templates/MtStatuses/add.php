@@ -47,7 +47,7 @@
         状態
     </td>
      <td>
-        <?= $this->Form->control('active', [
+        <?= $this->Form->control($activeField, [
             'label' => false,
             'div'   => false,
             'class' => 'form-control',
@@ -56,9 +56,8 @@
             'options' => ['1' => '有効', '0' => '無効'],
             'empty' => '-- 選択してください --', // empty placeholder
             'required' => true,
-            'value' => $entry->id ? $entry->active : '' // force empty for new record
         ]) ?>
-        <?= $this->Form->error('active') ?>
+        <?= $this->Form->error($activeField) ?>
     </td>
 </tr>
 

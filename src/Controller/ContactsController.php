@@ -634,7 +634,7 @@ class ContactsController extends AppController
 
         $statusOpt = $this->MtStatuses
             ->find('list', keyField: 'id', valueField: 'item_name')
-            ->where(['deleted IS' => null, 'active' => 1])
+            ->where(['deleted IS' => null, $this->MtStatuses->activeField() => 1])
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
 
