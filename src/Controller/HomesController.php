@@ -67,16 +67,15 @@ class HomesController extends AppController
         $limit = (int)($core?->limit_value ?? 50);
         $callbackNoticeTime = (int)($core?->callback_notice_time ?? 0);
 
-        $session = $this->request->getSession();
         $userId = $this->Authentication->getIdentity()?->getIdentifier();
-        $campaignId = $session->read('campaign');
+        $campaignId = $this->getCampaignId();
 
         $dateFrom = date('Y-m-d', strtotime('-1 month'));
         $dateTo = date('Y-m-d');
 
         $response = $this->callCallHistoryApi(
             (string)$ccid,
-            (string)$campaignId,
+            $campaignId,
             $limit,
             (string)$userId,
             $dateFrom,
@@ -179,12 +178,16 @@ public function manualDialApi()
             return $this->redirect(['action' => 'index']);
         }
 
+        $campaignId = $this->getCampaignId();
         $caller = $this->MtCids->find()
             ->select(['campaign_id'])
-            ->where(['cid' => $callerId, 'deleted IS' => null])
+            ->where([
+                'cid' => $callerId,
+                'deleted IS' => null,
+                'campaign_id' => $campaignId,
+            ])
             ->first();
-        $campaignId = $caller?->campaign_id;
-        if (empty($campaignId)) {
+        if ($caller === null) {
             $this->Flash->error(__('AmeyoJのセッションが正常に取得できませんでした。操作をやり直してください。'));
             return $this->redirect(['action' => 'index']);
         }
@@ -196,7 +199,7 @@ public function manualDialApi()
         }
 
         $payload = [
-            'campaignId' => (string)$campaignId,
+            'campaignId' => $campaignId,
             'sessionId' => (string)$sessionId,
             'command-request-id' => (string)$cmdreqId,
             'phone' => (string)$tel,
@@ -271,6 +274,11 @@ public function manualDialApi()
         }
     }
 
+    private function getCampaignId(): string
+    {
+        return (string)($this->request->getSession()->read('campaign') ?: '0');
+    }
+
     /**
      * Prepare shared option lists for the views.
      */
@@ -292,29 +300,14 @@ public function manualDialApi()
             ->orderBy(['id' => 'ASC'])
             ->toArray();
 
-        $session = $this->request->getSession();
-        $campaignId = $session->read('campaign');
-        $cidQuery = $this->MtCids
+        $cidOpt = $this->MtCids
             ->find('list', keyField: 'cid', valueField: 'item_name')
-            ->where(['deleted IS' => null]);
-
-        if (!empty($campaignId)) {
-            $cidQuery->where(['campaign_id' => $campaignId]);
-        }
-
-        $cidOpt = $cidQuery
+            ->where([
+                'deleted IS' => null,
+                'campaign_id' => $this->getCampaignId(),
+            ])
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
-
-        // A normal login may not contain an Ameyo SSO campaign.
-        // Keep the dashboard usable and expose active notification numbers.
-        if (empty($cidOpt)) {
-            $cidOpt = $this->MtCids
-                ->find('list', keyField: 'cid', valueField: 'item_name')
-                ->where(['deleted IS' => null])
-                ->orderBy(['disp_cd' => 'ASC'])
-                ->toArray();
-        }
 
         $this->set([
             'activeOpt' => $activeOpt,
