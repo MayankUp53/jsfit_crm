@@ -72,7 +72,8 @@ $userAuth = $currentUser ? ($currentUser->getOriginalData()->auth ?? null) : nul
                 'multiple' => true,
                 'options' => $statusOpt ?? [],
                 'value' => $search['status'] ?? [],
-                'class' => 'form-control'
+                'class' => 'form-control',
+                'size' => 6,
             ]) ?>
         </td>
     </tr>

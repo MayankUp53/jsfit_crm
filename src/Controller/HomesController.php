@@ -64,7 +64,7 @@ class HomesController extends AppController
 
         $voicelogUrl = $core?->voicelog_url;
         $ccid = $core?->ccid;
-        $limit = (int)($core?->limit_value ?? 50);
+        $limit = (int)($core?->get($this->CoreSettings->callHistoryLimitField()) ?? 50);
         $callbackNoticeTime = (int)($core?->callback_notice_time ?? 0);
 
         $userId = $this->Authentication->getIdentity()?->getIdentifier();

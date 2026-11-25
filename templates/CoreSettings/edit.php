@@ -43,7 +43,7 @@
 
             <tr>
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">コール履歴表示件数</td>
-                <td><?= $this->Form->control('limit_value', ['label' => false, 'class' => 'form-control']) ?></td>
+                <td><?= $this->Form->control($callHistoryLimitField, ['label' => false, 'class' => 'form-control']) ?></td>
 
                 <td style="vertical-align:middle;color:#ffffff;" bgcolor="#ff8c00">コールバック通知時間（分）</td>
                 <td><?= $this->Form->control('callback_notice_time', ['label' => false, 'class' => 'form-control']) ?></td>

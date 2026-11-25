@@ -80,12 +80,13 @@ class CoreSettingsController extends AppController
     protected function setListValue(): void
     {
         $warning = $this->CallbackNotification->getNumOfWarning();
+        $callHistoryLimitField = $this->CoreSettings->callHistoryLimitField();
         $activeOpt = ['0' => '無効', '1' => '有効'];
         $opeOpt = $this->Users->find('list', keyField: 'id', valueField: 'user_name')
             ->where(['deleted IS' => null])
             ->orderBy(['id' => 'ASC'])
             ->toArray();
 
-        $this->set(compact('warning', 'activeOpt', 'opeOpt'));
+        $this->set(compact('warning', 'activeOpt', 'opeOpt', 'callHistoryLimitField'));
     }
 }

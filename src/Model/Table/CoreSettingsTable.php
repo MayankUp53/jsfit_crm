@@ -30,6 +30,11 @@ class CoreSettingsTable extends Table
         ]);
     }
 
+    public function callHistoryLimitField(): string
+    {
+        return $this->hasField('limit_value') ? 'limit_value' : 'limit';
+    }
+
     public function validationDefault(Validator $validator): Validator
     {
         return $validator;
