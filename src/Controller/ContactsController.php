@@ -646,10 +646,7 @@ class ContactsController extends AppController
         $callbackStatusOpt = ['0' => '未', '1' => '完了', '2' => '中止', '3' => '破棄', '4' => '登録誤り', '99' => 'その他'];
 
         $queueOpt = $this->MtQueues->find('list', keyField: 'item_name', valueField: 'item_name')
-            ->where([
-                'MtQueues.deleted IS' => null,
-                'MtQueues.active_flg' => 1,
-            ])
+            ->where(['MtQueues.deleted IS' => null])
             ->orderBy(['MtQueues.disp_cd' => 'ASC'])
             ->toArray();
 

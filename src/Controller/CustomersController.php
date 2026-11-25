@@ -655,7 +655,7 @@ $results = $this->Customers->find()
             ->orderBy(['Users.deleted' => 'ASC', 'Users.disp_cd' => 'ASC'])
             ->toArray();
 
-        // Status options (removed active_flg filter)
+        // Status options
         $statusOpt = $this->MtStatuses->find('list', keyField: 'id', valueField: 'item_name')
             ->orderBy(['MtStatuses.disp_cd' => 'ASC'])
             ->toArray();
