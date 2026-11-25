@@ -22,7 +22,6 @@ class ContactsController extends AppController
     protected $CoreSettings;
     protected $MtQueues;
     protected $MtPhonelists;
-    protected $MtOutline;
 
     public function initialize(): void
     {
@@ -36,7 +35,6 @@ class ContactsController extends AppController
         $this->CoreSettings = $this->fetchTable('CoreSettings');
         $this->MtQueues = $this->fetchTable('MtQueues');
         $this->MtPhonelists = $this->fetchTable('MtPhonelists');
-        $this->MtOutline = $this->fetchTable('MtOutline');
     }
 
     public function clearSession()
@@ -638,11 +636,6 @@ class ContactsController extends AppController
             ->orderBy(['disp_cd' => 'ASC'])
             ->toArray();
 
-        $overviewOpt = $this->MtOutline
-            ->find('list', keyField: 'item_name', valueField: 'item_name')->where(['deleted IS' => null, 'active' => 1])
-            ->orderBy(['disp_cd' => 'ASC'])
-            ->toArray();
-
         $callbackStatusOpt = ['0' => '未', '1' => '完了', '2' => '中止', '3' => '破棄', '4' => '登録誤り', '99' => 'その他'];
 
         $queueOpt = $this->MtQueues->find('list', keyField: 'item_name', valueField: 'item_name')
@@ -650,7 +643,7 @@ class ContactsController extends AppController
             ->orderBy(['MtQueues.disp_cd' => 'ASC'])
             ->toArray();
 
-        $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt', 'statusOpt', 'overviewOpt'));
+        $this->set(compact('warning', 'activeOpt', 'sexOpt', 'opeOpt', 'allUsersOpt', 'callbackStatusOpt', 'queueOpt', 'statusOpt'));
     }
 
     protected function contactSearchDefaults(): array
